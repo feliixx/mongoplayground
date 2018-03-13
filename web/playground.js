@@ -1,6 +1,7 @@
 var doRedirect = true
 
 function redirect() {
+    clearLines()
     if (doRedirect) {
         window.history.replaceState({}, "MongoDB playground", "/")
         document.getElementById("link").style.visibility = "hidden"
@@ -122,7 +123,7 @@ function format(content, textArea) {
 
 function error(errorMsg, textArea) {
     var line = errorMsg.match(/line [0-9]*/)
-    if (line.length !== 0 && textArea !== "result") {
+    if (line !== null && textArea !== "result") {
         var nb = Number(line[0].replace("line ", "")) - 1
         var lineDiv = document.getElementById(textArea + "Lines")
         lineDiv.childNodes[nb].classList.add("red")
