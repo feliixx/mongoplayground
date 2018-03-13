@@ -1,0 +1,154 @@
+html {
+    height: 100%;
+}
+
+body {
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#top {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 50px;
+    background-color: rgb(224, 235, 245);
+}
+
+#content {
+    padding: 5px;
+}
+
+#bottom {
+    position: absolute;
+    top: 95%;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgb(255, 255, 255);
+}
+
+#configDiv {
+    left: 0;
+}
+
+#queryDiv {
+    left: 33%
+}
+
+#resultDiv {
+    left: 66%;
+}
+
+#docDiv {
+    left: 40%;
+    width: 60%;
+    display: none;
+}
+
+#docContent {
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+#title {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI", Helvetica, Arial, sans-serif;
+    float: left;
+    font-size: 16pt;
+    padding: 12px 10px;
+}
+
+#controls {
+    float: left;
+    padding: 10px 15px;
+}
+
+#link {
+    width: 300px;
+    visibility: hidden;
+}
+
+#doc {
+    padding: 10px 15px;
+    float: right;
+}
+
+#versionDiv {
+    padding: 10px;
+    color: rgb(100, 98, 98);
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+
+label {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+textarea {
+    resize: none;
+    background-color: rgb(255, 255, 221);
+    font-size: 11pt;
+    padding: 0;
+    border: none;
+    height: 100%;
+    width: 100%;
+}
+
+input[type="button"] {
+    height: 30px;
+    border: 1px solid rgb(55, 94, 171);
+    ;
+    background: rgb(55, 94, 171);
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+}
+
+input[type="button"]:hover,
+input[type="button"]:disabled {
+    background: rgb(31, 54, 99);
+}
+
+.divTitle {
+    text-align: center;
+    font-size: 1.3em;
+    color: #24292e;
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+
+.column {
+    width: 32%;
+    top: 40px;
+    position: absolute;
+    bottom: 12%;
+    margin: 0;
+}
+
+.red {
+    color: rgb(156, 21, 21) !important; 
+    font-weight: bold;
+}
+
+.linedtextarea {
+    width: 92%;
+}
+
+.linewrapper {
+    height: 100%;
+    overflow: hidden;
+}
+
+.lines {
+    width: 7%;
+    font-size: 11pt;
+    float: left;
+    overflow: hidden;
+    text-align: right;
+    padding-right: 2px;
+}
+
+.lines div {
+    color: rgb(180, 180, 180);
+}
