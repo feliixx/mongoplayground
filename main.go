@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 )
@@ -12,5 +13,5 @@ func main() {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
-	http.ListenAndServe(":8080", s)
+	log.Fatal(http.ListenAndServe(":80", s))
 }

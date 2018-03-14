@@ -1,11 +1,14 @@
+# Mongoplayground v0.1.0-alpha
+
 ## Summary
 
 
-- [limitations](#user-content-limitations)
-- [create a database](#user-content-user-content-create-a-database)
+- [Limitations](#user-content-limitations)
+- [Create a database](#user-content-create-a-database)
   - [with json documents](#user-content-use-json-documents)
   - [with random data](#user-content-create-random-documents-with-mgodatagen)
-- [credits](#user-content-credits)
+- [Report an issue / contribute](#user-content-report-an-issue-and-contribute)
+- [Credits](#user-content-credits)
 
 ## Limitations
 
@@ -21,7 +24,7 @@ This playground has several limitations:
 
 Currently, the playground can run only `find()` and `aggregate()` queries 
 
-#### projections
+### projections
 
 projections are not accepted in `find()`
 
@@ -35,69 +38,34 @@ Instead, use `aggregate()`:
 
 ```JSON5
 db.collection.aggregate([
-  {"$match": {"k": 1}, 
+  {"$match": {"k": 1}}, 
   {"$project": {"_id": 0}}
 ])
 ```
-### JSON and BSON
 
-the `configuration` and `query` input will only accept valid JSON, hence some of the MongoDB shell syntax is not available
+### shell regex
 
- #### keys need to be properly quoted
- 
- this will throw an error: 
+Currently, shell regex doesn't work in query. 
 
- ```JSON5
- db.collection.find({k: 1})
- ```
-
- but this won't: 
-
-```JSON5
- db.collection.find({"k": 1})
- ```
-
- #### ObjectId
-
- `ObjectId("...")` notation is not available. 
-
- Instead of 
-
-```JSON5
- db.collection.find({
-   "_id": ObjectId("5a9fe4ddc9659d676633c6bf")
- })
- ```
-
- use 
+so instead of 
 
 ```JSON5
 db.collection.find({
-  "_id": {
-    "$oid": "5a9fe4ddc9659d676633c6bf"
-  }
+  "k": /pattern/
 })
- ```
+```
 
- #### Regex
+use 
 
- `{"k": /pattern/}` notation is not available 
-
- Instead of 
- 
- ```JSON5
- db.collection.find({"k": /pattern/})
- ```
-
- use 
-
- ```JSON5
- db.collection.find({
+```JSON5 
+db.collection.find({
   "k": {
     "$regex": "pattern"
   }
 })
 ```
+
+
 
 ## Create a database 
 
@@ -180,9 +148,9 @@ List of custom `<generator>` types:
 - [autoincrement](#user-content-autoincrement)
 - [reference](#user-content-ref)
 - [fromArray](#user-content-fromarray)
-- [countAggregator](#user-content-countAggregator)
-- [valueAggregator](#user-content-valueAggregator)
-- [boundAggregator](#user-content-boundAggregator)
+- [countAggregator](#user-content-countaggregator)
+- [valueAggregator](#user-content-valueaggregator)
+- [boundAggregator](#user-content-boundaggregator)
 
 List of [Faker](https://github.com/manveru/faker) `<generator>` types: 
 
@@ -690,9 +658,18 @@ and use main or custom generators instead, as faker generator are way slower.
 
 Currently, only `"en"` locale is available  
 
+## Report an issue and contribute
 
+You can report issues here: [mongoplayground/issues](https://github.com/feliixx/mongoplayground/issues)
+
+The source code is available here: [mongoplayground](https://github.com/feliixx/mongoplayground)
+
+Contributions are welcome! 
 
 ## Credits 
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
+
 The code contains an adaptation of the [jQuery Lined Textarea Plugin](http://alan.blog-city.com/jquerylinedtextarea.htm) in native javascript 
+
+The documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)

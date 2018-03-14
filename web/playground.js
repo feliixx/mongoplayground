@@ -1,28 +1,70 @@
-var doRedirect = true
+var configArea
+var queryArea
+var resultArea
 
-function redirect() {
-    clearLines()
-    if (doRedirect) {
-        window.history.replaceState({}, "MongoDB playground", "/")
-        document.getElementById("link").style.visibility = "hidden"
-        document.getElementById("link").value = ""
-        doRedirect = false
-        document.getElementById("share").disabled = false
-    }
-}
+function initCodeArea() {
+    configArea = ace.edit(document.getElementById("config"), {
+        "mode": "ace/mode/json",
+        "fontSize": "16px"
+    })
+    queryArea = ace.edit(document.getElementById("query"), {
+        "mode": "ace/mode/javascript",
+        "fontSize": "16px"
+    })
+    resultArea = ace.edit(document.getElementById("result"), {
+        "mode": "ace/mode/json",
+        "fontSize": "16px",
+        "readOnly": true,
+        "showLineNumbers": false,
+        "showGutter": false,
+        "useWorker": false,
+        "highlightActiveLine": false
+    })
+    configArea.setValue(formatConfig(2), -1)
 
-function loadDocs() {
+    document.getElementById("config").removeAttribute("hidden")
+    document.getElementById("query").removeAttribute("hidden")
+    document.getElementById("result").removeAttribute("hidden")
+
+    configArea.getSession().on('change', function () {
+        redirect()
+    })
+    queryArea.getSession().on('change', function () {
+        redirect()
+    })
+
     var r = new XMLHttpRequest()
     r.open("GET", "/static/docs.html", true)
     r.onreadystatechange = function () {
-        if (r.readyState !== 4) {
-            return
-        }
+        if (r.readyState !== 4) { return }
         if (r.status === 200) {
             document.getElementById("docContent").innerHTML = r.responseText
         }
     }
     r.send(null)
+}
+
+function getMode() {
+    var select = document.getElementById("mode")
+    return select.options[select.selectedIndex].text
+}
+
+function setMode() {
+    if (getMode() === "json") {
+        configArea.session.setMode("ace/mode/javascript")
+        document.getElementById("config").classList.add("ignoreWarnings")
+    } else {
+        configArea.session.setMode("ace/mode/json")
+        document.getElementById("config").classList.remove("ignoreWarnings")
+    }
+    redirect()
+}
+
+function redirect() {
+    window.history.replaceState({}, "MongoDB playground", "/")
+    document.getElementById("link").style.visibility = "hidden"
+    document.getElementById("link").value = ""
+    document.getElementById("share").disabled = false
 }
 
 function showDoc(doShow) {
@@ -32,12 +74,13 @@ function showDoc(doShow) {
     document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
     document.getElementById("queryDiv").style.display = doShow ? "none" : "inline"
     document.getElementById("resultDiv").style.display = doShow ? "none" : "inline"
+    if (!doShow) {
+        redirect()
+    }
 }
 
 function run(doSave) {
     if (isCorrect()) {
-        var config = document.getElementById("config").value
-        var query = document.getElementById("query").value
         var r = new XMLHttpRequest()
         r.open("POST", doSave ? "/save/" : "/run/")
         r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -48,116 +91,78 @@ function run(doSave) {
             if (r.status === 200) {
                 if (doSave) {
                     window.history.replaceState({}, "MongoDB playground", r.responseText)
-                    doRedirect = true
                     var link = document.getElementById("link")
                     link.value = r.responseText
                     link.style.visibility = "visible"
                     document.getElementById("share").disabled = true
                 } else {
-                    var resultArea = document.getElementById("result")
                     var resultNb = document.getElementById("resultNb")
                     try {
                         var results = JSON.parse(r.responseText)
-                        resultArea.classList.remove("red")
                         resultNb.innerHTML = results.length + " results"
-                        resultArea.value = JSON.stringify(results, null, 2)
+                        resultArea.setValue(JSON.stringify(results, null, 2), -1)
                     } catch (e) {
-                        error(r.responseText, "result")
+                        resultArea.setValue(r.responseText, -1)
                     }
                 }
             }
         }
-        config = JSON.stringify(JSON.parse(config))
-        var select = document.getElementById("mode")
-        r.send("mode=" + select.options[select.selectedIndex].text + "&config=" + encodeURIComponent(config) + "&query=" + encodeURIComponent(query))
+        r.send("mode=" + getMode() + "&config=" + encodeURIComponent(formatConfig(0)) + "&query=" + encodeURIComponent(queryArea.getValue()))
     }
 }
 
 function isCorrect() {
-
     showDoc(false)
+    resultArea.setValue("", -1)
+    document.getElementById("resultNb").innerHTML = "0 result"
 
-    var config = document.getElementById("config")
-    var content = format(config.value.trim(), "config")
-    if (content !== "invalid") {
-        config.value = content
-    } else {
+    var errors = document.querySelectorAll(".ace_error")
+    if (errors.length > 0) {
+        resultArea.setValue("error(s) found in config or query", -1)
         return false
     }
-
-    var query = document.getElementById("query")
-    content = query.value.trim()
-    if (content.slice(-1) === ";") {
-        content = content.substring(0, content.length - 1)
+    if (!checkCorrectObjectId("config", configArea.getValue())) {
+        resultArea.setValue("invalid objectId in config", -1)
+        return false
     }
+    configArea.setValue(formatConfig(2), -1)
+    var content = queryArea.getValue().trim()
     var match = /^db\..*\.(find|aggregate)\([\s\S]*\)$/.test(content)
     if (!match) {
-        error("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", "query")
+        resultArea.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
         return false
     }
-    var queryStart = content.substring(0, content.indexOf("(") + 1)
-    var queryEnd = content.substring(content.length - 1, content.length)
-    content = content.substring(content.indexOf("(") + 1, content.length - 1).trim()
-    content = format(content, "query")
-    if (content !== "invalid") {
-        query.value = queryStart + content + queryEnd
-        clearLines()
-        return true
+    if (!checkCorrectObjectId("query", queryArea.getValue())) {
+        resultArea.setValue("invalid objectId in query", -1)
+        return false
+    }
+    queryArea.setValue(js_beautify(queryArea.getValue(), {}), -1)
+    return true
+}
+
+function formatConfig(indentSize) {
+    if (getMode() === "json") {
+        return js_beautify(configArea.getValue(), {
+            "indent_size": indentSize,
+            "indent_char": indentSize === 0 ? "" : " ",
+            "unescape_strings": true,
+            "preserve_newlines": false
+        })
     } else {
-        return false
+        return JSON.stringify(JSON.parse(configArea.getValue()), null, indentSize)
     }
 }
 
-function format(content, textArea) {
-    if (content === "") {
-        return ""
+function checkCorrectObjectId(area, content) {
+    if (area === "query" || getMode() === "json" ) {
+        var match = content.match(/ObjectId\((.+?)\)/g)
+        if (match !== null) {
+            for (var i in match ) {
+                if (match[i].length != 36) {
+                    return false 
+                }
+            }   
+        }
     }
-    try {
-        var obj = JSON.parse(content)
-        return JSON.stringify(obj, null, 2)
-    } catch (e) {
-        error("invalid " + textArea + ":\n" + e, textArea)
-        return "invalid"
-    }
-}
-
-function error(errorMsg, textArea) {
-    var line = errorMsg.match(/line [0-9]*/)
-    if (line !== null && textArea !== "result") {
-        var nb = Number(line[0].replace("line ", "")) - 1
-        var lineDiv = document.getElementById(textArea + "Lines")
-        lineDiv.childNodes[nb].classList.add("red")
-    }
-    var resultArea = document.getElementById("result")
-    resultArea.classList.add("red")
-    resultArea.value = errorMsg
-    document.getElementById("resultNb").innerHTML = "0 result"
-}
-
-function clearLines() {
-    document.querySelectorAll(".lines > div").forEach(function(element) {
-        element.classList.remove("red")
-    })
-}
-
-function scrollArea(textAreaId) {
-    var textArea = document.getElementById(textAreaId)
-    var scrollTop = textArea.scrollTop
-    var clientHeight = textArea.clientHeight
-
-    var linesDiv = textArea.parentNode.querySelector(".lines")
-    linesDiv.style.marginTop = (-scrollTop) + "px"
-    var lineNo = textArea.getAttribute("data-lineNo")
-    lineNo = fillOutLines(linesDiv, scrollTop + clientHeight, lineNo)
-    textArea.setAttribute("data-lineNo", lineNo)
-}
-
-function fillOutLines(linesDiv, h, lineNo) {
-    while (linesDiv.clientHeight < h) {
-        var divNo = document.createElement('div')
-        divNo.innerHTML = lineNo
-        linesDiv.appendChild(divNo)
-        lineNo++
-    }
-    return lineNo
+    return true 
 }

@@ -22,7 +22,7 @@ const (
 
 var (
 	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
-	templateURL    = "p/ZzunaQu-YHj"
+	templateURL    = "p/eYtYmPq-C4J"
 	srv            *server
 )
 
@@ -136,33 +136,33 @@ func TestServeHTTP(t *testing.T) {
 }
 
 func TestHomePage(t *testing.T) {
-	_, err := getHomeBytes([]byte("3.6.3"))
+	err := precompile([]byte("3.6.3"))
 	assert.Nil(t, err)
 }
 
 func TestRunCreateDB(t *testing.T) {
 	l := []struct {
-		params   url.Values
-		result   string
-		createDB bool
+		params    url.Values
+		result    string
+		createdDB int
 	}{
 		// incorrect config should not create db
 		{
-			params:   url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
-			result:   "fail to parse configuration: Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
-			createDB: false,
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
+			result:    "fail to parse configuration: Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
+			createdDB: 0,
 		},
 		// correct config, but collection 'c' doesn't exists
 		{
-			params:   url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
-			result:   NoDocFound,
-			createDB: true,
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
+			result:    NoDocFound,
+			createdDB: 1,
 		},
 		// make sure that we always get the same list of "_id"
 		{
-			params:   templateParams,
-			result:   templateResult,
-			createDB: false, // db already exists
+			params:    templateParams,
+			result:    templateResult,
+			createdDB: 0, // db already exists
 		},
 		// make sure other generators produce the same output
 		{
@@ -183,7 +183,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {templateQuery}},
 			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":"1jU"},{"_id":{"$oid":"5a934e000102030405000001"},"k":"tBRWL"},{"_id":{"$oid":"5a934e000102030405000002"},"k":"6Hch"},{"_id":{"$oid":"5a934e000102030405000003"},"k":"ZWHW"},{"_id":{"$oid":"5a934e000102030405000004"},"k":"RkMG"},{"_id":{"$oid":"5a934e000102030405000005"},"k":"RIr"},{"_id":{"$oid":"5a934e000102030405000006"},"k":"ru7"},{"_id":{"$oid":"5a934e000102030405000007"},"k":"OB"},{"_id":{"$oid":"5a934e000102030405000008"},"k":"ja"},{"_id":{"$oid":"5a934e000102030405000009"},"k":"K307"}]
 `,
-			createDB: true,
+			createdDB: 1,
 		},
 		// same config, but aggregation
 		{
@@ -204,7 +204,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
 			result: `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]
 `,
-			createDB: false,
+			createdDB: 0,
 		},
 		// same query/config, number of doc too big
 		{
@@ -225,7 +225,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0, "k": 0}}])`}},
 			result: `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
 `,
-			createDB: true,
+			createdDB: 1,
 		},
 		// invalid aggregation query
 		{
@@ -244,8 +244,8 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-			result:   "Aggregate query failed: invalid character ']' after object key:value pair",
-			createDB: false,
+			result:    "Fail to parse aggregate() query: invalid character ']' after object key:value pair",
+			createdDB: 0,
 		},
 		// aggregation query should be parsed correctly, but fail to run
 		{
@@ -264,8 +264,8 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-			result:   "Aggregate query failed: $project specification must be an object",
-			createDB: false,
+			result:    "Aggregate query failed: $project specification must be an object",
+			createdDB: 0,
 		},
 		// valid config, invalid query, valid json inside 'db.collection.find(...)' should create
 		// a db, but fail to run the query
@@ -285,8 +285,8 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"$set": 12})`}},
-			result:   "Find query failed: unknown top level operator: $set",
-			createDB: true,
+			result:    "Find query failed: unknown top level operator: $set",
+			createdDB: 1,
 		},
 		// valid config but invalid json in query
 		{
@@ -305,8 +305,68 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:   "Find query failed: unexpected EOF",
-			createDB: false,
+			result:    "Fail to parse find() query: unexpected EOF",
+			createdDB: 0,
+		},
+		// two database, valid config
+		{
+			params: url.Values{
+				"mode": {"mgodatagen"},
+				"config": {`[
+				{
+					"collection": "coll1",
+					"count": 10,
+					"content": {
+						"k": {
+							"type": "string", 
+							"minLength": 1,
+							"maxLength": 5
+						}
+					}
+				}, {
+					"collection": "coll2",
+					"count": 10,
+					"content": {
+						"k": {
+							"type": "int", 
+							"minInt": 1,
+							"maxInt": 5
+						}
+					}
+				}
+			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":5},{"_id":{"$oid":"5a934e000102030405000001"},"k":5},{"_id":{"$oid":"5a934e000102030405000004"},"k":4},{"_id":{"$oid":"5a934e000102030405000007"},"k":5},{"_id":{"$oid":"5a934e000102030405000008"},"k":5},{"_id":{"$oid":"5a934e000102030405000009"},"k":4}]
+`,
+			createdDB: 2,
+		},
+		// two databases, one with invalid config (missing 'type')
+		{
+			params: url.Values{
+				"mode": {"mgodatagen"},
+				"config": {`[
+				{
+					"collection": "coll1",
+					"count": 10,
+					"content": {
+						"k": {
+							"type": "string", 
+							"minLength": 1,
+							"maxLength": 5
+						}
+					}
+				}, {
+					"collection": "coll2",
+					"count": 10,
+					"content": {
+						"k": {
+							"minInt": 1,
+							"maxInt": 5
+						}
+					}
+				}
+			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+			result:    "fail to create DB: fail to create collection coll2: error while creating generators from configuration file:\n\tcause: invalid type  for field k",
+			createdDB: 0,
 		},
 		// valid json
 		{
@@ -317,7 +377,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":1}]
 `,
-			createDB: true,
+			createdDB: 1,
 		},
 		// empty json
 		{
@@ -328,7 +388,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result: `[{"_id":{"$oid":"5a934e000102030405000000"}}]
 `,
-			createDB: true,
+			createdDB: 1,
 		},
 		// invalid method
 		{
@@ -337,8 +397,8 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`db.collection.findOne()`},
 			},
-			result:   "invalid method: findOne",
-			createDB: false,
+			result:    "invalid method: findOne",
+			createdDB: 0,
 		},
 		{
 			params: url.Values{
@@ -346,8 +406,8 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`find()`},
 			},
-			result:   "invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)",
-			createDB: false,
+			result:    "invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)",
+			createdDB: 0,
 		},
 		// json shoud be an array of documents
 		{
@@ -356,8 +416,8 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
-			result:   "json: fail to parse content, expected an array of JSON documents",
-			createDB: false,
+			result:    "fail to parse bson documents: json: cannot unmarshal object into Go value of type []bson.M",
+			createdDB: 0,
 		},
 		// only work on 'collection' collection
 		{
@@ -366,8 +426,8 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"k": 1}, {"k": 2}]`},
 				"query":  {`db.otherCollection.find()`},
 			},
-			result:   NoDocFound,
-			createDB: true,
+			result:    NoDocFound,
+			createdDB: 1,
 		},
 		// doc with '_id' should not be overwritten
 		{
@@ -378,7 +438,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result: `[{"_id":1},{"_id":2}]
 `,
-			createDB: true,
+			createdDB: 1,
 		},
 		// mixed doc with / without '_id'
 		{
@@ -389,7 +449,17 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result: `[{"_id":1},{"_id":{"$oid":"5a934e000102030405000001"}}]
 `,
-			createDB: true,
+			createdDB: 1,
+		},
+		// duplicate ID err
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id":1},{"_id":1}]`},
+				"query":  {`db.collection.find()`},
+			},
+			result:    `E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }`,
+			createdDB: 1,
 		},
 	}
 
@@ -397,9 +467,7 @@ func TestRunCreateDB(t *testing.T) {
 	for _, c := range l {
 		r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", c.params)
 		assert.Equal(t, c.result, r)
-		if c.createDB {
-			expectedDbNumber++
-		}
+		expectedDbNumber += c.createdDB
 	}
 
 	dbNames, err := srv.session.DatabaseNames()
@@ -449,7 +517,7 @@ func TestSave(t *testing.T) {
 		// same config but different query should produce distinct url
 		{
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
-			result:    "p/QpqrnsKRbJA",
+			result:    "p/JExTWG6zk6K",
 			newRecord: true,
 		},
 		// invalid config should be saved to
@@ -562,15 +630,36 @@ func TestRemoveOldDB(t *testing.T) {
 }
 
 func TestStaticHandlers(t *testing.T) {
-	l := []string{
-		"/static/playground-min.js",
-		"/static/playground-min.css",
-		"/static/docs.html",
+	l := []struct {
+		url        string
+		statusCode int
+	}{
+		{
+			url:        "/static/playground-min.js",
+			statusCode: 200,
+		},
+		{
+			url:        "/static/playground-min.css",
+			statusCode: 200,
+		},
+		{
+			url:        "/static/docs.html",
+			statusCode: 200,
+		},
+		{
+			url:        "/static/unknown.txt",
+			statusCode: 404,
+		},
+		{
+			url:        "/static/../README.md",
+			statusCode: 404,
+		},
 	}
-	staticHandler := srv.staticHandler()
-	for _, url := range l {
-		ok := assert.HTTPSuccess(t, staticHandler.ServeHTTP, "GET", url, nil)
-		assert.True(t, ok)
+	for _, c := range l {
+		resp := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", c.url, nil)
+		srv.staticHandler(resp, req)
+		assert.Equal(t, c.statusCode, resp.Code)
 	}
 }
 
@@ -664,5 +753,13 @@ func BenchmarkRunNonExistingDB(b *testing.B) {
 		req, _ := http.NewRequest("POST", "/run/", strings.NewReader(params.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		srv.runHandler(resp, req)
+	}
+}
+
+func BenchmarkServeStaticFile(b *testing.B) {
+	for n := 0; n < b.N; n++ {
+		resp := httptest.NewRecorder()
+		req, _ := http.NewRequest("GET", "/static/docs.html", nil)
+		srv.staticHandler(resp, req)
 	}
 }

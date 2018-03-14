@@ -6,6 +6,7 @@ import (
 )
 
 var (
+	// use a constant time for objectId generation
 	t = uint32(time.Date(2018, 02, 26, 0, 0, 0, 0, time.UTC).Unix())
 )
 

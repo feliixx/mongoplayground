@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -22,13 +23,17 @@ import (
 
 var (
 	templates = template.Must(template.ParseFiles("playground.html"))
-	homePage  []byte
+	// precompile playground template with default values
+	staticContentMap = map[string]int{}
+	staticContent    = make([][]byte, 0)
 )
 
 const (
 	mgodatagenMode = byte(0)
 	jsonMode       = byte(1)
-	badgerDir      = "storage"
+	// badger storage directory
+	badgerDir = "storage"
+	staticDir = "static/"
 	// interval between two database cleanup
 	cleanupInterval = 60 * time.Minute
 	// if a database is not used within the last
@@ -47,9 +52,9 @@ const (
     "count": 10,
     "content": {
 		"k": {
-			"type": "int",
-			"minInt": 0, 
-			"maxInt": 10
+		  "type": "int",
+		  "minInt": 0, 
+		  "maxInt": 10
 		}
 	}
   }
@@ -60,19 +65,33 @@ const (
 	NoDocFound = "no document found"
 )
 
-func getHomeBytes(version []byte) ([]byte, error) {
+func precompile(version []byte) error {
 	var buf bytes.Buffer
 	p := &page{
-		ModeJSON:     false,
 		Config:       []byte(templateConfig),
 		Query:        []byte(templateQuery),
 		MongoVersion: version,
 	}
 	err := templates.Execute(&buf, p)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return buf.Bytes(), nil
+	staticContentMap["homepage"] = 0
+	staticContent = append(staticContent, buf.Bytes())
+
+	files, err := ioutil.ReadDir(staticDir)
+	if err != nil {
+		return err
+	}
+	for i, f := range files {
+		b, err := ioutil.ReadFile(staticDir + f.Name())
+		if err != nil {
+			return err
+		}
+		staticContentMap[strings.TrimRight(f.Name(), ".gz")] = i + 1
+		staticContent = append(staticContent, b)
+	}
+	return nil
 }
 
 type page struct {
@@ -148,18 +167,16 @@ func newServer() (*server, error) {
 		}
 	}(s)
 
-	h, err := getHomeBytes(version)
+	err = precompile(version)
 	if err != nil {
 		return nil, err
 	}
-	homePage = h
 
 	s.mux.HandleFunc("/", s.newPageHandler)
 	s.mux.HandleFunc("/p/", s.viewHandler)
 	s.mux.HandleFunc("/run/", s.runHandler)
 	s.mux.HandleFunc("/save/", s.saveHandler)
-	s.mux.Handle("/static/", s.staticHandler())
-
+	s.mux.HandleFunc("/static/", s.staticHandler)
 	return s, nil
 }
 
@@ -195,7 +212,8 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 		return nil
 	})
 	if err != nil {
-		http.Redirect(w, r, "/", http.StatusNotFound)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("this playground doesn't exist"))
 		return
 	}
 	templates.Execute(w, p)
@@ -204,12 +222,12 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 // run a query and return the results as plain text
 func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 	mode, config, query := []byte(r.FormValue("mode")), []byte(r.FormValue("config")), []byte(r.FormValue("query"))
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	res, err := s.generateSample(getMode(mode), config, query)
 	if err != nil {
 		w.Write([]byte(err.Error()))
+		return
 	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
 	w.Write(res)
 }
 
@@ -218,32 +236,56 @@ func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 	mode, config, query := []byte(r.FormValue("mode")), []byte(r.FormValue("config")), []byte(r.FormValue("query"))
 
 	ID := computeID(mode, config, query)
+	// playgrounds are stored with a specific structure
+	// the key is the unique URL of the playground, for example 'ZzunaQu-YHj'
+	// the value is an array of byte with folowing structure:
+	//
+	// value[0:4] -> an int32 to store the position of the last byte of the configuration
+	// value[4] -> the mode (mgodatagen / json) to use for building the database
+	// value[5:endConfig] -> the configuration
+	// value[endConfig:] -> the query
+	v := make([]byte, 5+len(config)+len(query))
+	split := len(config) + 5
+	binary.LittleEndian.PutUint32(v[0:4], uint32(split))
+	v[4] = getMode(mode)
+	copy(v[5:split], config)
+	copy(v[split:], query)
+
 	s.storage.Update(func(txn *badger.Txn) error {
-		v := make([]byte, 5+len(config)+len(query))
-
-		split := len(config) + 5
-		binary.LittleEndian.PutUint32(v[0:4], uint32(split))
-		v[4] = getMode(mode)
-		copy(v[5:split], config)
-		copy(v[split:], query)
-
 		return txn.Set(ID, v)
 	})
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	fmt.Fprintf(w, "%sp/%s", r.Referer(), ID)
 }
 
 // return a playground with the default configuration
 func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Write(homePage)
+	w.Write(staticContent[0])
 }
 
 // serve static ressources (css/js/html)
-func (s *server) staticHandler() http.Handler {
-	return http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))
+func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
+	name := strings.TrimLeft(r.URL.String(), "/static/")
+	sub := strings.Split(name, ".")
+
+	contentType := "text/html; charset=utf-8"
+	if len(sub) > 0 {
+		switch sub[len(sub)-1] {
+		case "css":
+			contentType = "text/css; charset=utf-8"
+		case "js":
+			contentType = "application/javascript; charset=utf-8"
+		}
+	}
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Encoding", "gzip")
+	pos, ok := staticContentMap[name]
+	if !ok {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.Write(staticContent[pos])
 }
 
 func (s *server) generateSample(mode byte, config, query []byte) ([]byte, error) {
@@ -277,7 +319,7 @@ func (s *server) generateSample(mode byte, config, query []byte) ([]byte, error)
 			var docs []bson.M
 			err := bson.UnmarshalJSON(config, &docs)
 			if err != nil {
-				return nil, fmt.Errorf("json: fail to parse content, expected an array of JSON documents")
+				return nil, fmt.Errorf("fail to parse bson documents: %v", err)
 			}
 			coll := createCollection(db, "collection")
 			bulk := coll.Bulk()
@@ -294,8 +336,6 @@ func (s *server) generateSample(mode byte, config, query []byte) ([]byte, error)
 			if err != nil {
 				return nil, err
 			}
-		default:
-			return nil, fmt.Errorf("invalid mode")
 		}
 	}
 	return runQuery(db, query)
@@ -368,7 +408,7 @@ func (s *server) removeExpiredDB() {
 }
 
 func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
-	p := bytes.SplitN(query, []byte("."), 3)
+	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
 		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
@@ -376,8 +416,8 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	if bytes.Equal(p[2], []byte("find()")) {
 		p[2] = []byte("find({})")
 	}
-	start := bytes.Index(p[2], []byte("("))
-	end := bytes.LastIndex(p[2], []byte(")"))
+	start := bytes.IndexByte(p[2], '(')
+	end := bytes.LastIndexByte(p[2], ')')
 
 	collection := db.C(string(p[1]))
 	var docs []interface{}
@@ -387,7 +427,7 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 		var query bson.M
 		err := bson.UnmarshalJSON(p[2][start+1:end], &query)
 		if err != nil {
-			return nil, fmt.Errorf("Find query failed: %v", err)
+			return nil, fmt.Errorf("Fail to parse find() query: %v", err)
 		}
 		err = collection.Find(query).All(&docs)
 		if err != nil {
@@ -397,14 +437,14 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 		var pipeline []bson.M
 		err := bson.UnmarshalJSON(p[2][start+1:end], &pipeline)
 		if err != nil {
-			return nil, fmt.Errorf("Aggregate query failed: %v", err)
+			return nil, fmt.Errorf("Fail to parse aggregate() query: %v", err)
 		}
 		err = collection.Pipe(pipeline).All(&docs)
 		if err != nil {
 			return nil, fmt.Errorf("Aggregate query failed: %v", err)
 		}
 	default:
-		// this should never happend as invalid queries are filtered from front-end size
+		// this should never happen as invalid queries are filtered from front-end size
 		return nil, fmt.Errorf("invalid method: %s", p[2][:start])
 	}
 	if len(docs) == 0 {
