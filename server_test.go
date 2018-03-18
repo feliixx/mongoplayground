@@ -461,6 +461,60 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }`,
 			createdDB: 1,
 		},
+		// bson notation test input ObjectId
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
+				"query":  {`db.collection.find()`},
+			},
+			result: `[{"_id":{"$oid":"5a934e000102030405000001"}},{"_id":1}]
+`,
+			createdDB: 1,
+		},
+		// bson notation unkeyed query + objectId
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
+				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
+			},
+			result: `[{"_id":{"$oid":"5a934e000102030405000001"}}]
+`,
+			createdDB: 0,
+		},
+		// aggregation + unkeyed
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
+				"query":  {`db.collection.aggregate([{$match: {_id: ObjectId("5a934e000102030405000001")}}])`},
+			},
+			result: `[{"_id":{"$oid":"5a934e000102030405000001"}}]
+`,
+			createdDB: 0,
+		},
+		// ISODate test
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{dt: ISODate("2000-01-01T00:00:00+00:00")}]`},
+				"query":  {`db.collection.find()`},
+			},
+			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"dt":{"$date":"2000-01-01T00:00:00Z"}}]
+`,
+			createdDB: 1,
+		},
+		// invalid objectId should not panic
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": ObjectId("5a9")}]`},
+				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
+			},
+			result:    `Fail`,
+			createdDB: 0,
+		},
 	}
 
 	expectedDbNumber := 0

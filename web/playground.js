@@ -121,19 +121,11 @@ function isCorrect() {
         resultArea.setValue("error(s) found in config or query", -1)
         return false
     }
-    if (!checkCorrectObjectId("config", configArea.getValue())) {
-        resultArea.setValue("invalid objectId in config", -1)
-        return false
-    }
     configArea.setValue(formatConfig(2), -1)
     var content = queryArea.getValue().trim()
     var match = /^db\..*\.(find|aggregate)\([\s\S]*\)$/.test(content)
     if (!match) {
         resultArea.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
-        return false
-    }
-    if (!checkCorrectObjectId("query", queryArea.getValue())) {
-        resultArea.setValue("invalid objectId in query", -1)
         return false
     }
     queryArea.setValue(js_beautify(queryArea.getValue(), {}), -1)
@@ -151,18 +143,4 @@ function formatConfig(indentSize) {
     } else {
         return JSON.stringify(JSON.parse(configArea.getValue()), null, indentSize)
     }
-}
-
-function checkCorrectObjectId(area, content) {
-    if (area === "query" || getMode() === "json" ) {
-        var match = content.match(/ObjectId\((.+?)\)/g)
-        if (match !== null) {
-            for (var i in match ) {
-                if (match[i].length != 36) {
-                    return false 
-                }
-            }   
-        }
-    }
-    return true 
 }
