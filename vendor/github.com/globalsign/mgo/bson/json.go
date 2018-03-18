@@ -260,6 +260,9 @@ func jdecObjectId(data []byte) (interface{}, error) {
 	if v.Id == "" {
 		v.Id = v.Func.Id
 	}
+	if !IsObjectIdHex(v.Id) {
+		return nil, fmt.Errorf("invalid ObjectId: %v", v.Id)
+	}
 	return ObjectIdHex(v.Id), nil
 }
 

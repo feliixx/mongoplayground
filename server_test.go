@@ -512,8 +512,18 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result:    `Fail`,
+			result:    `fail to parse bson documents: invalid ObjectId: 5a9`,
 			createdDB: 0,
+		},
+		// TODO implement regex parsing
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"k": "randompattern"}]`},
+				"query":  {`db.collection.find({k: /pattern/})`},
+			},
+			result:    `Fail to parse find() query: invalid character '/' looking for beginning of value`,
+			createdDB: 1,
 		},
 	}
 
