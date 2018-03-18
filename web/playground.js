@@ -34,7 +34,7 @@ function initCodeArea() {
     })
 
     var r = new XMLHttpRequest()
-    r.open("GET", "/static/docs.html", true)
+    r.open("GET", "/static/docs-1.html", true)
     r.onreadystatechange = function () {
         if (r.readyState !== 4) { return }
         if (r.status === 200) {

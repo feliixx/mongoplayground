@@ -280,6 +280,7 @@ func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", contentType)
 	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
 	pos, ok := staticContentMap[name]
 	if !ok {
 		w.WriteHeader(http.StatusNotFound)

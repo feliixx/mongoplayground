@@ -699,15 +699,15 @@ func TestStaticHandlers(t *testing.T) {
 		statusCode int
 	}{
 		{
-			url:        "/static/playground-min.js",
+			url:        "/static/playground-min-1.js",
 			statusCode: 200,
 		},
 		{
-			url:        "/static/playground-min.css",
+			url:        "/static/playground-min-1.css",
 			statusCode: 200,
 		},
 		{
-			url:        "/static/docs.html",
+			url:        "/static/docs-1.html",
 			statusCode: 200,
 		},
 		{
