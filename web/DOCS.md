@@ -71,9 +71,9 @@ db.collection.find({
 
 ## Use JSON documents
 
-you can import JSON documents to create a database. Documents will be inserted in a **collection named `collection`**
+It is possible to use JSON documents to create a database. Documents will be inserted in a **collection named `collection`**
 
-JSON documents need to be in an array, for example: 
+Select `JSON` mode and add the JSON documents in an array, for example: 
 
 ```JSON5
 [
@@ -669,7 +669,5 @@ Contributions are welcome!
 ## Credits 
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
-
-The code contains an adaptation of the [jQuery Lined Textarea Plugin](http://alan.blog-city.com/jquerylinedtextarea.htm) in native javascript 
 
 The documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
