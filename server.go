@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/base64"
@@ -66,30 +67,50 @@ const (
 )
 
 func precompile(version []byte) error {
+
 	var buf bytes.Buffer
+	zw := gzip.NewWriter(&buf)
+	zw.Name = "playground.html"
+	zw.ModTime = time.Now()
 	p := &page{
 		Config:       []byte(templateConfig),
 		Query:        []byte(templateQuery),
 		MongoVersion: version,
 	}
-	err := templates.Execute(&buf, p)
-	if err != nil {
+	if err := templates.Execute(zw, p); err != nil {
 		return err
 	}
-	staticContentMap["homepage"] = 0
-	staticContent = append(staticContent, buf.Bytes())
+	if err := zw.Flush(); err != nil {
+		return err
+	}
+	c := make([]byte, buf.Len())
+	copy(c, buf.Bytes())
+	staticContentMap[zw.Name] = 0
+	staticContent = append(staticContent, c)
 
 	files, err := ioutil.ReadDir(staticDir)
 	if err != nil {
 		return err
 	}
 	for i, f := range files {
+		buf.Reset()
+		zw.Reset(&buf)
+		zw.Name = f.Name()
+		zw.ModTime = time.Now()
 		b, err := ioutil.ReadFile(staticDir + f.Name())
 		if err != nil {
 			return err
 		}
-		staticContentMap[strings.TrimRight(f.Name(), ".gz")] = i + 1
-		staticContent = append(staticContent, b)
+		if _, err = zw.Write(b); err != nil {
+			return err
+		}
+		if err := zw.Flush(); err != nil {
+			return err
+		}
+		c := make([]byte, buf.Len())
+		copy(c, buf.Bytes())
+		staticContentMap[f.Name()] = i + 1
+		staticContent = append(staticContent, c)
 	}
 	return nil
 }
@@ -261,6 +282,7 @@ func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 // return a playground with the default configuration
 func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Encoding", "gzip")
 	w.Write(staticContent[0])
 }
 

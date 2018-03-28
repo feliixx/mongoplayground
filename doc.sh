@@ -1,15 +1,12 @@
 #!/bin/bash 
+
+nb=2
 if [ $1 == "all" ]; then 
-  echo '<div class="markdown-body">' >> static/docs.html
-  curl https://api.github.com/markdown/raw -X "POST" -H "Content-Type: text/plain" -d "$(cat web/DOCS.md)" >> static/docs.html
-  echo '</div>' >> static/docs.html
+  echo '<div class="markdown-body">' >> static/docs-$nb.html
+  curl https://api.github.com/markdown/raw -X "POST" -H "Content-Type: text/plain" -d "$(cat web/DOCS.md)" >> static/docs-$nb.html
+  echo '</div>' >> static/docs-$nb.html
 fi
 
 
-  purifycss web/playground.css web/github.css static/docs.html playground.html --whitelist ["ignoreWarnings", "ace_gutter","ace_layer","ace_warning", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error"] --min --info --out "static/playground-min-2.css"  
-  gzip --best --verbose --force static/playground-min-2.css
+  purifycss web/playground.css web/github.css static/docs-$nb.html playground.html --whitelist ["ignoreWarnings", "ace_gutter","ace_layer","ace_warning", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error"] --min --info --out "static/playground-min-$nb.css"  
 
-if [ $1 == "all" ]; then 
-  mv static/docs.html static/docs-2.html
-  gzip --best --force --verbose static/docs-2.html
-fi
