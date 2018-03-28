@@ -6,13 +6,10 @@ if [ $1 == "all" ]; then
 fi
 
 
-  purifycss web/playground.css web/github.css web/playground.js static/docs.html playground.html --whitelist ["ignoreWarnings", "ace_gutter","ace_layer","ace_warning", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error"] --min --info --out "static/playground-min-1.css"  
-  gzip --best --verbose --force static/playground-min-1.css
-
-  uglifyjs  web/playground.js --compress  --verbose --mangle --output  static/playground-min-1.js
-  gzip --best --verbose --force static/playground-min-1.js
+  purifycss web/playground.css web/github.css static/docs.html playground.html --whitelist ["ignoreWarnings", "ace_gutter","ace_layer","ace_warning", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error"] --min --info --out "static/playground-min-2.css"  
+  gzip --best --verbose --force static/playground-min-2.css
 
 if [ $1 == "all" ]; then 
-  mv static/docs.html static/docs-1.html
-  gzip --best --force --verbose static/docs-1.html
+  mv static/docs.html static/docs-2.html
+  gzip --best --force --verbose static/docs-2.html
 fi

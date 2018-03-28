@@ -1,4 +1,4 @@
-# Mongoplayground v0.1.0-alpha
+# Mongoplayground v0.1.0-alpha2
 
 ## Summary
 
@@ -65,6 +65,9 @@ db.collection.find({
 })
 ```
 
+### Number decimal
+
+Currently, `NumberDecimal()` notation is not supported in json mode. 
 
 
 ## Create a database 
@@ -353,7 +356,7 @@ Generate a random date (stored as [`ISODate`](https://docs.mongodb.com/manual/re
 
 `startDate` and `endDate` are string representation of a Date following RFC3339: 
 
-**format**: "yyyy-MM-ddThh:mm:ss+00:00"
+**format**: "yyyy-MM-ddThh:mm:ss+00:00" or "yyyy-MM-ddThh:mm:ssZ"
 
 
 ```JSON5

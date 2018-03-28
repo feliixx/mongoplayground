@@ -129,7 +129,7 @@ func getDBHash(mode byte, config []byte) string {
 }
 
 func TestServeHTTP(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/static/docs.html", nil)
+	req, _ := http.NewRequest("GET", "/static/docs-2.html", nil)
 	resp := httptest.NewRecorder()
 	srv.ServeHTTP(resp, req)
 	assert.Equal(t, resp.Code, http.StatusOK)
@@ -541,6 +541,7 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
+<<<<<<< HEAD
 		// json with extended syntax
 		{
 			params: url.Values{
@@ -569,6 +570,25 @@ func TestRunCreateDB(t *testing.T) {
     "t": Timestamp(1, 0),
     "u": null,
     "v": 1
+=======
+		// make sure that code is formatted on server side
+		{
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": 1},{"_id": 2},{"_id": 3,"k":"key"}]`},
+				"query":  {`db.collection.find()`},
+			},
+			result: `[
+  {
+    "_id": 1
+  },
+  {
+    "_id": 2
+  },
+  {
+    "_id": 3,
+    "k": "key"
+>>>>>>> 469c173... code refactoring
   }
 ]
 `,
@@ -760,15 +780,11 @@ func TestStaticHandlers(t *testing.T) {
 		statusCode int
 	}{
 		{
-			url:        "/static/playground-min-1.js",
+			url:        "/static/playground-min-2.css",
 			statusCode: 200,
 		},
 		{
-			url:        "/static/playground-min-1.css",
-			statusCode: 200,
-		},
-		{
-			url:        "/static/docs-1.html",
+			url:        "/static/docs-2.html",
 			statusCode: 200,
 		},
 		{
