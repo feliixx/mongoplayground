@@ -3,8 +3,9 @@ var queryArea
 var resultArea
 
 function initCodeArea() {
+
     configArea = ace.edit(document.getElementById("config"), {
-        "mode": "ace/mode/json",
+        "mode": "ace/mode/javascript",
         "fontSize": "16px"
     })
     queryArea = ace.edit(document.getElementById("query"), {
@@ -21,11 +22,6 @@ function initCodeArea() {
         "highlightActiveLine": false
     })
     configArea.setValue(formatConfig(2), -1)
-
-    document.getElementById("config").removeAttribute("hidden")
-    document.getElementById("query").removeAttribute("hidden")
-    document.getElementById("result").removeAttribute("hidden")
-
     configArea.getSession().on('change', function () {
         redirect()
     })
@@ -47,17 +43,6 @@ function initCodeArea() {
 function getMode() {
     var select = document.getElementById("mode")
     return select.options[select.selectedIndex].text
-}
-
-function setMode() {
-    if (getMode() === "json") {
-        configArea.session.setMode("ace/mode/javascript")
-        document.getElementById("config").classList.add("ignoreWarnings")
-    } else {
-        configArea.session.setMode("ace/mode/json")
-        document.getElementById("config").classList.remove("ignoreWarnings")
-    }
-    redirect()
 }
 
 function redirect() {
@@ -96,7 +81,6 @@ function run(doSave) {
                     link.style.visibility = "visible"
                     document.getElementById("share").disabled = true
                 } else {
-                    var resultNb = document.getElementById("resultNb")
                     resultArea.setValue(r.responseText, -1)
                 }
             }
@@ -127,14 +111,10 @@ function isCorrect() {
 }
 
 function formatConfig(indentSize) {
-    if (getMode() === "json") {
-        return js_beautify(configArea.getValue(), {
-            "indent_size": indentSize,
-            "indent_char": indentSize === 0 ? "" : " ",
-            "unescape_strings": true,
-            "preserve_newlines": false
-        })
-    } else {
-        return JSON.stringify(JSON.parse(configArea.getValue()), null, indentSize)
-    }
+    return js_beautify(configArea.getValue(), {
+        "indent_size": indentSize,
+        "indent_char": indentSize === 0 ? "" : " ",
+        "unescape_strings": true,
+        "preserve_newlines": false
+    })
 }
