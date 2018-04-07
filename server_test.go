@@ -1,7 +1,7 @@
 package main
 
 import (
-	"crypto/md5"
+	"bytes"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -13,17 +13,16 @@ import (
 
 	"github.com/dgraph-io/badger"
 	"github.com/globalsign/mgo/bson"
-	"github.com/stretchr/testify/assert"
 )
 
 const (
 	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
+	templateURL    = "p/eYtYmPq-C4J"
 )
 
 var (
 	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
-	templateURL    = "p/eYtYmPq-C4J"
-	srv            *server
+	testServer     *server
 )
 
 func TestMain(m *testing.M) {
@@ -37,25 +36,20 @@ func TestMain(m *testing.M) {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
-	srv = s
+	testServer = s
 	defer s.session.Close()
 	defer s.storage.Close()
-
-	err = s.clearDatabases()
-	if err != nil {
-		fmt.Printf("fail to remove old db: %v\n", err)
-		os.Exit(1)
-	}
 
 	retCode := m.Run()
 	os.Exit(retCode)
 }
 
-func (s *server) clearDatabases() error {
+func (s *server) clearDatabases(t *testing.T) error {
 	dbNames, err := s.session.DatabaseNames()
 	if err != nil {
-		return err
+		t.Error(err)
 	}
+	// dbNames are md5 hash, 32-char long
 	for _, name := range dbNames {
 		if len(name) == 32 {
 			s.session.DB(name).DropDatabase()
@@ -81,14 +75,14 @@ func (s *server) clearDatabases() error {
 		return err
 	})
 	if err != nil {
-		return err
+		t.Error(err)
 	}
 
 	deleteTxn := s.storage.NewTransaction(true)
 	for i := 0; i < len(keys); i++ {
 		err = deleteTxn.Delete(keys[i])
 		if err != nil {
-			return err
+			t.Error(err)
 		}
 	}
 	return deleteTxn.Commit(func(err error) {
@@ -98,7 +92,22 @@ func (s *server) clearDatabases() error {
 	})
 }
 
-// return only 32 long name
+func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
+	dbNames, err := testServer.session.DatabaseNames()
+	if err != nil {
+		t.Error(err)
+	}
+	nbDB := len(filterDBNames(dbNames))
+	if nbDB != nbMongoDatabases {
+		t.Errorf("expected %d DB, but got %d", nbMongoDatabases, nbDB)
+	}
+	nbP := testServer.savedPageNb()
+	if nbP != nbBadgerRecords {
+		t.Errorf("expected %d page saved, but got %d", 0, nbBadgerRecords)
+	}
+}
+
+// return only created db, and get rid of 'indexes', 'local' ect
 func filterDBNames(dbNames []string) []string {
 	r := make([]string, 0)
 	for _, n := range dbNames {
@@ -124,52 +133,67 @@ func (s *server) savedPageNb() int {
 	return count
 }
 
-func getDBHash(mode byte, config []byte) string {
-	return fmt.Sprintf("%x", md5.Sum(append(config, mode)))
+func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
+	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
+	if err != nil {
+		t.Error(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp := httptest.NewRecorder()
+	handler(resp, req)
+	return resp.Body
 }
 
 func TestServeHTTP(t *testing.T) {
-	req, _ := http.NewRequest("GET", "/static/docs-2.html", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/static/docs-2.html", nil)
 	resp := httptest.NewRecorder()
-	srv.ServeHTTP(resp, req)
-	assert.Equal(t, resp.Code, http.StatusOK)
+	testServer.ServeHTTP(resp, req)
+	if resp.Code != http.StatusOK {
+		t.Errorf("expected code %d but got %d", http.StatusOK, resp.Code)
+	}
 }
 
 func TestHomePage(t *testing.T) {
 	err := precompile([]byte("3.6.3"))
-	assert.Nil(t, err)
+	if err != nil {
+		t.Errorf("fail to precompile: %v", err)
+	}
 }
 
 func TestRunCreateDB(t *testing.T) {
-	l := []struct {
+
+	testServer.clearDatabases(t)
+
+	runCreateDBTests := []struct {
+		name      string
 		params    url.Values
 		result    string
 		createdDB int
 		compact   bool
 	}{
-		// incorrect config should not create db
 		{
+			name:      "incorrect config",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
 			result:    "fail to parse configuration: Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 			createdDB: 0,
 			compact:   false,
 		},
-		// correct config, but collection 'c' doesn't exists
 		{
+			name:      "non existing collection",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
-			result:    NoDocFound,
+			result:    noDocFound,
 			createdDB: 1,
 			compact:   false,
 		},
-		// make sure that we always get the same list of "_id"
 		{
+			name:      "deterministic list of objectId",
 			params:    templateParams,
 			result:    templateResult,
 			createdDB: 0, // db already exists
 			compact:   true,
 		},
-		// make sure other generators produce the same output
 		{
+			name: "deterministic results with generators",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -191,6 +215,7 @@ func TestRunCreateDB(t *testing.T) {
 		},
 		// same config, but aggregation
 		{
+			name: "basic aggregation",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -210,8 +235,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   true,
 		},
-		// same query/config, number of doc too big
 		{
+			name: "doc nb > 100",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -231,8 +256,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// invalid aggregation query
 		{
+			name: "invalid aggregation query (invalid json)",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -252,8 +277,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// aggregation query should be parsed correctly, but fail to run
 		{
+			name: "invalid aggregation query (invalid syntax)",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -273,9 +298,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// valid config, invalid query, valid json inside 'db.collection.find(...)' should create
-		// a db, but fail to run the query
 		{
+			name: "invalid find query (invalid syntax)",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -295,8 +319,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
-		// valid config but invalid json in query
 		{
+			name: "invalid find query (invalid json)",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -316,8 +340,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// two database, valid config
 		{
+			name: "two databases",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -347,8 +371,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 2,
 			compact:   true,
 		},
-		// two databases, one with invalid config (missing 'type')
 		{
+			name: "two databases invalid config",
 			params: url.Values{
 				"mode": {"mgodatagen"},
 				"config": {`[
@@ -377,8 +401,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// valid json
 		{
+			name: "basic json mode",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"k": 1}]`},
@@ -388,8 +412,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// empty json
 		{
+			name: "empty json",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{}]`},
@@ -399,8 +423,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// invalid method
 		{
+			name: "invalid method",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{}]`},
@@ -411,6 +435,7 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   false,
 		},
 		{
+			name: "invalid query syntax",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{}]`},
@@ -420,8 +445,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// json shoud be an array of documents
 		{
+			name: "require array of json documents",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`{"k": 1}, {"k": 2}`},
@@ -431,19 +456,19 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// only work on 'collection' collection
 		{
+			name: `json create only collection "collection"`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"k": 1}, {"k": 2}]`},
 				"query":  {`db.otherCollection.find()`},
 			},
-			result:    NoDocFound,
+			result:    noDocFound,
 			createdDB: 1,
 			compact:   false,
 		},
-		// doc with '_id' should not be overwritten
 		{
+			name: `doc with "_id" should not be overwritten`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": 1}, {"_id": 2}]`},
@@ -453,8 +478,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// mixed doc with / without '_id'
 		{
+			name: `mixed doc with/without "_id"`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": 1}, {}]`},
@@ -464,8 +489,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// duplicate ID err
 		{
+			name: `duplicate "_id" error`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id":1},{"_id":1}]`},
@@ -475,8 +500,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
-		// bson notation test input ObjectId
 		{
+			name: `bson "ObjectId" notation`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
@@ -486,8 +511,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// bson notation unkeyed query + objectId
 		{
+			name: `bson unkeyed notation`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
@@ -497,8 +522,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   true,
 		},
-		// aggregation + unkeyed
 		{
+			name: `unkeyed params in aggreagtion`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
@@ -508,8 +533,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   true,
 		},
-		// ISODate test
 		{
+			name: `doc with bson "ISODate"`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{dt: ISODate("2000-01-01T00:00:00+00:00")}]`},
@@ -519,8 +544,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   true,
 		},
-		// invalid objectId should not panic
 		{
+			name: `invalid "ObjectId" should not panic`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": ObjectId("5a9")}]`},
@@ -530,8 +555,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 			compact:   false,
 		},
-		// TODO implement regex parsing
 		{
+			name: `regex parsing`, // TODO
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"k": "randompattern"}]`},
@@ -541,38 +566,8 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
-<<<<<<< HEAD
-		// json with extended syntax
 		{
-			params: url.Values{
-				"mode": {"json"},
-				"config": {`[{
-  "_id": ObjectId("5a934e000102030405000000"),
-  "i": NumberInt(10),
-  "l": NumberLong(7326863683),
-  "d": ISODate("2018-01-01"),
-  "b": BinData(2, "Zm9v"),
-  "u": null,
-  "dc": 0.000012,
-  "t": Timestamp(1),
-  "v": 1
-}]`},
-				"query": {`db.collection.find()`},
-			},
-			result: `[
-  {
-    "_id": ObjectId("5a934e000102030405000000"),
-    "b": BinData(0, "Zm9v"),
-    "d": ISODate("2018-01-01T00:00:00Z"),
-    "dc": 1.2e-05,
-    "i": 10,
-    "l": 7326863683,
-    "t": Timestamp(1, 0),
-    "u": null,
-    "v": 1
-=======
-		// make sure that code is formatted on server side
-		{
+			name: `code formatted on server side`,
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`[{"_id": 1},{"_id": 2},{"_id": 3,"k":"key"}]`},
@@ -588,7 +583,6 @@ func TestRunCreateDB(t *testing.T) {
   {
     "_id": 3,
     "k": "key"
->>>>>>> 469c173... code refactoring
   }
 ]
 `,
@@ -597,210 +591,276 @@ func TestRunCreateDB(t *testing.T) {
 		},
 	}
 
-	expectedDbNumber := 0
-	for _, c := range l {
-		r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", c.params)
-		if c.compact {
-			comp, err := bson.CompactJSON([]byte(r))
-			assert.Nil(t, err)
-			r = string(comp)
-		}
-		assert.Equal(t, c.result, r)
-		expectedDbNumber += c.createdDB
+	nbMongoDatabases := 0
+	for _, tt := range runCreateDBTests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", tt.params)
+			respBody := buf.Bytes()
+			if tt.compact {
+				comp, err := bson.CompactJSON(respBody)
+				if err != nil {
+					t.Errorf("fail to compact JSON: %v", err)
+				}
+				respBody = comp
+			}
+			if string(respBody) != tt.result {
+				t.Errorf("expected %s but got %s", tt.result, respBody)
+			}
+		})
+		nbMongoDatabases += tt.createdDB
 	}
 
-	dbNames, err := srv.session.DatabaseNames()
-	assert.Nil(t, err)
-	assert.Equal(t, expectedDbNumber, len(filterDBNames(dbNames)))
+	testStorageContent(t, nbMongoDatabases, 0)
 
-	assert.Equal(t, 0, srv.savedPageNb())
-
-	err = srv.clearDatabases()
-	assert.Nil(t, err)
 }
 
 func TestRunExistingDB(t *testing.T) {
+
+	testServer.clearDatabases(t)
+
 	// the first /run/ request should create the database
-	r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", templateParams)
-	comp, err := bson.CompactJSON([]byte(r))
-	assert.Nil(t, err)
-	assert.Equal(t, templateResult, string(comp))
-	// the DBHash should be in the map
-	DBHash := getDBHash(mgodatagenMode, []byte(templateParams.Get("config")))
-	_, ok := srv.activeDB.Load(DBHash)
-	assert.True(t, ok)
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", templateParams)
+	comp, err := bson.CompactJSON(buf.Bytes())
+	if err != nil {
+		t.Error(err)
+	}
+	if string(comp) != templateResult {
+		t.Errorf("expected %s but got %s", templateResult, comp)
+	}
+	DBHash := dbHash(mgodatagenMode, []byte(templateParams.Get("config")))
+	_, ok := testServer.activeDB.Load(DBHash)
+	if !ok {
+		t.Errorf("activeDb should contain DB %s", DBHash)
+	}
+
 	//  the second /run/ should produce the same result
-	r = assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", templateParams)
-	comp, err = bson.CompactJSON([]byte(r))
-	assert.Nil(t, err)
-	assert.Equal(t, templateResult, string(comp))
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run/", templateParams)
+	comp, err = bson.CompactJSON(buf.Bytes())
+	if err != nil {
+		t.Error(err)
+	}
+	if string(comp) != templateResult {
+		t.Errorf("expected %s but got %s", templateResult, comp)
+	}
 
-	dbNames, err := srv.session.DatabaseNames()
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(filterDBNames(dbNames)))
+	testStorageContent(t, 1, 0)
 
-	assert.Equal(t, 0, srv.savedPageNb())
-
-	err = srv.clearDatabases()
-	assert.Nil(t, err)
 }
 
 func TestSave(t *testing.T) {
-	l := []struct {
+
+	testServer.clearDatabases(t)
+
+	saveTests := []struct {
+		name      string
 		params    url.Values
 		result    string
 		newRecord bool
 	}{
-		// template params
 		{
+			name:      "template config",
 			params:    templateParams,
 			result:    templateURL,
 			newRecord: true,
 		},
-		// same config but different query should produce distinct url
 		{
+			name:      "template config with new query",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
 			result:    "p/JExTWG6zk6K",
 			newRecord: true,
 		},
-		// invalid config should be saved to
 		{
+			name:      "invalid config",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}},
 			result:    "p/adv9VNjZGf-",
 			newRecord: true,
 		},
-		// re-saving an existing playground should return same url
 		{
+			name:      "save existing playground",
 			params:    templateParams,
 			result:    templateURL,
 			newRecord: false,
 		},
-		// different mode should create different url
 		{
+			name:      "template query with new config",
 			params:    url.Values{"mode": {"json"}, "config": {`[{}]`}, "query": {templateQuery}},
 			result:    "p/vkTDdT0z08q",
 			newRecord: true,
 		},
 	}
 
-	expectedRecordsNb := 0
-	for _, c := range l {
-		r := assert.HTTPBody(srv.saveHandler, http.MethodPost, "/save/", c.params)
-		assert.Equal(t, c.result, r)
-		if c.newRecord {
-			expectedRecordsNb++
+	nbBadgerRecords := 0
+	for _, tt := range saveTests {
+		t.Run(tt.name, func(t *testing.T) {
+			buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
+			respBodyString := buf.String()
+			if respBodyString != tt.result {
+				t.Errorf("expected %s, but got %s", tt.result, respBodyString)
+			}
+		})
+		if tt.newRecord {
+			nbBadgerRecords++
 		}
 	}
-	assert.Equal(t, expectedRecordsNb, srv.savedPageNb())
 
-	// /save/ should not try to generate samples
-	dbNames, err := srv.session.DatabaseNames()
-	assert.Nil(t, err)
-	assert.Equal(t, 0, len(filterDBNames(dbNames)))
+	testStorageContent(t, 0, nbBadgerRecords)
 
-	err = srv.clearDatabases()
-	assert.Nil(t, err)
 }
 
 func TestView(t *testing.T) {
-	r := assert.HTTPBody(srv.saveHandler, http.MethodPost, "/save/", templateParams)
-	assert.Equal(t, templateURL, r)
 
-	req, _ := http.NewRequest(http.MethodGet, "/"+templateURL, nil)
-	resp := httptest.NewRecorder()
-	srv.viewHandler(resp, req)
-	assert.Equal(t, http.StatusOK, resp.Code)
+	testServer.clearDatabases(t)
 
-	// save in json mode
-	jsonParams := url.Values{
-		"mode":   {"json"},
-		"config": {`[{"_id": 1}]`},
-		"query":  {templateQuery},
+	viewTests := []struct {
+		name         string
+		params       url.Values
+		url          string
+		responseCode int
+		newRecord    bool
+	}{
+		{
+			name:         "template parameters",
+			params:       templateParams,
+			url:          templateURL,
+			responseCode: http.StatusOK,
+			newRecord:    true,
+		},
+		{
+			name: "new config",
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"_id": 1}]`},
+				"query":  {templateQuery},
+			},
+			url:          "p/VxLxAzh9Uv9",
+			responseCode: http.StatusOK,
+			newRecord:    true,
+		},
+		{
+			name:         "non existing url",
+			params:       templateParams,
+			url:          "p/random",
+			responseCode: http.StatusNotFound,
+			newRecord:    false,
+		},
 	}
-	r = assert.HTTPBody(srv.saveHandler, http.MethodPost, "/save/", jsonParams)
-	assert.Equal(t, "p/VxLxAzh9Uv9", r)
 
-	req, _ = http.NewRequest(http.MethodGet, "/"+r, nil)
-	resp = httptest.NewRecorder()
-	srv.viewHandler(resp, req)
-	assert.Equal(t, http.StatusOK, resp.Code)
+	nbBadgerRecords := 0
+	for _, tt := range viewTests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.responseCode == http.StatusOK {
+				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
+				respBodyString := buf.String()
+				if respBodyString != tt.url {
+					t.Errorf("expected %s but got %s", tt.url, respBodyString)
+				}
+			}
+			req, _ := http.NewRequest(http.MethodGet, "/"+tt.url, nil)
+			resp := httptest.NewRecorder()
+			testServer.viewHandler(resp, req)
+			if resp.Code != tt.responseCode {
+				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
+			}
+		})
+		if tt.newRecord {
+			nbBadgerRecords++
+		}
+	}
 
-	// if the page does not exists in storage, return 404 err
-	req, _ = http.NewRequest(http.MethodGet, "/p/random", nil)
-	resp = httptest.NewRecorder()
-	srv.viewHandler(resp, req)
-	assert.Equal(t, http.StatusNotFound, resp.Code)
+	testStorageContent(t, 0, nbBadgerRecords)
 
-	assert.Equal(t, 2, srv.savedPageNb())
-
-	err := srv.clearDatabases()
-	assert.Nil(t, err)
 }
 
 func TestBasePage(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	resp := httptest.NewRecorder()
 
-	srv.newPageHandler(resp, req)
-	assert.Equal(t, http.StatusOK, resp.Code)
+	testServer.newPageHandler(resp, req)
+	if resp.Code != http.StatusOK {
+		t.Errorf("expected response code %d but got %d", http.StatusOK, resp.Code)
+	}
 }
 
 func TestRemoveOldDB(t *testing.T) {
-	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
-	r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", params)
-	comp, err := bson.CompactJSON([]byte(r))
-	assert.Nil(t, err)
-	assert.Equal(t, templateResult, string(comp))
 
-	DBHash := getDBHash(mgodatagenMode, []byte(params.Get("config")))
-	srv.activeDB.Store(DBHash, time.Now().Add(-cleanupInterval).Unix())
+	testServer.clearDatabases(t)
+
+	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", params)
+	comp, err := bson.CompactJSON(buf.Bytes())
+	if err != nil {
+		t.Error(err)
+	}
+	if string(comp) != templateResult {
+		t.Errorf("expected %s but got %s", templateResult, comp)
+	}
+
+	DBHash := dbHash(mgodatagenMode, []byte(params.Get("config")))
+	testServer.activeDB.Store(DBHash, time.Now().Add(-cleanupInterval).Unix())
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	r = assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", params)
-	assert.Equal(t, NoDocFound, r)
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run/", params)
+	respBodyString := buf.String()
+	if respBodyString != noDocFound {
+		t.Errorf("expected %s but got %s", templateResult, respBodyString)
+	}
 
-	srv.removeExpiredDB()
+	testServer.removeExpiredDB()
 
-	_, ok := srv.activeDB.Load(DBHash)
-	assert.False(t, ok)
-	dbNames, err := srv.session.DatabaseNames()
-	assert.Nil(t, err)
-	assert.Equal(t, 1, len(filterDBNames(dbNames)))
-	assert.NotEqual(t, dbNames[0], DBHash)
+	_, ok := testServer.activeDB.Load(DBHash)
+	if ok {
+		t.Errorf("DB %s should not be present in activeDB", DBHash)
+	}
 
-	err = srv.clearDatabases()
-	assert.Nil(t, err)
+	dbNames, err := testServer.session.DatabaseNames()
+	if err != nil {
+		t.Error(err)
+	}
+	if dbNames[0] == DBHash {
+		t.Errorf("%s should have been removed from mongodb", DBHash)
+	}
+
+	testStorageContent(t, 1, 0)
 
 }
 
 func TestStaticHandlers(t *testing.T) {
-	l := []struct {
-		url        string
-		statusCode int
+	staticFileTests := []struct {
+		name         string
+		url          string
+		responseCode int
 	}{
 		{
-			url:        "/static/playground-min-2.css",
-			statusCode: 200,
+			name:         "css",
+			url:          "/static/playground-min-2.css",
+			responseCode: 200,
 		},
 		{
-			url:        "/static/docs-2.html",
-			statusCode: 200,
+			name:         "documentation",
+			url:          "/static/docs-2.html",
+			responseCode: 200,
 		},
 		{
-			url:        "/static/unknown.txt",
-			statusCode: 404,
+			name:         "non existing file",
+			url:          "/static/unknown.txt",
+			responseCode: 404,
 		},
 		{
-			url:        "/static/../README.md",
-			statusCode: 404,
+			name:         "file outside of static",
+			url:          "/static/../README.md",
+			responseCode: 404,
 		},
 	}
-	for _, c := range l {
-		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", c.url, nil)
-		srv.staticHandler(resp, req)
-		assert.Equal(t, c.statusCode, resp.Code)
+	for _, tt := range staticFileTests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
+			testServer.staticHandler(resp, req)
+			if resp.Code != tt.responseCode {
+				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
+			}
+		})
 	}
 }
 
@@ -833,74 +893,69 @@ func BenchmarkComputeID(b *testing.B) {
 }
 
 func BenchmarkNewPage(b *testing.B) {
-	b.StopTimer()
-	req, _ := http.NewRequest("GET", "/", nil)
-	b.StartTimer()
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
-		srv.newPageHandler(resp, req)
+		testServer.newPageHandler(resp, req)
 	}
 }
 
 func BenchmarkView(b *testing.B) {
-	b.StopTimer()
-	assert.HTTPBody(srv.saveHandler, "POST", "/save/", templateParams)
-	req, _ := http.NewRequest("GET", "/"+templateURL, nil)
-	b.StartTimer()
+	req, _ := http.NewRequest(http.MethodPost, "/save/", strings.NewReader(templateParams.Encode()))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp := httptest.NewRecorder()
+	testServer.saveHandler(resp, req)
+	req, _ = http.NewRequest(http.MethodGet, "/"+templateURL, nil)
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
-		srv.viewHandler(resp, req)
+		testServer.viewHandler(resp, req)
 	}
 }
 
 func BenchmarkSave(b *testing.B) {
-	b.StopTimer()
 	configFormat := `[{"collection": "coll%v","count": 10,"content": {}}]`
 	params := url.Values{"mode": {"mgodatagen"}, "query": {templateQuery}}
-	b.StartTimer()
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
 		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest("POST", "/save/", strings.NewReader(params.Encode()))
+		req, _ := http.NewRequest(http.MethodPost, "/save/", strings.NewReader(params.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		srv.saveHandler(resp, req)
+		testServer.saveHandler(resp, req)
 	}
 }
 
 func BenchmarkRunExistingDB(b *testing.B) {
-	b.StopTimer()
-	req, _ := http.NewRequest("POST", "/run/", strings.NewReader(templateParams.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, "/run/", strings.NewReader(templateParams.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
-	srv.runHandler(resp, req)
-	b.StartTimer()
+	testServer.runHandler(resp, req)
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		resp = httptest.NewRecorder()
-		srv.runHandler(resp, req)
+		testServer.runHandler(resp, req)
 	}
 }
 
 func BenchmarkRunNonExistingDB(b *testing.B) {
-	b.StopTimer()
-
 	configFormat := `[{"collection": "collection","count": 10,"content": {"k": {"type": "int", "minInt": 0, "maxInt": %d}}}]`
 	params := url.Values{"mode": {"mgodatagen"}, "query": {templateQuery}}
-	b.StartTimer()
-
+	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
 		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest("POST", "/run/", strings.NewReader(params.Encode()))
+		req, _ := http.NewRequest(http.MethodPost, "/run/", strings.NewReader(params.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		srv.runHandler(resp, req)
+		testServer.runHandler(resp, req)
 	}
 }
 
 func BenchmarkServeStaticFile(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/static/docs.html", nil)
-		srv.staticHandler(resp, req)
+		req, _ := http.NewRequest(http.MethodGet, "/static/docs.html", nil)
+		testServer.staticHandler(resp, req)
 	}
 }

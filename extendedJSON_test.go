@@ -6,11 +6,10 @@ import (
 	"time"
 
 	"github.com/globalsign/mgo/bson"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestExtendedJSON(t *testing.T) {
-	l := []struct {
+	extendedJSONTests := []struct {
 		a interface{}
 		b string
 	}{
@@ -20,11 +19,7 @@ func TestExtendedJSON(t *testing.T) {
 		},
 		{
 			a: bson.MongoTimestamp(4294967298),
-<<<<<<< HEAD
 			b: `Timestamp(1, 2)`,
-=======
-			b: `Timestamp(1,2)`,
->>>>>>> acf1d42... allow extended JSON as input
 		},
 		{
 			a: time.Date(2016, 5, 15, 1, 2, 3, 4000000, time.UTC),
@@ -35,17 +30,12 @@ func TestExtendedJSON(t *testing.T) {
 		},
 		{
 			a: bson.Binary{Kind: 2, Data: []byte("foo")},
-<<<<<<< HEAD
 			b: `BinData(2, "Zm9v")`,
-=======
-			b: `BinData(2,"Zm9v")`,
->>>>>>> acf1d42... allow extended JSON as input
 		},
 		{
 			a: bson.Undefined,
 			b: `undefined`,
 		},
-<<<<<<< HEAD
 		{
 			a: int64(10),
 			b: `10`,
@@ -56,19 +46,16 @@ func TestExtendedJSON(t *testing.T) {
 			a: int32(26),
 			b: `NumberInt(26)`,
 		},
-=======
->>>>>>> acf1d42... allow extended JSON as input
 	}
 
-	for _, c := range l {
-		out, err := bson.MarshalIndentExtendedJSON(c.a)
-		assert.Nil(t, err)
-<<<<<<< HEAD
-		assert.Equal(t, c.b, strings.TrimSuffix(string(out), "\n"))
-=======
-		compactOut, err := bson.CompactJSON(out)
-		assert.Nil(t, err)
-		assert.Equal(t, c.b, strings.TrimSuffix(string(compactOut), "\n"))
->>>>>>> acf1d42... allow extended JSON as input
+	for _, tt := range extendedJSONTests {
+		b, err := bson.MarshalIndentExtendedJSON(tt.a)
+		if err != nil {
+			t.Errorf("fail to unmarshal %v: %v", tt.a, err)
+		}
+		r := strings.TrimSuffix(string(b), "\n")
+		if r != tt.b {
+			t.Errorf("expected %s, but got %s", tt.b, r)
+		}
 	}
 }

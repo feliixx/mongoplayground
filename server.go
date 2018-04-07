@@ -62,8 +62,8 @@ const (
 ]`
 	// template query
 	templateQuery = "db.collection.find()"
-	// NoDocFound error message when no docs match the query
-	NoDocFound = "no document found"
+	// noDocFound error message when no docs match the query
+	noDocFound = "no document found"
 )
 
 func precompile(version []byte) error {
@@ -145,11 +145,15 @@ func connect() (*mgo.Session, []byte, error) {
 	return s, []byte(info.Version), nil
 }
 
-func getMode(mode []byte) byte {
+func modeByte(mode []byte) byte {
 	if bytes.Equal(mode, []byte("json")) {
 		return jsonMode
 	}
 	return mgodatagenMode
+}
+
+func dbHash(mode byte, config []byte) string {
+	return fmt.Sprintf("%x", md5.Sum(append(config, mode)))
 }
 
 type server struct {
@@ -244,7 +248,7 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 	mode, config, query := []byte(r.FormValue("mode")), []byte(r.FormValue("config")), []byte(r.FormValue("query"))
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	res, err := s.generateSample(getMode(mode), config, query)
+	res, err := s.generateSample(modeByte(mode), config, query)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
@@ -268,7 +272,7 @@ func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 	v := make([]byte, 5+len(config)+len(query))
 	split := len(config) + 5
 	binary.LittleEndian.PutUint32(v[0:4], uint32(split))
-	v[4] = getMode(mode)
+	v[4] = modeByte(mode)
 	copy(v[5:split], config)
 	copy(v[split:], query)
 
@@ -316,7 +320,7 @@ func (s *server) generateSample(mode byte, config, query []byte) ([]byte, error)
 	session := s.session.Copy()
 	defer session.Close()
 
-	DBHash := fmt.Sprintf("%x", md5.Sum(append(config, mode)))
+	DBHash := dbHash(mode, config)
 	db := session.DB(DBHash)
 
 	_, exists := s.activeDB.LoadOrStore(DBHash, time.Now().Unix())
@@ -471,7 +475,7 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid method: %s", p[2][:start])
 	}
 	if len(docs) == 0 {
-		return []byte(NoDocFound), nil
+		return []byte(noDocFound), nil
 	}
 	return bson.MarshalIndentExtendedJSON(docs)
 }
