@@ -5,8 +5,7 @@
 //     http://bsonspec.org/#/specification
 //
 //
-// It was created as part of mgodatagen, but is standalone
-// and may be used on its own.
+// It was created as part of mgodatagen, but may be used on its own.
 package generators
 
 import (
@@ -21,6 +20,41 @@ import (
 	"github.com/manveru/faker"
 )
 
+// DocumentGenerator is a Generator for creating random bson documents
+type DocumentGenerator struct {
+	// Buffer holds the document bytes
+	Buffer *DocBuffer
+	// list of all generators used to create the document. The resulting document
+	// will have n keys where 0 < n < len(Generators)
+	Generators []Generator
+}
+
+// Generate creates a new bson document and returns it as a slice of bytes
+func (g *DocumentGenerator) Generate() []byte {
+	g.Buffer.Truncate(4)
+	for _, gen := range g.Generators {
+		if gen.Exists() {
+			if gen.Type() != bson.ElementNil {
+				g.Buffer.WriteSingleByte(gen.Type())
+				g.Buffer.Write(gen.Key())
+				g.Buffer.WriteSingleByte(byte(0))
+			}
+			gen.Value()
+		}
+	}
+	g.Buffer.WriteSingleByte(byte(0))
+	g.Buffer.WriteAt(0, int32Bytes(int32(g.Buffer.Len())))
+	return g.Buffer.Bytes()
+}
+
+// Add append a new Generator to the DocumentGenerator. The generator Value() method
+// must write to the same DocBuffer as the DocumentGenerator g
+func (g *DocumentGenerator) Add(generator Generator) {
+	if generator != nil {
+		g.Generators = append(g.Generators, generator)
+	}
+}
+
 // Generator is an interface for generator that can be used to
 // generate random value of a specific type, and encode them in bson
 // format
@@ -29,7 +63,7 @@ type Generator interface {
 	Key() []byte
 	// Type returns the bson type of the element as defined in bson spec: http://bsonspec.org/
 	Type() byte
-	// Value encode a value in bson format and append it to the generator buffer
+	// Value encodes a random value in bson and write it to a DocBuffer
 	Value()
 	// Exists returns true if the generation should be performed.
 	Exists() bool
@@ -217,39 +251,11 @@ func (g *objectIDGenerator) Value() {
 	)
 }
 
-// DocumentGenerator is a Generator for creating random bson documents
-type DocumentGenerator struct {
+// Generator for creating embedded documents
+type embeddedObjectGenerator struct {
 	base
 	generators []Generator
 }
-
-// Value create a new bson documents from Generators of g. Documents
-// bytes are written to the associated DocBuffer
-func (g *DocumentGenerator) Value() {
-	g.buffer.Truncate(4)
-	for _, gen := range g.generators {
-		if gen.Exists() {
-			if gen.Type() != bson.ElementNil {
-				g.buffer.WriteSingleByte(gen.Type())
-				g.buffer.Write(gen.Key())
-				g.buffer.WriteSingleByte(byte(0))
-			}
-			gen.Value()
-		}
-	}
-	g.buffer.WriteSingleByte(byte(0))
-	g.buffer.WriteAt(0, int32Bytes(int32(g.buffer.Len())))
-}
-
-// Add append a new Generator to the DocumentGenerator
-func (g *DocumentGenerator) Add(generator Generator) {
-	if generator != nil {
-		g.generators = append(g.generators, generator)
-	}
-}
-
-// Generator for creating embedded documents
-type embeddedObjectGenerator DocumentGenerator
 
 func (g *embeddedObjectGenerator) Value() {
 	current := g.buffer.Len()

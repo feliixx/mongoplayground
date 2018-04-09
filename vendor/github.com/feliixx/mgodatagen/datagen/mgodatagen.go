@@ -197,7 +197,7 @@ var pool = sync.Pool{
 		list := make([]bson.Raw, 1000)
 		for i := range list {
 			list[i] = bson.Raw{
-				Data: make([]byte, 0),
+				Data: make([]byte, 128),
 				Kind: bson.ElementDocument,
 			}
 		}
@@ -216,7 +216,7 @@ func (d *dtg) fillCollection(coll *Collection) error {
 	seed := uint64(time.Now().Unix())
 	ci := generators.NewCollInfo(coll.Count, d.version, seed, d.mapRef, d.mapRefType)
 
-	docGenerator, err := ci.DocumentGenerator(coll.Content)
+	docGenerator, err := ci.NewDocumentGenerator(coll.Content)
 	if err != nil {
 		return err
 	}
@@ -294,17 +294,14 @@ func (d *dtg) fillCollection(coll *Collection) error {
 			rc.nbToInsert = int(coll.Count - count)
 		}
 		for i := 0; i < rc.nbToInsert; i++ {
-			docGenerator.Value()
-			l := ci.DocBuffer.Len()
+			docBytes := docGenerator.Generate()
+
 			// if documents[i] is not large enough, grow it manually
-			if len(rc.documents[i].Data) < l {
-				for j := len(rc.documents[i].Data); j < l; j++ {
-					rc.documents[i].Data = append(rc.documents[i].Data, byte(0))
-				}
-			} else {
-				rc.documents[i].Data = rc.documents[i].Data[:l]
+			for len(rc.documents[i].Data) < len(docBytes) {
+				rc.documents[i].Data = append(rc.documents[i].Data, byte(0))
 			}
-			copy(rc.documents[i].Data, ci.DocBuffer.Bytes())
+			rc.documents[i].Data = rc.documents[i].Data[:len(docBytes)]
+			copy(rc.documents[i].Data, docBytes)
 		}
 		count += rc.nbToInsert
 		d.bar.Set(d.bar.Current() + rc.nbToInsert)
@@ -327,7 +324,7 @@ func (d *dtg) updateWithAggregators(coll *Collection) error {
 	}
 
 	ci := generators.NewCollInfo(coll.Count, d.version, 0, d.mapRef, d.mapRefType)
-	aggregators, err := ci.AggregatorList(coll.Content)
+	aggregators, err := ci.NewAggregatorSlice(coll.Content)
 	if err != nil {
 		return err
 	}
@@ -432,8 +429,7 @@ func (d *dtg) printStats(collections []Collection) error {
 	rows := make([][]string, 0, len(collections))
 
 	for _, coll := range collections {
-		c := d.session.DB(coll.DB).C(coll.Name)
-		err := c.Database.Run(bson.D{
+		err := d.session.DB(coll.DB).Run(bson.D{
 			{Name: "collStats", Value: coll.Name},
 			{Name: "scale", Value: 1024},
 		}, &stats)
@@ -478,16 +474,20 @@ func createEmptyCfgFile(filename string) error {
 		return err
 	}
 	defer f.Close()
-	template := `[{
-"database": "dbName",
-"collection": "collectionName",
-"count": 1000,
-"content": {
-    
-  }
-}]
-`
-	_, err = f.Write([]byte(template))
+
+	templateByte := []byte(`
+[
+    {
+        "database": "dbName",
+        "collection": "collName",
+        "count": 1000,
+        "content": {
+
+        }
+    }
+]		
+`)
+	_, err = f.Write(templateByte[1:])
 	return err
 }
 
@@ -542,7 +542,7 @@ const (
 	defaultTimeout    = 10 * time.Second
 )
 
-// Generate create a database according to specified options. Progress informations
+// Generate creates a database according to specified options. Progress informations
 // are send to out
 func Generate(options *Options, out io.Writer) error {
 	return run(options, out)

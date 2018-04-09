@@ -38,8 +38,8 @@
     "datagen",
     "datagen/generators"
   ]
-  revision = "d4c7f25a19391ba3201de876bf4976c6a9de60ac"
-  version = "0.7.2"
+  revision = "0f9da7f62813959afad9dd36c144bc58770d47fe"
+  version = "0.7.3"
 
 [[projects]]
   branch = "master"
@@ -112,13 +112,13 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
+  revision = "dfa909b99c79129e1100513e5cd36307665e5723"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+  revision = "31355384c89b50e6faeffdb36f64a77a8210188e"
 
 [solve-meta]
   analyzer-name = "dep"
