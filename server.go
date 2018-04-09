@@ -451,5 +451,5 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	if len(docs) == 0 {
 		return []byte(NoDocFound), nil
 	}
-	return bson.MarshalJSON(docs)
+	return bson.MarshalIndentExtendedJSON(docs)
 }

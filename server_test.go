@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
+	"github.com/globalsign/mgo/bson"
 	"github.com/stretchr/testify/assert"
 )
 
 const (
-	templateResult = `[{"_id":{"$oid":"5a934e000102030405000000"},"k":10},{"_id":{"$oid":"5a934e000102030405000001"},"k":2},{"_id":{"$oid":"5a934e000102030405000002"},"k":7},{"_id":{"$oid":"5a934e000102030405000003"},"k":6},{"_id":{"$oid":"5a934e000102030405000004"},"k":9},{"_id":{"$oid":"5a934e000102030405000005"},"k":10},{"_id":{"$oid":"5a934e000102030405000006"},"k":9},{"_id":{"$oid":"5a934e000102030405000007"},"k":10},{"_id":{"$oid":"5a934e000102030405000008"},"k":2},{"_id":{"$oid":"5a934e000102030405000009"},"k":1}]
-`
+	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
 )
 
 var (
@@ -145,24 +145,28 @@ func TestRunCreateDB(t *testing.T) {
 		params    url.Values
 		result    string
 		createdDB int
+		compact   bool
 	}{
 		// incorrect config should not create db
 		{
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
 			result:    "fail to parse configuration: Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 			createdDB: 0,
+			compact:   false,
 		},
 		// correct config, but collection 'c' doesn't exists
 		{
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
 			result:    NoDocFound,
 			createdDB: 1,
+			compact:   false,
 		},
 		// make sure that we always get the same list of "_id"
 		{
 			params:    templateParams,
 			result:    templateResult,
 			createdDB: 0, // db already exists
+			compact:   true,
 		},
 		// make sure other generators produce the same output
 		{
@@ -181,9 +185,9 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {templateQuery}},
-			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":"1jU"},{"_id":{"$oid":"5a934e000102030405000001"},"k":"tBRWL"},{"_id":{"$oid":"5a934e000102030405000002"},"k":"6Hch"},{"_id":{"$oid":"5a934e000102030405000003"},"k":"ZWHW"},{"_id":{"$oid":"5a934e000102030405000004"},"k":"RkMG"},{"_id":{"$oid":"5a934e000102030405000005"},"k":"RIr"},{"_id":{"$oid":"5a934e000102030405000006"},"k":"ru7"},{"_id":{"$oid":"5a934e000102030405000007"},"k":"OB"},{"_id":{"$oid":"5a934e000102030405000008"},"k":"ja"},{"_id":{"$oid":"5a934e000102030405000009"},"k":"K307"}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// same config, but aggregation
 		{
@@ -202,9 +206,9 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
-			result: `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]
-`,
+			result:    `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
 			createdDB: 0,
+			compact:   true,
 		},
 		// same query/config, number of doc too big
 		{
@@ -223,9 +227,9 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0, "k": 0}}])`}},
-			result: `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]
-`,
+			result:    `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// invalid aggregation query
 		{
@@ -246,6 +250,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
 			result:    "Fail to parse aggregate() query: invalid character ']' after object key:value pair",
 			createdDB: 0,
+			compact:   false,
 		},
 		// aggregation query should be parsed correctly, but fail to run
 		{
@@ -266,6 +271,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
 			result:    "Aggregate query failed: $project specification must be an object",
 			createdDB: 0,
+			compact:   false,
 		},
 		// valid config, invalid query, valid json inside 'db.collection.find(...)' should create
 		// a db, but fail to run the query
@@ -287,6 +293,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.find({"$set": 12})`}},
 			result:    "Find query failed: unknown top level operator: $set",
 			createdDB: 1,
+			compact:   false,
 		},
 		// valid config but invalid json in query
 		{
@@ -307,6 +314,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
 			result:    "Fail to parse find() query: unexpected EOF",
 			createdDB: 0,
+			compact:   false,
 		},
 		// two database, valid config
 		{
@@ -335,9 +343,9 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":5},{"_id":{"$oid":"5a934e000102030405000001"},"k":5},{"_id":{"$oid":"5a934e000102030405000004"},"k":4},{"_id":{"$oid":"5a934e000102030405000007"},"k":5},{"_id":{"$oid":"5a934e000102030405000008"},"k":5},{"_id":{"$oid":"5a934e000102030405000009"},"k":4}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":5},{"_id":ObjectId("5a934e000102030405000001"),"k":5},{"_id":ObjectId("5a934e000102030405000004"),"k":4},{"_id":ObjectId("5a934e000102030405000007"),"k":5},{"_id":ObjectId("5a934e000102030405000008"),"k":5},{"_id":ObjectId("5a934e000102030405000009"),"k":4}]`,
 			createdDB: 2,
+			compact:   true,
 		},
 		// two databases, one with invalid config (missing 'type')
 		{
@@ -367,6 +375,7 @@ func TestRunCreateDB(t *testing.T) {
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
 			result:    "fail to create DB: fail to create collection coll2: error while creating generators from configuration file:\n\tcause: invalid type  for field k",
 			createdDB: 0,
+			compact:   false,
 		},
 		// valid json
 		{
@@ -375,9 +384,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"k": 1}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"k":1}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":1}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// empty json
 		{
@@ -386,9 +395,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000000"}}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000000")}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// invalid method
 		{
@@ -399,6 +408,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    "invalid method: findOne",
 			createdDB: 0,
+			compact:   false,
 		},
 		{
 			params: url.Values{
@@ -408,6 +418,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    "invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)",
 			createdDB: 0,
+			compact:   false,
 		},
 		// json shoud be an array of documents
 		{
@@ -418,6 +429,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    "fail to parse bson documents: json: cannot unmarshal object into Go value of type []bson.M",
 			createdDB: 0,
+			compact:   false,
 		},
 		// only work on 'collection' collection
 		{
@@ -428,6 +440,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    NoDocFound,
 			createdDB: 1,
+			compact:   false,
 		},
 		// doc with '_id' should not be overwritten
 		{
@@ -436,9 +449,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": 1}, {"_id": 2}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":1},{"_id":2}]
-`,
+			result:    `[{"_id":1},{"_id":2}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// mixed doc with / without '_id'
 		{
@@ -447,9 +460,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": 1}, {}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":1},{"_id":{"$oid":"5a934e000102030405000001"}}]
-`,
+			result:    `[{"_id":1},{"_id":ObjectId("5a934e000102030405000001")}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// duplicate ID err
 		{
@@ -460,6 +473,7 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    `E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }`,
 			createdDB: 1,
+			compact:   false,
 		},
 		// bson notation test input ObjectId
 		{
@@ -468,9 +482,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000001"}},{"_id":1}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000001")},{"_id":1}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// bson notation unkeyed query + objectId
 		{
@@ -479,9 +493,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000001"}}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000001")}]`,
 			createdDB: 0,
+			compact:   true,
 		},
 		// aggregation + unkeyed
 		{
@@ -490,9 +504,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.aggregate([{$match: {_id: ObjectId("5a934e000102030405000001")}}])`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000001"}}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000001")}]`,
 			createdDB: 0,
+			compact:   true,
 		},
 		// ISODate test
 		{
@@ -501,9 +515,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{dt: ISODate("2000-01-01T00:00:00+00:00")}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result: `[{"_id":{"$oid":"5a934e000102030405000000"},"dt":{"$date":"2000-01-01T00:00:00Z"}}]
-`,
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"dt":ISODate("2000-01-01T00:00:00Z")}]`,
 			createdDB: 1,
+			compact:   true,
 		},
 		// invalid objectId should not panic
 		{
@@ -512,8 +526,9 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result:    `fail to parse bson documents: invalid ObjectId: 5a9`,
+			result:    `fail to parse bson documents: invalid input to ObjectIdHex: "5a9"`,
 			createdDB: 0,
+			compact:   false,
 		},
 		// TODO implement regex parsing
 		{
@@ -524,12 +539,52 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    `Fail to parse find() query: invalid character '/' looking for beginning of value`,
 			createdDB: 1,
+			compact:   false,
+		},
+		// json with extended syntax
+		{
+			params: url.Values{
+				"mode": {"json"},
+				"config": {`[{
+  "_id": ObjectId("5a934e000102030405000000"),
+  "i": NumberInt(10),
+  "l": NumberLong(7326863683),
+  "d": ISODate("2018-01-01"),
+  "b": BinData(2, "Zm9v"),
+  "u": null,
+  "dc": 0.000012,
+  "t": Timestamp(1),
+  "v": 1
+}]`},
+				"query": {`db.collection.find()`},
+			},
+			result: `[
+  {
+    "_id": ObjectId("5a934e000102030405000000"),
+    "b": BinData(0, "Zm9v"),
+    "d": ISODate("2018-01-01T00:00:00Z"),
+    "dc": 1.2e-05,
+    "i": 10,
+    "l": 7326863683,
+    "t": Timestamp(1, 0),
+    "u": null,
+    "v": 1
+  }
+]
+`,
+			createdDB: 1,
+			compact:   false,
 		},
 	}
 
 	expectedDbNumber := 0
 	for _, c := range l {
 		r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", c.params)
+		if c.compact {
+			comp, err := bson.CompactJSON([]byte(r))
+			assert.Nil(t, err)
+			r = string(comp)
+		}
 		assert.Equal(t, c.result, r)
 		expectedDbNumber += c.createdDB
 	}
@@ -547,14 +602,18 @@ func TestRunCreateDB(t *testing.T) {
 func TestRunExistingDB(t *testing.T) {
 	// the first /run/ request should create the database
 	r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", templateParams)
-	assert.Equal(t, templateResult, r)
+	comp, err := bson.CompactJSON([]byte(r))
+	assert.Nil(t, err)
+	assert.Equal(t, templateResult, string(comp))
 	// the DBHash should be in the map
 	DBHash := getDBHash(mgodatagenMode, []byte(templateParams.Get("config")))
 	_, ok := srv.activeDB.Load(DBHash)
 	assert.True(t, ok)
 	//  the second /run/ should produce the same result
 	r = assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", templateParams)
-	assert.Equal(t, templateResult, r)
+	comp, err = bson.CompactJSON([]byte(r))
+	assert.Nil(t, err)
+	assert.Equal(t, templateResult, string(comp))
 
 	dbNames, err := srv.session.DatabaseNames()
 	assert.Nil(t, err)
@@ -669,7 +728,9 @@ func TestBasePage(t *testing.T) {
 func TestRemoveOldDB(t *testing.T) {
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
 	r := assert.HTTPBody(srv.runHandler, http.MethodPost, "/run/", params)
-	assert.Equal(t, templateResult, r)
+	comp, err := bson.CompactJSON([]byte(r))
+	assert.Nil(t, err)
+	assert.Equal(t, templateResult, string(comp))
 
 	DBHash := getDBHash(mgodatagenMode, []byte(params.Get("config")))
 	srv.activeDB.Store(DBHash, time.Now().Add(-cleanupInterval).Unix())

@@ -12,7 +12,7 @@ function initCodeArea() {
         "fontSize": "16px"
     })
     resultArea = ace.edit(document.getElementById("result"), {
-        "mode": "ace/mode/json",
+        "mode": "ace/mode/javascript",
         "fontSize": "16px",
         "readOnly": true,
         "showLineNumbers": false,
@@ -97,13 +97,7 @@ function run(doSave) {
                     document.getElementById("share").disabled = true
                 } else {
                     var resultNb = document.getElementById("resultNb")
-                    try {
-                        var results = JSON.parse(r.responseText)
-                        resultNb.innerHTML = results.length + " results"
-                        resultArea.setValue(JSON.stringify(results, null, 2), -1)
-                    } catch (e) {
-                        resultArea.setValue(r.responseText, -1)
-                    }
+                    resultArea.setValue(r.responseText, -1)
                 }
             }
         }
