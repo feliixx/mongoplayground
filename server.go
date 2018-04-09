@@ -380,16 +380,12 @@ func createCollection(db *mgo.Database, name string) *mgo.Collection {
 }
 
 func fillCollection(c cfg.Collection, coll *mgo.Collection) error {
-	ci := &generators.CollInfo{
-		Encoder:    generators.NewEncoder(4, 1),
-		Version:    []int{3, 6},
-		ShortNames: false,
-		Count:      c.Count,
-	}
+	// use a constant see to always have the same output
+	ci := generators.NewCollInfo(c.Count, false, []int{3, 6}, 1)
 	if ci.Count > maxDoc || ci.Count <= 0 {
 		ci.Count = maxDoc
 	}
-	g, err := ci.CreateGenerator(c.Content)
+	g, err := ci.DocumentGenerator(c.Content)
 	if err != nil {
 		return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
 	}

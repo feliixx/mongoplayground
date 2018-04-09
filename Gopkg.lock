@@ -14,12 +14,6 @@
   revision = "df440c6ed7ed8897ac98a408365e5e89c7becf1a"
 
 [[projects]]
-  name = "github.com/davecgh/go-spew"
-  packages = ["spew"]
-  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
-  version = "v1.1.0"
-
-[[projects]]
   name = "github.com/dgraph-io/badger"
   packages = [
     ".",
@@ -44,8 +38,8 @@
     "config",
     "generators"
   ]
-  revision = "ae7175cd1fa13b863eb4bf22386972caa53e268e"
-  version = "0.5.1"
+  revision = "f2dafd3918ae4bd55cf7915dce12e0e7971794f2"
+  version = "0.6.0"
 
 [[projects]]
   branch = "master"
@@ -57,7 +51,7 @@
     "internal/sasl",
     "internal/scram"
   ]
-  revision = "baa28fcb8e7d5dfab92026c0920cb6c9ae72faa2"
+  revision = "f76e4f9da92ecd56e3be26f5ba92580af1ef97b4"
 
 [[projects]]
   name = "github.com/golang/protobuf"
@@ -78,18 +72,6 @@
   version = "v0.8.0"
 
 [[projects]]
-  name = "github.com/pmezard/go-difflib"
-  packages = ["difflib"]
-  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
-  version = "v1.0.0"
-
-[[projects]]
-  name = "github.com/stretchr/testify"
-  packages = ["assert"]
-  revision = "12b6f73e6084dad08a7c6e575284b177ecafbc71"
-  version = "v1.2.1"
-
-[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -97,17 +79,17 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "24dd3780ca4f75fed9f321890729414a4b5d3f13"
+  revision = "61147c48b25b599e5b561d2e9c4f3e1ef489ca41"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "2f1e207ee39ff70f3433e49c6eb52677a515e3b5"
+  revision = "3b87a42e500a6dc65dae1a55d0b641295971163e"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "f8c6069ebc661d608d79a07c3ea04ab7829f6121de5b0d7d83b9a290f062ca54"
+  inputs-digest = "547d2acaac939796750d8f5b092695f184e520f2db2fc12d2de84d34f038ad6a"
   solver-name = "gps-cdcl"
   solver-version = 1
