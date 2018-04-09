@@ -32,6 +32,27 @@ func MarshalJSON(value interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+func MarshalIndentExtendedJSON(value interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	e := json.NewEncoder(&buf)
+	e.Indent("", "  ")
+	e.Extend(&jsonExtendedExt)
+	err := e.Encode(value)
+	if err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
+
+func CompactJSON(src []byte) ([]byte, error) {
+	var dst bytes.Buffer
+	err := json.Compact(&dst, src)
+	if err != nil {
+		return nil, err
+	}
+	return dst.Bytes(), nil
+}
+
 // jdec is used internally by the JSON decoding functions
 // so they may unmarshal functions without getting into endless
 // recursion due to keyed objects.
@@ -43,6 +64,7 @@ func jdec(data []byte, value interface{}) error {
 
 var jsonExt json.Extension
 var funcExt json.Extension
+var jsonExtendedExt json.Extension
 
 // TODO
 // - Shell regular expressions ("/regexp/opts")
@@ -56,26 +78,32 @@ func init() {
 	jsonExt.DecodeKeyed("$binaryFunc", jdecBinary)
 	jsonExt.EncodeType([]byte(nil), jencBinarySlice)
 	jsonExt.EncodeType(Binary{}, jencBinaryType)
+	jsonExtendedExt.EncodeType([]byte(nil), jencExtendedBinarySlice)
+	jsonExtendedExt.EncodeType(Binary{}, jencExtendedBinaryType)
 
 	funcExt.DecodeFunc("ISODate", "$dateFunc", "S")
 	funcExt.DecodeFunc("new Date", "$dateFunc", "S")
 	jsonExt.DecodeKeyed("$date", jdecDate)
 	jsonExt.DecodeKeyed("$dateFunc", jdecDate)
 	jsonExt.EncodeType(time.Time{}, jencDate)
+	jsonExtendedExt.EncodeType(time.Time{}, jencExtendedDate)
 
 	funcExt.DecodeFunc("Timestamp", "$timestamp", "t", "i")
 	jsonExt.DecodeKeyed("$timestamp", jdecTimestamp)
 	jsonExt.EncodeType(MongoTimestamp(0), jencTimestamp)
+	jsonExtendedExt.EncodeType(MongoTimestamp(0), jencExtendedTimestamp)
 
 	funcExt.DecodeConst("undefined", Undefined)
 
 	jsonExt.DecodeKeyed("$regex", jdecRegEx)
 	jsonExt.EncodeType(RegEx{}, jencRegEx)
+	jsonExtendedExt.EncodeType(RegEx{}, jencRegEx)
 
 	funcExt.DecodeFunc("ObjectId", "$oidFunc", "Id")
 	jsonExt.DecodeKeyed("$oid", jdecObjectId)
 	jsonExt.DecodeKeyed("$oidFunc", jdecObjectId)
 	jsonExt.EncodeType(ObjectId(""), jencObjectId)
+	jsonExtendedExt.EncodeType(ObjectId(""), jencExtendedObjectId)
 
 	funcExt.DecodeFunc("DBRef", "$dbrefFunc", "$ref", "$id")
 	jsonExt.DecodeKeyed("$dbrefFunc", jdecDBRef)
@@ -84,16 +112,27 @@ func init() {
 	jsonExt.DecodeKeyed("$numberLong", jdecNumberLong)
 	jsonExt.DecodeKeyed("$numberLongFunc", jdecNumberLong)
 	jsonExt.EncodeType(int64(0), jencNumberLong)
+	jsonExtendedExt.EncodeType(int64(0), jencExtendedNumberLong)
+
 	jsonExt.EncodeType(int(0), jencInt)
+	jsonExtendedExt.EncodeType(int(0), jencInt)
+
+	funcExt.DecodeFunc("NumberInt", "$numberIntFunc", "N")
+	jsonExt.DecodeKeyed("$numberInt", jdecNumberInt)
+	jsonExt.DecodeKeyed("$numberIntFunc", jdecNumberInt)
+	jsonExt.EncodeType(int32(0), jencNumberInt)
+	jsonExtendedExt.EncodeType(int32(0), jencExtendedNumberInt)
 
 	funcExt.DecodeConst("MinKey", MinKey)
 	funcExt.DecodeConst("MaxKey", MaxKey)
 	jsonExt.DecodeKeyed("$minKey", jdecMinKey)
 	jsonExt.DecodeKeyed("$maxKey", jdecMaxKey)
 	jsonExt.EncodeType(orderKey(0), jencMinMaxKey)
+	jsonExtendedExt.EncodeType(orderKey(0), jencMinMaxKey)
 
 	jsonExt.DecodeKeyed("$undefined", jdecUndefined)
 	jsonExt.EncodeType(Undefined, jencUndefined)
+	jsonExtendedExt.EncodeType(Undefined, jencExtendedUndefined)
 
 	jsonExt.Extend(&funcExt)
 }
@@ -157,6 +196,20 @@ func jencBinaryType(v interface{}) ([]byte, error) {
 	return fbytes(`{"$binary":"%s","$type":"0x%x"}`, out, in.Kind), nil
 }
 
+func jencExtendedBinarySlice(v interface{}) ([]byte, error) {
+	in := v.([]byte)
+	out := make([]byte, base64.StdEncoding.EncodedLen(len(in)))
+	base64.StdEncoding.Encode(out, in)
+	return fbytes(`BinData(0,"%s")`, out), nil
+}
+
+func jencExtendedBinaryType(v interface{}) ([]byte, error) {
+	in := v.(Binary)
+	out := make([]byte, base64.StdEncoding.EncodedLen(len(in.Data)))
+	base64.StdEncoding.Encode(out, in.Data)
+	return fbytes(`BinData(%x,"%s")`, in.Kind, out), nil
+}
+
 const jdateFormat = "2006-01-02T15:04:05.999Z07:00"
 
 func jdecDate(data []byte) (interface{}, error) {
@@ -206,6 +259,11 @@ func jencDate(v interface{}) ([]byte, error) {
 	return fbytes(`{"$date":%q}`, t.Format(jdateFormat)), nil
 }
 
+func jencExtendedDate(v interface{}) ([]byte, error) {
+	t := v.(time.Time)
+	return fbytes(`ISODate("%s")`, t.Format(jdateFormat)), nil
+}
+
 func jdecTimestamp(data []byte) (interface{}, error) {
 	var v struct {
 		Func struct {
@@ -223,6 +281,11 @@ func jdecTimestamp(data []byte) (interface{}, error) {
 func jencTimestamp(v interface{}) ([]byte, error) {
 	ts := uint64(v.(MongoTimestamp))
 	return fbytes(`{"$timestamp":{"t":%d,"i":%d}}`, ts>>32, uint32(ts)), nil
+}
+
+func jencExtendedTimestamp(v interface{}) ([]byte, error) {
+	ts := uint64(v.(MongoTimestamp))
+	return fbytes(`Timestamp(%d,%d)`, ts>>32, uint32(ts)), nil
 }
 
 func jdecRegEx(data []byte) (interface{}, error) {
@@ -260,14 +323,15 @@ func jdecObjectId(data []byte) (interface{}, error) {
 	if v.Id == "" {
 		v.Id = v.Func.Id
 	}
-	if !IsObjectIdHex(v.Id) {
-		return nil, fmt.Errorf("invalid ObjectId: %v", v.Id)
-	}
 	return ObjectIdHex(v.Id), nil
 }
 
 func jencObjectId(v interface{}) ([]byte, error) {
 	return fbytes(`{"$oid":"%s"}`, v.(ObjectId).Hex()), nil
+}
+
+func jencExtendedObjectId(v interface{}) ([]byte, error) {
+	return fbytes(`ObjectId("%s")`, v.(ObjectId).Hex()), nil
 }
 
 func jdecDBRef(data []byte) (interface{}, error) {
@@ -319,6 +383,53 @@ func jencNumberLong(v interface{}) ([]byte, error) {
 		f = `{"$numberLong":%d}`
 	}
 	return fbytes(f, n), nil
+}
+
+func jencExtendedNumberLong(v interface{}) ([]byte, error) {
+	n := v.(int64)
+	return fbytes("%d", n), nil
+}
+
+func jdecNumberInt(data []byte) (interface{}, error) {
+	var v struct {
+		N    int32 `json:"$numberInt,string"`
+		Func struct {
+			N int32 `json:",string"`
+		} `json:"$numberIntFunc"`
+	}
+	var vn struct {
+		N    int32 `json:"$numberInt"`
+		Func struct {
+			N int32
+		} `json:"$numberIntFunc"`
+	}
+	err := jdec(data, &v)
+	if err != nil {
+		err = jdec(data, &vn)
+		v.N = vn.N
+		v.Func.N = vn.Func.N
+	}
+	if err != nil {
+		return nil, err
+	}
+	if v.N != 0 {
+		return v.N, nil
+	}
+	return v.Func.N, nil
+}
+
+func jencNumberInt(v interface{}) ([]byte, error) {
+	n := v.(int32)
+	f := `{"$numberInt":"%d"}`
+	if n <= 1<<21 {
+		f = `{"$numberInt":%d}`
+	}
+	return fbytes(f, n), nil
+}
+
+func jencExtendedNumberInt(v interface{}) ([]byte, error) {
+	n := v.(int32)
+	return fbytes("NumberInt(%d)", n), nil
 }
 
 func jencInt(v interface{}) ([]byte, error) {
@@ -384,4 +495,8 @@ func jdecUndefined(data []byte) (interface{}, error) {
 
 func jencUndefined(v interface{}) ([]byte, error) {
 	return []byte(`{"$undefined":true}`), nil
+}
+
+func jencExtendedUndefined(v interface{}) ([]byte, error) {
+	return []byte(`undefined`), nil
 }
