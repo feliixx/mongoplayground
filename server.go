@@ -104,7 +104,7 @@ func precompile(version []byte) error {
 		if _, err = zw.Write(b); err != nil {
 			return err
 		}
-		if err := zw.Flush(); err != nil {
+		if err := zw.Close(); err != nil {
 			return err
 		}
 		c := make([]byte, buf.Len())
@@ -295,13 +295,13 @@ func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimLeft(r.URL.String(), "/static/")
 	sub := strings.Split(name, ".")
 
-	contentType := "text/html; charset=utf-8"
+	contentType := "text/plain; charset=utf-8"
 	if len(sub) > 0 {
 		switch sub[len(sub)-1] {
 		case "css":
 			contentType = "text/css; charset=utf-8"
-		case "js":
-			contentType = "application/javascript; charset=utf-8"
+		case "html":
+			contentType = "text/html; charset=utf-8"
 		}
 	}
 	w.Header().Set("Content-Type", contentType)

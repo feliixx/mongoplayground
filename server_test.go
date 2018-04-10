@@ -2,7 +2,10 @@ package main
 
 import (
 	"bytes"
+	"compress/gzip"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -44,119 +47,12 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func (s *server) clearDatabases(t *testing.T) error {
-	dbNames, err := s.session.DatabaseNames()
-	if err != nil {
-		t.Error(err)
-	}
-	// dbNames are md5 hash, 32-char long
-	for _, name := range dbNames {
-		if len(name) == 32 {
-			s.session.DB(name).DropDatabase()
-		}
-	}
-	s.activeDB.Range(func(k, v interface{}) bool {
-		s.activeDB.Delete(k)
-		return true
-	})
-
-	keys := make([][]byte, 0)
-	err = s.storage.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			key := make([]byte, len(item.Key()))
-			copy(key, item.Key())
-			keys = append(keys, key)
-		}
-		return err
-	})
-	if err != nil {
-		t.Error(err)
-	}
-
-	deleteTxn := s.storage.NewTransaction(true)
-	for i := 0; i < len(keys); i++ {
-		err = deleteTxn.Delete(keys[i])
-		if err != nil {
-			t.Error(err)
-		}
-	}
-	return deleteTxn.Commit(func(err error) {
-		if err != nil {
-			fmt.Printf("fail to delete: %v\n", err)
-		}
-	})
-}
-
-func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
-	dbNames, err := testServer.session.DatabaseNames()
-	if err != nil {
-		t.Error(err)
-	}
-	nbDB := len(filterDBNames(dbNames))
-	if nbDB != nbMongoDatabases {
-		t.Errorf("expected %d DB, but got %d", nbMongoDatabases, nbDB)
-	}
-	nbP := testServer.savedPageNb()
-	if nbP != nbBadgerRecords {
-		t.Errorf("expected %d page saved, but got %d", 0, nbBadgerRecords)
-	}
-}
-
-// return only created db, and get rid of 'indexes', 'local' ect
-func filterDBNames(dbNames []string) []string {
-	r := make([]string, 0)
-	for _, n := range dbNames {
-		if len(n) == 32 {
-			r = append(r, n)
-		}
-	}
-	return r
-}
-
-func (s *server) savedPageNb() int {
-	count := 0
-	s.storage.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			count++
-		}
-		return nil
-	})
-	return count
-}
-
-func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
-	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
-	if err != nil {
-		t.Error(err)
-	}
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp := httptest.NewRecorder()
-	handler(resp, req)
-	return resp.Body
-}
-
 func TestServeHTTP(t *testing.T) {
-	req, _ := http.NewRequest(http.MethodGet, "/static/docs-2.html", nil)
+	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	resp := httptest.NewRecorder()
 	testServer.ServeHTTP(resp, req)
-	if resp.Code != http.StatusOK {
+	if http.StatusOK != resp.Code {
 		t.Errorf("expected code %d but got %d", http.StatusOK, resp.Code)
-	}
-}
-
-func TestHomePage(t *testing.T) {
-	err := precompile([]byte("3.6.3"))
-	if err != nil {
-		t.Errorf("fail to precompile: %v", err)
 	}
 }
 
@@ -572,16 +468,16 @@ func TestRunCreateDB(t *testing.T) {
 	for _, tt := range runCreateDBTests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", tt.params)
-			respBody := buf.Bytes()
 			if tt.compact {
-				comp, err := bson.CompactJSON(respBody)
+				comp, err := bson.CompactJSON(buf.Bytes())
 				if err != nil {
 					t.Errorf("fail to compact JSON: %v", err)
 				}
-				respBody = comp
+				buf = bytes.NewBuffer(comp)
 			}
-			if string(respBody) != tt.result {
-				t.Errorf("expected %s but got %s", tt.result, respBody)
+
+			if want, got := tt.result, buf.String(); want != got {
+				t.Errorf("expected %s but got %s", want, got)
 			}
 		})
 		nbMongoDatabases += tt.createdDB
@@ -601,8 +497,8 @@ func TestRunExistingDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if string(comp) != templateResult {
-		t.Errorf("expected %s but got %s", templateResult, comp)
+	if want, got := templateResult, string(comp); want != got {
+		t.Errorf("expected %s but got %s", want, got)
 	}
 	DBHash := dbHash(mgodatagenMode, []byte(templateParams.Get("config")))
 	_, ok := testServer.activeDB.Load(DBHash)
@@ -616,8 +512,8 @@ func TestRunExistingDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if string(comp) != templateResult {
-		t.Errorf("expected %s but got %s", templateResult, comp)
+	if want, got := templateResult, string(comp); want != got {
+		t.Errorf("expected %s but got %s", want, got)
 	}
 
 	testStorageContent(t, 1, 0)
@@ -670,9 +566,9 @@ func TestSave(t *testing.T) {
 	for _, tt := range saveTests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
-			respBodyString := buf.String()
-			if respBodyString != tt.result {
-				t.Errorf("expected %s, but got %s", tt.result, respBodyString)
+
+			if want, got := tt.result, buf.String(); want != got {
+				t.Errorf("expected %s, but got %s", want, got)
 			}
 		})
 		if tt.newRecord {
@@ -727,15 +623,16 @@ func TestView(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.responseCode == http.StatusOK {
 				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
-				respBodyString := buf.String()
-				if respBodyString != tt.url {
-					t.Errorf("expected %s but got %s", tt.url, respBodyString)
+
+				if want, got := tt.url, buf.String(); want != got {
+					t.Errorf("expected %s but got %s", want, got)
 				}
 			}
 			req, _ := http.NewRequest(http.MethodGet, "/"+tt.url, nil)
 			resp := httptest.NewRecorder()
 			testServer.viewHandler(resp, req)
-			if resp.Code != tt.responseCode {
+
+			if tt.responseCode != resp.Code {
 				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
 			}
 		})
@@ -753,8 +650,17 @@ func TestBasePage(t *testing.T) {
 	resp := httptest.NewRecorder()
 
 	testServer.newPageHandler(resp, req)
-	if resp.Code != http.StatusOK {
+
+	if http.StatusOK != resp.Code {
 		t.Errorf("expected response code %d but got %d", http.StatusOK, resp.Code)
+	}
+
+	if want, got := "text/html; charset=utf-8", resp.Header().Get("Content-Type"); want != got {
+		t.Errorf("expected Content-Type: %s but got %s", want, got)
+	}
+
+	if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
+		t.Errorf("expected Content-Encoding: %s but got %s", want, got)
 	}
 }
 
@@ -768,8 +674,9 @@ func TestRemoveOldDB(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if string(comp) != templateResult {
-		t.Errorf("expected %s but got %s", templateResult, comp)
+
+	if want, got := templateResult, string(comp); want != got {
+		t.Errorf("expected %s but got %s", want, got)
 	}
 
 	DBHash := dbHash(mgodatagenMode, []byte(params.Get("config")))
@@ -778,9 +685,9 @@ func TestRemoveOldDB(t *testing.T) {
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
 	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run/", params)
-	respBodyString := buf.String()
-	if respBodyString != noDocFound {
-		t.Errorf("expected %s but got %s", templateResult, respBodyString)
+
+	if want, got := buf.String(), noDocFound; want != got {
+		t.Errorf("expected %s but got %s", want, got)
 	}
 
 	testServer.removeExpiredDB()
@@ -806,26 +713,31 @@ func TestStaticHandlers(t *testing.T) {
 	staticFileTests := []struct {
 		name         string
 		url          string
+		contentType  string
 		responseCode int
 	}{
 		{
 			name:         "css",
 			url:          "/static/playground-min-2.css",
+			contentType:  "text/css; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "documentation",
 			url:          "/static/docs-2.html",
+			contentType:  "text/html; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "non existing file",
 			url:          "/static/unknown.txt",
+			contentType:  "",
 			responseCode: 404,
 		},
 		{
 			name:         "file outside of static",
 			url:          "/static/../README.md",
+			contentType:  "",
 			responseCode: 404,
 		},
 	}
@@ -834,8 +746,30 @@ func TestStaticHandlers(t *testing.T) {
 			resp := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
 			testServer.staticHandler(resp, req)
-			if resp.Code != tt.responseCode {
+
+			if tt.responseCode != resp.Code {
 				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
+			}
+
+			if tt.responseCode == http.StatusOK {
+
+				if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
+					t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
+				}
+
+				if want, got := tt.contentType, resp.Header().Get("Content-Type"); want != got {
+					t.Errorf("expected Content-Type: %s, but got %s", want, got)
+				}
+
+				zr, err := gzip.NewReader(resp.Body)
+				if err != nil {
+					t.Errorf("coulnd't read response body: %v", err)
+				}
+				_, err = io.Copy(ioutil.Discard, zr)
+				if err != nil {
+					t.Errorf("fail to read gzip content: %v", err)
+				}
+				zr.Close()
 			}
 		})
 	}
@@ -935,4 +869,102 @@ func BenchmarkServeStaticFile(b *testing.B) {
 		req, _ := http.NewRequest(http.MethodGet, "/static/docs.html", nil)
 		testServer.staticHandler(resp, req)
 	}
+}
+
+func (s *server) clearDatabases(t *testing.T) error {
+	dbNames, err := s.session.DatabaseNames()
+	if err != nil {
+		t.Error(err)
+	}
+	// dbNames are md5 hash, 32-char long
+	for _, name := range dbNames {
+		if len(name) == 32 {
+			s.session.DB(name).DropDatabase()
+		}
+	}
+	s.activeDB.Range(func(k, v interface{}) bool {
+		s.activeDB.Delete(k)
+		return true
+	})
+
+	keys := make([][]byte, 0)
+	err = s.storage.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			key := make([]byte, len(item.Key()))
+			copy(key, item.Key())
+			keys = append(keys, key)
+		}
+		return err
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	deleteTxn := s.storage.NewTransaction(true)
+	for i := 0; i < len(keys); i++ {
+		err = deleteTxn.Delete(keys[i])
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	return deleteTxn.Commit(func(err error) {
+		if err != nil {
+			fmt.Printf("fail to delete: %v\n", err)
+		}
+	})
+}
+
+func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
+	dbNames, err := testServer.session.DatabaseNames()
+	if err != nil {
+		t.Error(err)
+	}
+	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
+		t.Errorf("expected %d DB, but got %d", want, got)
+	}
+	if want, got := nbBadgerRecords, testServer.savedPageNb(); want != got {
+		t.Errorf("expected %d page saved, but got %d", want, got)
+	}
+}
+
+// return only created db, and get rid of 'indexes', 'local' ect
+func filterDBNames(dbNames []string) []string {
+	r := make([]string, 0)
+	for _, n := range dbNames {
+		if len(n) == 32 {
+			r = append(r, n)
+		}
+	}
+	return r
+}
+
+func (s *server) savedPageNb() int {
+	count := 0
+	s.storage.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+		}
+		return nil
+	})
+	return count
+}
+
+func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
+	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
+	if err != nil {
+		t.Error(err)
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	resp := httptest.NewRecorder()
+	handler(resp, req)
+	return resp.Body
 }

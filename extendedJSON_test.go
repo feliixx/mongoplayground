@@ -53,9 +53,8 @@ func TestExtendedJSON(t *testing.T) {
 		if err != nil {
 			t.Errorf("fail to unmarshal %v: %v", tt.a, err)
 		}
-		r := strings.TrimSuffix(string(b), "\n")
-		if r != tt.b {
-			t.Errorf("expected %s, but got %s", tt.b, r)
+		if want, got := tt.b, strings.TrimSuffix(string(b), "\n"); want != got {
+			t.Errorf("expected %s, but got %s", want, got)
 		}
 	}
 }
