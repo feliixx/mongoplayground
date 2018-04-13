@@ -740,6 +740,12 @@ func TestStaticHandlers(t *testing.T) {
 			responseCode: 200,
 		},
 		{
+			name:         "documentation",
+			url:          "/static/playground-min-2.js",
+			contentType:  "application/javascript; charset=utf-8",
+			responseCode: 200,
+		},
+		{
 			name:         "non existing file",
 			url:          "/static/unknown.txt",
 			contentType:  "",

@@ -4,19 +4,25 @@
     <title>Mongo playground</title>
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries">
     <link href="/static/playground-min-2.css" rel="stylesheet" type="text/css">
+    <script src="/static/playground-min-2.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/ace.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.3.3/mode-javascript.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.7.5/beautify.min.js" type="text/javascript" async></script>
     <script type="text/javascript">
-        var configArea, queryArea, resultArea
+        var configEditor, queryEditor, resultEditor
+
         window.onload = function () {
+            var configDiv = document.getElementById("config")
+            var queryDiv = document.getElementById("query")
+            configDiv.innerHTML = indent(configDiv.innerHTML, indentMode)
+            queryDiv.innerHTML = indent(queryDiv.innerHTML, indentMode)
+
             var commonOpts = {
                 "mode": "ace/mode/javascript",
                 "fontSize": "16px"
             }
-            configArea = ace.edit(document.getElementById("config"), commonOpts)
-            queryArea = ace.edit(document.getElementById("query"), commonOpts)
-            resultArea = ace.edit(document.getElementById("result"), {
+            configEditor = ace.edit(document.getElementById("config"), commonOpts)
+            queryEditor = ace.edit(document.getElementById("query"), commonOpts)
+            resultEditor = ace.edit(document.getElementById("result"), {
                 "mode": commonOpts.mode,
                 "fontSize": commonOpts.fontSize,
                 "readOnly": true,
@@ -25,8 +31,8 @@
                 "useWorker": false,
                 "highlightActiveLine": false
             })
-            configArea.getSession().on('change', function () { redirect("/", false) })
-            queryArea.getSession().on('change', function () { redirect("/", false) })
+            configEditor.getSession().on('change', function () { redirect("/", false) })
+            queryEditor.getSession().on('change', function () { redirect("/", false) })
 
             var r = new XMLHttpRequest()
             r.open("GET", "/static/docs-2.html", true)
@@ -53,7 +59,9 @@
             document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
             document.getElementById("queryDiv").style.display = doShow ? "none" : "inline"
             document.getElementById("resultDiv").style.display = doShow ? "none" : "inline"
-            if (!doShow) { redirect("/", false) }
+            if (!doShow) {
+                redirect("/", false)
+            }
         }
 
         function run(doSave) {
@@ -64,31 +72,47 @@
                 r.onreadystatechange = function () {
                     if (r.readyState !== 4) { return }
                     if (r.status === 200) {
-                        if (doSave) { redirect(r.responseText, true) }
-                        else { resultArea.setValue(r.responseText, -1) }
+                        if (doSave) {
+                            redirect(r.responseText, true)
+                        }
+                        else {
+                            resultEditor.setValue(indent(r.responseText, indentMode), -1)
+                        }
                     }
                 }
                 var select = document.getElementById("mode")
-                r.send("mode=" + select.options[select.selectedIndex].text + "&config=" + encodeURIComponent(configArea.getValue()) + "&query=" + encodeURIComponent(queryArea.getValue()))
+                r.send("mode=" + select.options[select.selectedIndex].text
+                    + "&config=" + encodeURIComponent(indent(configEditor.getValue(), compactMode))
+                    + "&query=" + encodeURIComponent(indent(queryEditor.getValue(), compactMode)))
             }
         }
 
         function isCorrect() {
             showDoc(false)
-            resultArea.setValue("", -1)
+            resultEditor.setValue("", -1)
             var errors = document.querySelectorAll(".ace_error")
             if (errors.length > 0) {
-                resultArea.setValue("error(s) found in config or query", -1)
+                resultEditor.setValue("error(s) found in config or query", -1)
                 return false
             }
-            configArea.setValue(js_beautify(configArea.getValue(), {}), -1)
-            var content = queryArea.getValue().trim()
-            var match = /^db\..*\.(find|aggregate)\([\s\S]*\)$/.test(content)
-            if (!match) {
-                resultArea.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
+
+            var content = configEditor.getValue().trim()
+            if (!content.startsWith("[") || !content.endsWith("]")) {
+                resultEditor.setValue("invalid config: must be an array")
                 return false
             }
-            queryArea.setValue(js_beautify(queryArea.getValue(), {}), -1)
+            configEditor.setValue(indent(content, indentMode), -1)
+
+            content = queryEditor.getValue().trim()
+            if (content.endsWith(";")) {
+                content = content.slice(0, -1)
+            }
+            var correctQuery = /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/.test(content)
+            if (!correctQuery) {
+                resultEditor.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
+                return false
+            }
+            queryEditor.setValue(indent(content, indentMode), -1)
             return true
         }
     </script>
