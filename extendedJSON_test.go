@@ -19,7 +19,7 @@ func TestExtendedJSON(t *testing.T) {
 		},
 		{
 			a: bson.MongoTimestamp(4294967298),
-			b: `Timestamp(1, 2)`,
+			b: `Timestamp(1,2)`,
 		},
 		{
 			a: time.Date(2016, 5, 15, 1, 2, 3, 4000000, time.UTC),
@@ -30,7 +30,7 @@ func TestExtendedJSON(t *testing.T) {
 		},
 		{
 			a: bson.Binary{Kind: 2, Data: []byte("foo")},
-			b: `BinData(2, "Zm9v")`,
+			b: `BinData(2,"Zm9v")`,
 		},
 		{
 			a: bson.Undefined,
@@ -49,7 +49,7 @@ func TestExtendedJSON(t *testing.T) {
 	}
 
 	for _, tt := range extendedJSONTests {
-		b, err := bson.MarshalIndentExtendedJSON(tt.a)
+		b, err := bson.MarshalExtendedJSON(tt.a)
 		if err != nil {
 			t.Errorf("fail to unmarshal %v: %v", tt.a, err)
 		}

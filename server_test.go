@@ -566,29 +566,6 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
-		{
-			name: `code formatted on server side`,
-			params: url.Values{
-				"mode":   {"json"},
-				"config": {`[{"_id": 1},{"_id": 2},{"_id": 3,"k":"key"}]`},
-				"query":  {`db.collection.find()`},
-			},
-			result: `[
-  {
-    "_id": 1
-  },
-  {
-    "_id": 2
-  },
-  {
-    "_id": 3,
-    "k": "key"
-  }
-]
-`,
-			createdDB: 1,
-			compact:   false,
-		},
 	}
 
 	nbMongoDatabases := 0
