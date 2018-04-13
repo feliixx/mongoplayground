@@ -24,25 +24,6 @@ This playground has several limitations:
 
 Currently, the playground can run only `find()` and `aggregate()` queries 
 
-### projections
-
-projections are not accepted in `find()`
-
-this will throw an error: 
-
-```JSON5
-db.collection.find({"k": 1}, {"_id": 0})
-```
-
-Instead, use `aggregate()`: 
-
-```JSON5
-db.collection.aggregate([
-  {"$match": {"k": 1}}, 
-  {"$project": {"_id": 0}}
-])
-```
-
 ### shell regex
 
 Currently, shell regex doesn't work in query. 

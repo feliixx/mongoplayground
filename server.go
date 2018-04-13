@@ -447,12 +447,22 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 
 	switch string(p[2][:start]) {
 	case "find":
-		var query bson.M
-		err := bson.UnmarshalJSON(p[2][start+1:end], &query)
+		var params []bson.M
+		query := make([]byte, 0, end-start+1)
+		query = append(query, '[')
+		query = append(query, p[2][start+1:end]...)
+		query = append(query, ']')
+		err := bson.UnmarshalJSON(query, &params)
 		if err != nil {
 			return nil, fmt.Errorf("Fail to parse find() query: %v", err)
 		}
-		err = collection.Find(query).All(&docs)
+		if len(params) == 0 {
+			return nil, fmt.Errorf("Fail to parse query")
+		}
+		if len(params) == 1 {
+			params = append(params, bson.M{})
+		}
+		err = collection.Find(params[0]).Select(params[1]).All(&docs)
 		if err != nil {
 			return nil, fmt.Errorf("Find query failed: %v", err)
 		}

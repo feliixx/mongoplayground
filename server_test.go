@@ -232,7 +232,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:    "Fail to parse find() query: unexpected EOF",
+			result:    "Fail to parse find() query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -462,6 +462,17 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 			compact:   false,
 		},
+		{
+			name: `query with projection`,
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`[{"k":1},{"k":2},{"k":3}]`},
+				"query":  {`db.collection.find({}, {"_id": 0})`},
+			},
+			result:    `[{"k":1},{"k":2},{"k":3}]`,
+			createdDB: 1,
+			compact:   true,
+		},
 	}
 
 	nbMongoDatabases := 0
@@ -477,7 +488,7 @@ func TestRunCreateDB(t *testing.T) {
 			}
 
 			if want, got := tt.result, buf.String(); want != got {
-				t.Errorf("expected %s but got %s", want, got)
+				t.Errorf("expected '%s' but got '%s'", want, got)
 			}
 		})
 		nbMongoDatabases += tt.createdDB

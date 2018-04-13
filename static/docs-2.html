@@ -502,3 +502,497 @@ and use main or custom generators instead, as faker generator are way slower.</p
 <p>This playground is heavily inspired from <a href="https://play.golang.org" rel="nofollow">The Go Playground</a></p>
 <p>The documentation is styled using <a href="https://github.com/sindresorhus/github-markdown-css">github-markdown-css</a></p>
 </div>
+<div class="markdown-body">
+<h1>
+<a id="user-content-mongoplayground-v010-alpha2" class="anchor" href="#mongoplayground-v010-alpha2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Mongoplayground v0.1.0-alpha2</h1>
+<h2>
+<a id="user-content-summary" class="anchor" href="#summary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Summary</h2>
+<ul>
+<li><a href="#user-content-limitations">Limitations</a></li>
+<li>
+<a href="#user-content-create-a-database">Create a database</a>
+<ul>
+<li><a href="#user-content-use-json-documents">with json documents</a></li>
+<li><a href="#user-content-create-random-documents-with-mgodatagen">with random data</a></li>
+</ul>
+</li>
+<li><a href="#user-content-report-an-issue-and-contribute">Report an issue / contribute</a></li>
+<li><a href="#user-content-credits">Credits</a></li>
+</ul>
+<h2>
+<a id="user-content-limitations" class="anchor" href="#limitations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Limitations</h2>
+<h3>
+<a id="user-content-size-limitations" class="anchor" href="#size-limitations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Size limitations</h3>
+<p>This playground has several limitations:</p>
+<ul>
+<li>a database can't contain more than <strong>10 collections</strong>
+</li>
+<li>a collection can't contain more than <strong>100 documents</strong>
+</li>
+<li>all collections are capped to a size of <strong>1024*100 bytes</strong>, see <a href="https://docs.mongodb.com/manual/core/capped-collections/" rel="nofollow">mongodb capped collections</a> for details</li>
+</ul>
+<h3>
+<a id="user-content-queries" class="anchor" href="#queries" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Queries</h3>
+<p>Currently, the playground can run only <code>find()</code> and <code>aggregate()</code> queries</p>
+<h3>
+<a id="user-content-shell-regex" class="anchor" href="#shell-regex" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>shell regex</h3>
+<p>Currently, shell regex doesn't work in query.</p>
+<p>so instead of</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
+  <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span><span class="pl-sr"> <span class="pl-pds">/</span>pattern<span class="pl-pds">/</span></span>
+})</pre></div>
+<p>use</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
+  <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>$regex<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>pattern<span class="pl-pds">"</span></span>
+  }
+})</pre></div>
+<h3>
+<a id="user-content-number-decimal" class="anchor" href="#number-decimal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Number decimal</h3>
+<p>Currently, <code>NumberDecimal()</code> notation is not supported in json mode.</p>
+<h2>
+<a id="user-content-create-a-database" class="anchor" href="#create-a-database" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a database</h2>
+<h2>
+<a id="user-content-use-json-documents" class="anchor" href="#use-json-documents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Use JSON documents</h2>
+<p>It is possible to use JSON documents to create a database. Documents will be inserted in a <strong>collection named <code>collection</code></strong></p>
+<p>Select <code>JSON</code> mode and add the JSON documents in an array, for example:</p>
+<div class="highlight highlight-source-js"><pre>[
+  {
+    <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, 
+    <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>
+  }, {
+    <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, 
+    <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>someOtherValue<span class="pl-pds">"</span></span>
+  }
+]</pre></div>
+<h2>
+<a id="user-content-create-random-documents-with-mgodatagen" class="anchor" href="#create-random-documents-with-mgodatagen" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create random documents with mgodatagen</h2>
+<p>You can create random documents using <strong><a href="github.com/feliixx/mgodatagen">mgodatagen</a></strong></p>
+<p>The config file is an array of JSON documents, where each documents holds the configuration
+for a collection to create</p>
+<div class="highlight highlight-source-js"><pre>[
+  <span class="pl-c"><span class="pl-c">//</span> first collection to create </span>
+  {  
+   <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,            <span class="pl-c"><span class="pl-c">//</span> required, collection name</span>
+   <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,                    <span class="pl-c"><span class="pl-c">//</span> required, number of document to insert in the collection </span>
+   <span class="pl-s"><span class="pl-pds">"</span>content<span class="pl-pds">"</span></span><span class="pl-k">:</span> {                       <span class="pl-c"><span class="pl-c">//</span> required, the actual schema to generate documents   </span>
+     <span class="pl-s"><span class="pl-pds">"</span>fieldName1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,       <span class="pl-c"><span class="pl-c">//</span> optional, see Generator below</span>
+     <span class="pl-s"><span class="pl-pds">"</span>fieldName2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,
+     <span class="pl-k">...</span>
+   }
+  },
+  <span class="pl-c"><span class="pl-c">//</span> second collection to create </span>
+  {
+    <span class="pl-k">...</span>
+  }
+]</pre></div>
+<h2>
+<a id="user-content-generator-types" class="anchor" href="#generator-types" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Generator types</h2>
+<p>Generators have a common structure:</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {                 <span class="pl-c"><span class="pl-c">//</span> required, field name in generated document</span>
+  <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,            <span class="pl-c"><span class="pl-c">//</span> required, type of the field </span>
+  <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional, int between 0 and 100. Percentage of documents </span>
+                               <span class="pl-c"><span class="pl-c">//</span> that will have this field</span>
+  <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional, maximum number of distinct values for this field</span>
+  <span class="pl-s"><span class="pl-pds">"</span>typeParam<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">...</span>             <span class="pl-c"><span class="pl-c">//</span> specific parameters for this type</span>
+}</pre></div>
+<p>List of main <code>&lt;generator&gt;</code> types:</p>
+<ul>
+<li><a href="#user-content-string">string</a></li>
+<li><a href="#user-content-int">int</a></li>
+<li><a href="#user-content-long">long</a></li>
+<li><a href="#user-content-double">double</a></li>
+<li><a href="#user-content-decimal">decimal</a></li>
+<li><a href="#user-content-boolean">boolean</a></li>
+<li><a href="#user-content-objectid">objectId</a></li>
+<li><a href="#user-content-array">array</a></li>
+<li><a href="#user-content-object">object</a></li>
+<li><a href="#user-content-binary">binary</a></li>
+<li><a href="#user-content-date">date</a></li>
+</ul>
+<p>List of custom <code>&lt;generator&gt;</code> types:</p>
+<ul>
+<li><a href="#user-content-position">position</a></li>
+<li><a href="#user-content-constant">constant</a></li>
+<li><a href="#user-content-autoincrement">autoincrement</a></li>
+<li><a href="#user-content-ref">reference</a></li>
+<li><a href="#user-content-fromarray">fromArray</a></li>
+<li><a href="#user-content-countaggregator">countAggregator</a></li>
+<li><a href="#user-content-valueaggregator">valueAggregator</a></li>
+<li><a href="#user-content-boundaggregator">boundAggregator</a></li>
+</ul>
+<p>List of <a href="https://github.com/manveru/faker">Faker</a> <code>&lt;generator&gt;</code> types:</p>
+<ul>
+<li><a href="#user-content-faker">CellPhoneNumber</a></li>
+<li><a href="#user-content-faker">City</a></li>
+<li><a href="#user-content-faker">CityPrefix</a></li>
+<li><a href="#user-content-faker">CitySuffix</a></li>
+<li><a href="#user-content-faker">CompanyBs</a></li>
+<li><a href="#user-content-faker">CompanyCatchPhrase</a></li>
+<li><a href="#user-content-faker">CompanyName</a></li>
+<li><a href="#user-content-faker">CompanySuffix</a></li>
+<li><a href="#user-content-faker">Country</a></li>
+<li><a href="#user-content-faker">DomainName</a></li>
+<li><a href="#user-content-faker">DomainSuffix</a></li>
+<li><a href="#user-content-faker">DomainWord</a></li>
+<li><a href="#user-content-faker">Email</a></li>
+<li><a href="#user-content-faker">FirstName</a></li>
+<li><a href="#user-content-faker">FreeEmail</a></li>
+<li><a href="#user-content-faker">JobTitle</a></li>
+<li><a href="#user-content-faker">LastName</a></li>
+<li><a href="#user-content-faker">Name</a></li>
+<li><a href="#user-content-faker">NamePrefix</a></li>
+<li><a href="#user-content-faker">NameSuffix</a></li>
+<li><a href="#user-content-faker">PhoneNumber</a></li>
+<li><a href="#user-content-faker">PostCode</a></li>
+<li><a href="#user-content-faker">SafeEmail</a></li>
+<li><a href="#user-content-faker">SecondaryAddress</a></li>
+<li><a href="#user-content-faker">State</a></li>
+<li><a href="#user-content-faker">StateAbbr</a></li>
+<li><a href="#user-content-faker">StreetAddress</a></li>
+<li><a href="#user-content-faker">StreetName</a></li>
+<li><a href="#user-content-faker">StreetSuffix</a></li>
+<li><a href="#user-content-faker">URL</a></li>
+<li><a href="#user-content-faker">UserName</a></li>
+</ul>
+<h3>
+<a id="user-content-string" class="anchor" href="#string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>String</h3>
+<p>Generate random string of a certain length. String is composed of char within this list:
+<code>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_</code></p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>string<span class="pl-pds">"</span></span>,          <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>unique<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>bool<span class="pl-k">&gt;</span>,          <span class="pl-c"><span class="pl-c">//</span> optional, see details below </span>
+    <span class="pl-s"><span class="pl-pds">"</span>minLength<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,        <span class="pl-c"><span class="pl-c">//</span> required,  must be &gt;= 0 </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxLength<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>         <span class="pl-c"><span class="pl-c">//</span> required,  must be &gt;= minLength</span>
+}</pre></div>
+<h4>
+<a id="user-content-unique-string" class="anchor" href="#unique-string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Unique String</h4>
+<p>if <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
+have a <strong>fixed length</strong>, <code>minLength</code> is taken as length for the string.
+There is  <code>64^x</code>  possible unique string for strings of length <code>x</code>. This number has to
+be inferior or equal to the number of documents you want to generate.
+For example, if you want unique strings of length 3, the is <code>64 * 64 * 64 = 262144</code> possible
+strings</p>
+<p>They will look like</p>
+<pre><code>"aaa",
+"aab",
+"aac",
+"aad",
+...
+</code></pre>
+<h3>
+<a id="user-content-int" class="anchor" href="#int" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Int</h3>
+<p>Generate random int within bounds.</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>int<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>minInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,           <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>            <span class="pl-c"><span class="pl-c">//</span> required, must be &gt;= minInt</span>
+}</pre></div>
+<h3>
+<a id="user-content-long" class="anchor" href="#long" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Long</h3>
+<p>Generate random long within bounds.</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>long<span class="pl-pds">"</span></span>,            <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>minLong<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>long<span class="pl-k">&gt;</span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxLong<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>long<span class="pl-k">&gt;</span>          <span class="pl-c"><span class="pl-c">//</span> required, must be &gt;= minLong</span>
+}</pre></div>
+<h3>
+<a id="user-content-double" class="anchor" href="#double" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Double</h3>
+<p>Generate random double within bounds.</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>double<span class="pl-pds">"</span></span>,          <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>minDouble<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>double<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDouble<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>double<span class="pl-k">&gt;</span>      <span class="pl-c"><span class="pl-c">//</span> required, must be &gt;= minDouble</span>
+}</pre></div>
+<h3>
+<a id="user-content-decimal" class="anchor" href="#decimal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Decimal</h3>
+<p>Generate random decimal128</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>decimal<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional </span>
+}</pre></div>
+<h3>
+<a id="user-content-boolean" class="anchor" href="#boolean" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Boolean</h3>
+<p>Generate random boolean</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>boolean<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+}</pre></div>
+<h3>
+<a id="user-content-objectid" class="anchor" href="#objectid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ObjectId</h3>
+<p>Generate random and unique objectId</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>objectId<span class="pl-pds">"</span></span>,        <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>  <span class="pl-c"><span class="pl-c">//</span> optional </span>
+}</pre></div>
+<h3>
+<a id="user-content-array" class="anchor" href="#array" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Array</h3>
+<p>Generate a random array of bson object</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>array<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>size<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,               <span class="pl-c"><span class="pl-c">//</span> required, size of the array </span>
+    <span class="pl-s"><span class="pl-pds">"</span>arrayContent<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>  <span class="pl-c"><span class="pl-c">//</span> genrator use to create element to fill the array.</span>
+                                 <span class="pl-c"><span class="pl-c">//</span> can be of any type scpecified in generator types</span>
+}</pre></div>
+<h3>
+<a id="user-content-object" class="anchor" href="#object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Object</h3>
+<p>Generate random nested object</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>object<span class="pl-pds">"</span></span>,                    <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,             <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,           <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>objectContent<span class="pl-pds">"</span></span><span class="pl-k">:</span> {                   <span class="pl-c"><span class="pl-c">//</span> required, list of generator used to </span>
+       <span class="pl-s"><span class="pl-pds">"</span>nestedFieldName1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> generate the nested document </span>
+       <span class="pl-s"><span class="pl-pds">"</span>nestedFieldName2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,
+       <span class="pl-k">...</span>
+    }
+}</pre></div>
+<h3>
+<a id="user-content-binary" class="anchor" href="#binary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Binary</h3>
+<p>Generate random binary data of length within bounds</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>binary<span class="pl-pds">"</span></span>,           <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>minLength<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,         <span class="pl-c"><span class="pl-c">//</span> required,  must be &gt;= 0 </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxLength<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>          <span class="pl-c"><span class="pl-c">//</span> required,  must be &gt;= minLength</span>
+}</pre></div>
+<h3>
+<a id="user-content-date" class="anchor" href="#date" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Date</h3>
+<p>Generate a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/" rel="nofollow"><code>ISODate</code></a> )</p>
+<p><code>startDate</code> and <code>endDate</code> are string representation of a Date following RFC3339:</p>
+<p><strong>format</strong>: "yyyy-MM-ddThh:mm:ss+00:00" or "yyyy-MM-ddThh:mm:ssZ"</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>date<span class="pl-pds">"</span></span>,            <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>, <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>startDate<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>endDate<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>        <span class="pl-c"><span class="pl-c">//</span> required,  must be &gt;= startDate</span>
+}</pre></div>
+<h3>
+<a id="user-content-position" class="anchor" href="#position" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Position</h3>
+<p>Generate a random GPS position in Decimal Degrees ( WGS 84),
+eg : [40.741895, -73.989308]</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>position<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>     <span class="pl-c"><span class="pl-c">//</span> optional </span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+}</pre></div>
+<h3>
+<a id="user-content-constant" class="anchor" href="#constant" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Constant</h3>
+<p>Add the same value to each document</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>constant<span class="pl-pds">"</span></span>,       <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>constVal<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>      <span class="pl-c"><span class="pl-c">//</span> required, an be of any type including object and array</span>
+                              <span class="pl-c"><span class="pl-c">//</span> eg: {"k": 1, "v": "val"} </span>
+}</pre></div>
+<h3>
+<a id="user-content-autoincrement" class="anchor" href="#autoincrement" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Autoincrement</h3>
+<p>Create an autoincremented field (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>)</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>autoincrement<span class="pl-pds">"</span></span>,  <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>autoType<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> required, can be `int` or `long`</span>
+    <span class="pl-s"><span class="pl-pds">"</span>startLong<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>long<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> start value if autoType = long</span>
+    <span class="pl-s"><span class="pl-pds">"</span>startInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>       <span class="pl-c"><span class="pl-c">//</span> start value if autoType = int</span>
+}</pre></div>
+<h3>
+<a id="user-content-ref" class="anchor" href="#ref" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Ref</h3>
+<p>If a field reference an other field in an other collection, you can use a ref generator.</p>
+<p>generator in first collection:</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span>{  
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span><span class="pl-s"><span class="pl-pds">"</span>ref<span class="pl-pds">"</span></span>,               <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,                <span class="pl-c"><span class="pl-c">//</span> required, generator id used to link</span>
+                                <span class="pl-c"><span class="pl-c">//</span> field between collections</span>
+    <span class="pl-s"><span class="pl-pds">"</span>refContent<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>   <span class="pl-c"><span class="pl-c">//</span> required</span>
+}</pre></div>
+<p>generator in other collections:</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>ref<span class="pl-pds">"</span></span>,              <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>                 <span class="pl-c"><span class="pl-c">//</span> required, same id as previous generator </span>
+}</pre></div>
+<h3>
+<a id="user-content-fromarray" class="anchor" href="#fromarray" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FromArray</h3>
+<p>Randomly pick value from an array as value for the field. Currently, object in the
+array have to be of the same type</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>fromArray<span class="pl-pds">"</span></span>,      <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional   </span>
+    <span class="pl-s"><span class="pl-pds">"</span>in<span class="pl-pds">"</span></span><span class="pl-k">:</span> [                   <span class="pl-c"><span class="pl-c">//</span> required. Can't be empty. An array of object of </span>
+      <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>,               <span class="pl-c"><span class="pl-c">//</span> any type, including object and array. </span>
+      <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>
+      <span class="pl-k">...</span>
+    ]
+}</pre></div>
+<h3>
+<a id="user-content-countaggregator" class="anchor" href="#countaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>CountAggregator</h3>
+<p>Count documents from <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a
+variable of the document in the query, prefix it with "$$"</p>
+<p>For the moment, the query can't be empty or null</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+  <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>countAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> required, collection to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>query<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>          <span class="pl-c"><span class="pl-c">//</span> required, query that selects which documents to count in the collection </span>
+}</pre></div>
+<p><strong>Example:</strong></p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span> }</pre></div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js"><pre>{
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>content<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>autoincrement<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>autoType<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>int<span class="pl-pds">"</span></span>
+      <span class="pl-s"><span class="pl-pds">"</span>startInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>
+    },
+    <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>countAggregator<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>query<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>$$_id<span class="pl-pds">"</span></span>
+      }
+    }
+  }
+}</pre></div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>}
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>}</pre></div>
+<h3>
+<a id="user-content-valueaggregator" class="anchor" href="#valueaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ValueAggregator</h3>
+<p>Get distinct values for a specific field for documents from
+<code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
+the document in the query, prefix it with "$$"</p>
+<p>For the moment, the query can't be empty or null</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+  <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> required, collection to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>key<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,           <span class="pl-c"><span class="pl-c">//</span> required, the field for which to return distinct values. </span>
+  <span class="pl-s"><span class="pl-pds">"</span>query<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>          <span class="pl-c"><span class="pl-c">//</span> required, query that specifies the documents from which </span>
+                             <span class="pl-c"><span class="pl-c">//</span> to retrieve the distinct values</span>
+}</pre></div>
+<p><strong>Example</strong>:</p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span> }</pre></div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js"><pre>{
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>content<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>autoincrement<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>autoType<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>int<span class="pl-pds">"</span></span>
+      <span class="pl-s"><span class="pl-pds">"</span>startInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>
+    },
+    <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>key<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>$$_id<span class="pl-pds">"</span></span>
+      }
+    }
+  }
+}</pre></div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">"</span>a<span class="pl-pds">"</span></span>, <span class="pl-s"><span class="pl-pds">"</span>b<span class="pl-pds">"</span></span>]}
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> [<span class="pl-s"><span class="pl-pds">"</span>c<span class="pl-pds">"</span></span>]}</pre></div>
+<h3>
+<a id="user-content-boundaggregator" class="anchor" href="#boundaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>BoundAggregator</h3>
+<p>Get lower ang higher values for a specific field for documents from
+<code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
+the document in the query, prefix it with "$$"</p>
+<p>For the moment, the query can't be empty or null</p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+  <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> required, collection to use to perform aggregation</span>
+  <span class="pl-s"><span class="pl-pds">"</span>key<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,           <span class="pl-c"><span class="pl-c">//</span> required, the field for which to return distinct values. </span>
+  <span class="pl-s"><span class="pl-pds">"</span>query<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>          <span class="pl-c"><span class="pl-c">//</span> required, query that specifies the documents from which </span>
+                             <span class="pl-c"><span class="pl-c">//</span> to retrieve lower/higer value</span>
+}</pre></div>
+<p><strong>Example</strong>:</p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>0<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>10<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">3</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>20<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">4</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>30<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">5</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>15<span class="pl-pds">"</span></span> }
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">6</span>, <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>200<span class="pl-pds">"</span></span> }</pre></div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js"><pre>{
+  <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>second<span class="pl-pds">"</span></span>,
+  <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>,
+  <span class="pl-s"><span class="pl-pds">"</span>content<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>autoincrement<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>autoType<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>int<span class="pl-pds">"</span></span>
+      <span class="pl-s"><span class="pl-pds">"</span>startInt<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>
+    },
+    <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+      <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>test<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>first<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>key<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>field2<span class="pl-pds">"</span></span>,
+      <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+        <span class="pl-s"><span class="pl-pds">"</span>field1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>$$_id<span class="pl-pds">"</span></span>
+      }
+    }
+  }
+}</pre></div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js"><pre>{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> {<span class="pl-s"><span class="pl-pds">"</span>m<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">0</span>, <span class="pl-s"><span class="pl-pds">"</span>M<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">10</span>}}
+{<span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">2</span>, <span class="pl-s"><span class="pl-pds">"</span>values<span class="pl-pds">"</span></span><span class="pl-k">:</span> {<span class="pl-s"><span class="pl-pds">"</span>m<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">15</span>, <span class="pl-s"><span class="pl-pds">"</span>M<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">200</span>}}</pre></div>
+<p>where <code>m</code> is the min value, and <code>M</code> the max value</p>
+<h3>
+<a id="user-content-faker" class="anchor" href="#faker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Faker</h3>
+<p>Generate 'real' data using <a href="https://github.com/manveru/faker">Faker library</a></p>
+<div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
+    <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>faker<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
+    <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
+    <span class="pl-s"><span class="pl-pds">"</span>method<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>           <span class="pl-c"><span class="pl-c">//</span> faker method to use, for example: City / Email...</span>
+}</pre></div>
+<p>If you're building large datasets (1000000+ items) you should avoid faker generators
+and use main or custom generators instead, as faker generator are way slower.</p>
+<p>Currently, only <code>"en"</code> locale is available</p>
+<h2>
+<a id="user-content-report-an-issue-and-contribute" class="anchor" href="#report-an-issue-and-contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Report an issue and contribute</h2>
+<p>You can report issues here: <a href="https://github.com/feliixx/mongoplayground/issues">mongoplayground/issues</a></p>
+<p>The source code is available here: <a href="https://github.com/feliixx/mongoplayground">mongoplayground</a></p>
+<p>Contributions are welcome!</p>
+<h2>
+<a id="user-content-credits" class="anchor" href="#credits" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Credits</h2>
+<p>This playground is heavily inspired from <a href="https://play.golang.org" rel="nofollow">The Go Playground</a></p>
+<p>The documentation is styled using <a href="https://github.com/sindresorhus/github-markdown-css">github-markdown-css</a></p>
+</div>
