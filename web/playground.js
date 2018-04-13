@@ -75,20 +75,24 @@ function indent(src, mode) {
                     i++
                     c = src.charAt(i)
                 }
-                result += "\""
+                if (i != src.length) {
+                    result += "\""
+                }
                 break
             case "n":
                 var tmp = src.substring(i, i + 9)
                 if (tmp === "new Date(") {
                     result += tmp
-                    i += tmp.length + 1
+                    i += tmp.length
                     c = src.charAt(i)
                     while (c !== ")" && i < src.length) {
                         result += c
                         i++
                         c = src.charAt(i)
                     }
-                    result += ")"
+                    if (i != src.length) {
+                        result += ")"
+                    }
                 } else {
                     result += c
                 }
@@ -102,7 +106,9 @@ function indent(src, mode) {
                     i++
                     c = src.charAt(i)
                 }
-                result += "/"
+                if (i != src.length) {
+                    result += "/"
+                }
                 break
             default:
                 result += c

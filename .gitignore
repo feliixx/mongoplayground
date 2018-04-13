@@ -6,4 +6,4 @@ cpu.out
 mem.out
 storage
 debug 
-
+tests/test.js
