@@ -131,8 +131,8 @@
             <input id="link" type="text">
             <label>Mode:
                 <select id="mode" onchange="redirect('/', false)">
-                    <option>mgodatagen</option>
-                    <option {{if .ModeJSON}}selected="selected" {{end}}>json</option>
+                    <option>json</option>
+                    <option {{if .ModeMgodatagen}}selected="selected" {{end}}>mgodatagen</option>
                 </select>
             </label>
         </div>

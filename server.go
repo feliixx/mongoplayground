@@ -116,7 +116,7 @@ func precompile(version []byte) error {
 }
 
 type page struct {
-	ModeJSON bool
+	ModeMgodatagen bool
 	// configuration used to generate the sample database
 	Config []byte
 	// query to run against the collection / database
@@ -229,8 +229,8 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 			return err
 		}
 		split := binary.LittleEndian.Uint32(val[0:4])
-		if val[4] == jsonMode {
-			p.ModeJSON = true
+		if val[4] == mgodatagenMode {
+			p.ModeMgodatagen = true
 		}
 		p.Config = val[5:split]
 		p.Query = val[split:]
