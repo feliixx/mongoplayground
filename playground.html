@@ -76,7 +76,11 @@
                             redirect(r.responseText, true)
                         }
                         else {
-                            resultEditor.setValue(indent(r.responseText, indentMode), -1)
+                            var response = r.responseText
+                            if (response.startsWith("[")) {
+                                response = indent(response, indentMode)
+                            }
+                            resultEditor.setValue(response, -1)
                         }
                     }
                 }
