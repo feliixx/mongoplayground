@@ -29,7 +29,7 @@
 </ul>
 <h3>
 <a id="user-content-queries" class="anchor" href="#queries" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Queries</h3>
-<p>Currently, the playground can run only <code>find()</code> and <code>aggregate()</code> queries</p>
+<p>Currently, the playground can run only <code>find()</code> and <code>aggregate()</code> queries. Options in aggregation queries are <strong>not</strong> supported.</p>
 <h3>
 <a id="user-content-shell-regex" class="anchor" href="#shell-regex" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>shell regex</h3>
 <p>Currently, shell regex doesn't work in query.</p>
@@ -50,7 +50,7 @@
 <a id="user-content-create-a-database" class="anchor" href="#create-a-database" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a database</h2>
 <h2>
 <a id="user-content-use-json-documents" class="anchor" href="#use-json-documents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Use JSON documents</h2>
-<p>It is possible to use JSON documents to create a database. Documents will be inserted in a <strong>collection named <code>collection</code></strong></p>
+<p>It is possible to use JSON documents to create a database. Documents will be inserted in a <strong>collection named <code>collection</code></strong>.</p>
 <p>Select <code>JSON</code> mode and add the JSON documents in an array, for example:</p>
 <div class="highlight highlight-source-js"><pre>[
   {
@@ -63,9 +63,10 @@
 ]</pre></div>
 <h2>
 <a id="user-content-create-random-documents-with-mgodatagen" class="anchor" href="#create-random-documents-with-mgodatagen" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create random documents with mgodatagen</h2>
-<p>You can create random documents using <strong><a href="github.com/feliixx/mgodatagen">mgodatagen</a></strong></p>
+<p>You can create random documents using <strong><a href="github.com/feliixx/mgodatagen">mgodatagen</a></strong>. Select <code>mgodatagen</code> mode and create a
+custom configuration file.</p>
 <p>The config file is an array of JSON documents, where each documents holds the configuration
-for a collection to create</p>
+for a collection to create.</p>
 <div class="highlight highlight-source-js"><pre>[
   <span class="pl-c"><span class="pl-c">//</span> first collection to create </span>
   {  
@@ -165,12 +166,12 @@ for a collection to create</p>
 }</pre></div>
 <h4>
 <a id="user-content-unique-string" class="anchor" href="#unique-string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Unique String</h4>
-<p>if <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
+<p>If <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
 have a <strong>fixed length</strong>, <code>minLength</code> is taken as length for the string.
 There is  <code>64^x</code>  possible unique string for strings of length <code>x</code>. This number has to
 be inferior or equal to the number of documents you want to generate.
 For example, if you want unique strings of length 3, the is <code>64 * 64 * 64 = 262144</code> possible
-strings</p>
+strings.</p>
 <p>They will look like</p>
 <pre><code>"aaa",
 "aab",
@@ -210,7 +211,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-decimal" class="anchor" href="#decimal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Decimal</h3>
-<p>Generate random decimal128</p>
+<p>Generate random decimal128.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>decimal<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -218,7 +219,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-boolean" class="anchor" href="#boolean" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Boolean</h3>
-<p>Generate random boolean</p>
+<p>Generate random boolean.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>boolean<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional </span>
@@ -226,7 +227,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-objectid" class="anchor" href="#objectid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ObjectId</h3>
-<p>Generate random and unique objectId</p>
+<p>Generate random and unique ObjectId.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>objectId<span class="pl-pds">"</span></span>,        <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -234,7 +235,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-array" class="anchor" href="#array" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Array</h3>
-<p>Generate a random array of bson object</p>
+<p>Generate a random array of bson object.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>array<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -245,7 +246,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-object" class="anchor" href="#object" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Object</h3>
-<p>Generate random nested object</p>
+<p>Generate random nested object.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>object<span class="pl-pds">"</span></span>,                    <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,             <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -258,7 +259,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-binary" class="anchor" href="#binary" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Binary</h3>
-<p>Generate random binary data of length within bounds</p>
+<p>Generate random binary data of length within bounds.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>binary<span class="pl-pds">"</span></span>,           <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,    <span class="pl-c"><span class="pl-c">//</span> optional </span>
@@ -268,7 +269,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-date" class="anchor" href="#date" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Date</h3>
-<p>Generate a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/" rel="nofollow"><code>ISODate</code></a> )</p>
+<p>Generate a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/" rel="nofollow"><code>ISODate</code></a> ).</p>
 <p><code>startDate</code> and <code>endDate</code> are string representation of a Date following RFC3339:</p>
 <p><strong>format</strong>: "yyyy-MM-ddThh:mm:ss+00:00" or "yyyy-MM-ddThh:mm:ssZ"</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
@@ -280,7 +281,7 @@ strings</p>
 }</pre></div>
 <h3>
 <a id="user-content-position" class="anchor" href="#position" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Position</h3>
-<p>Generate a random GPS position in Decimal Degrees ( WGS 84),
+<p>Generate a random GPS position in Decimal Degrees ( WGS 84).
 eg : [40.741895, -73.989308]</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>position<span class="pl-pds">"</span></span>,         <span class="pl-c"><span class="pl-c">//</span> required</span>
@@ -289,7 +290,7 @@ eg : [40.741895, -73.989308]</p>
 }</pre></div>
 <h3>
 <a id="user-content-constant" class="anchor" href="#constant" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Constant</h3>
-<p>Add the same value to each document</p>
+<p>Add the same value to each document.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>constant<span class="pl-pds">"</span></span>,       <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -298,7 +299,7 @@ eg : [40.741895, -73.989308]</p>
 }</pre></div>
 <h3>
 <a id="user-content-autoincrement" class="anchor" href="#autoincrement" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Autoincrement</h3>
-<p>Create an autoincremented field (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>)</p>
+<p>Create an autoincremented field (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>).</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>autoincrement<span class="pl-pds">"</span></span>,  <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -328,7 +329,7 @@ eg : [40.741895, -73.989308]</p>
 <h3>
 <a id="user-content-fromarray" class="anchor" href="#fromarray" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>FromArray</h3>
 <p>Randomly pick value from an array as value for the field. Currently, object in the
-array have to be of the same type</p>
+array have to be of the same type.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>fromArray<span class="pl-pds">"</span></span>,      <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,  <span class="pl-c"><span class="pl-c">//</span> optional   </span>
@@ -341,8 +342,8 @@ array have to be of the same type</p>
 <h3>
 <a id="user-content-countaggregator" class="anchor" href="#countaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>CountAggregator</h3>
 <p>Count documents from <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a
-variable of the document in the query, prefix it with "$$"</p>
-<p>For the moment, the query can't be empty or null</p>
+variable of the document in the query, prefix it with <code>$$</code>.</p>
+<p>The query can't be empty or null.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
   <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>countAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
   <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
@@ -382,8 +383,8 @@ variable of the document in the query, prefix it with "$$"</p>
 <a id="user-content-valueaggregator" class="anchor" href="#valueaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ValueAggregator</h3>
 <p>Get distinct values for a specific field for documents from
 <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
-the document in the query, prefix it with "$$"</p>
-<p>For the moment, the query can't be empty or null</p>
+the document in the query, prefix it with <code>$$</code>.</p>
+<p>The query can't be empty or null.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
   <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
   <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
@@ -426,8 +427,8 @@ the document in the query, prefix it with "$$"</p>
 <a id="user-content-boundaggregator" class="anchor" href="#boundaggregator" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>BoundAggregator</h3>
 <p>Get lower ang higher values for a specific field for documents from
 <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
-the document in the query, prefix it with "$$"</p>
-<p>For the moment, the query can't be empty or null</p>
+the document in the query, prefix it with <code>$$</code>.</p>
+<p>The query can't be empty or null.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
   <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>valueAggregator<span class="pl-pds">"</span></span>, <span class="pl-c"><span class="pl-c">//</span> required</span>
   <span class="pl-s"><span class="pl-pds">"</span>database<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,      <span class="pl-c"><span class="pl-c">//</span> required, db to use to perform aggregation</span>
@@ -472,7 +473,7 @@ the document in the query, prefix it with "$$"</p>
 <p>where <code>m</code> is the min value, and <code>M</code> the max value</p>
 <h3>
 <a id="user-content-faker" class="anchor" href="#faker" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Faker</h3>
-<p>Generate 'real' data using <a href="https://github.com/manveru/faker">Faker library</a></p>
+<p>Generate 'real' data using <a href="https://github.com/manveru/faker">Faker library</a>.</p>
 <div class="highlight highlight-source-js"><pre><span class="pl-s"><span class="pl-pds">"</span>fieldName<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>faker<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional</span>
@@ -481,7 +482,7 @@ the document in the query, prefix it with "$$"</p>
 }</pre></div>
 <p>If you're building large datasets (1000000+ items) you should avoid faker generators
 and use main or custom generators instead, as faker generator are way slower.</p>
-<p>Currently, only <code>"en"</code> locale is available</p>
+<p>Currently, only <code>"en"</code> locale is available.</p>
 <h2>
 <a id="user-content-report-an-issue-and-contribute" class="anchor" href="#report-an-issue-and-contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Report an issue and contribute</h2>
 <p>You can report issues here: <a href="https://github.com/feliixx/mongoplayground/issues">mongoplayground/issues</a></p>

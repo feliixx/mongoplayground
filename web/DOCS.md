@@ -22,7 +22,7 @@ This playground has several limitations:
 
 ### Queries
 
-Currently, the playground can run only `find()` and `aggregate()` queries 
+Currently, the playground can run only `find()` and `aggregate()` queries. Options in aggregation queries are **not** supported.
 
 ### shell regex
 
@@ -55,7 +55,7 @@ Currently, `NumberDecimal()` notation is not supported in json mode.
 
 ## Use JSON documents
 
-It is possible to use JSON documents to create a database. Documents will be inserted in a **collection named `collection`**
+It is possible to use JSON documents to create a database. Documents will be inserted in a **collection named `collection`**.
 
 Select `JSON` mode and add the JSON documents in an array, for example: 
 
@@ -73,10 +73,11 @@ Select `JSON` mode and add the JSON documents in an array, for example:
 
 ## Create random documents with mgodatagen
 
-You can create random documents using **[mgodatagen](github.com/feliixx/mgodatagen)**
+You can create random documents using **[mgodatagen](github.com/feliixx/mgodatagen)**. Select `mgodatagen` mode and create a 
+custom configuration file. 
 
 The config file is an array of JSON documents, where each documents holds the configuration 
-for a collection to create 
+for a collection to create.
 
 ```JSON5
 [
@@ -190,12 +191,12 @@ Generate random string of a certain length. String is composed of char within th
 
 #### Unique String
 
-if `unique` is set to true, the field will only contains unique strings. Unique strings 
+If `unique` is set to true, the field will only contains unique strings. Unique strings 
 have a **fixed length**, `minLength` is taken as length for the string. 
 There is  `64^x`  possible unique string for strings of length `x`. This number has to 
 be inferior or equal to the number of documents you want to generate. 
 For example, if you want unique strings of length 3, the is `64 * 64 * 64 = 262144` possible 
-strings
+strings.
 
 They will look like 
 
@@ -251,7 +252,7 @@ Generate random double within bounds.
 
 ### Decimal
 
-Generate random decimal128
+Generate random decimal128.
 
 ```JSON5
 "fieldName": {
@@ -263,7 +264,7 @@ Generate random decimal128
 
 ### Boolean
 
-Generate random boolean
+Generate random boolean.
 
 ```JSON5
 "fieldName": {
@@ -275,7 +276,7 @@ Generate random boolean
 
 ### ObjectId
 
-Generate random and unique objectId
+Generate random and unique ObjectId.
 
 ```JSON5
 "fieldName": {
@@ -287,7 +288,7 @@ Generate random and unique objectId
 
 ### Array
 
-Generate a random array of bson object 
+Generate a random array of bson object.
 
 ```JSON5
 "fieldName": {
@@ -302,7 +303,7 @@ Generate a random array of bson object
 
 ### Object
 
-Generate random nested object
+Generate random nested object.
 
 ```JSON5
 "fieldName": {
@@ -319,7 +320,7 @@ Generate random nested object
 
 ### Binary 
 
-Generate random binary data of length within bounds
+Generate random binary data of length within bounds.
 
 ```JSON5
 "fieldName": {
@@ -333,7 +334,7 @@ Generate random binary data of length within bounds
 
 ### Date 
 
-Generate a random date (stored as [`ISODate`](https://docs.mongodb.com/manual/reference/method/Date/) ) 
+Generate a random date (stored as [`ISODate`](https://docs.mongodb.com/manual/reference/method/Date/) ).
 
 `startDate` and `endDate` are string representation of a Date following RFC3339: 
 
@@ -352,7 +353,7 @@ Generate a random date (stored as [`ISODate`](https://docs.mongodb.com/manual/re
 
 ### Position
 
-Generate a random GPS position in Decimal Degrees ( WGS 84), 
+Generate a random GPS position in Decimal Degrees ( WGS 84).
 eg : [40.741895, -73.989308]
 
 ```JSON5
@@ -365,7 +366,7 @@ eg : [40.741895, -73.989308]
 
 ### Constant
 
-Add the same value to each document 
+Add the same value to each document.
 
 ```JSON5
 "fieldName": {
@@ -378,7 +379,7 @@ Add the same value to each document
 
 ### Autoincrement
 
-Create an autoincremented field (type `<long>` or `<int>`)
+Create an autoincremented field (type `<long>` or `<int>`).
 
 ```JSON5
 "fieldName": {
@@ -421,7 +422,7 @@ generator in other collections:
 ### FromArray
 
 Randomly pick value from an array as value for the field. Currently, object in the 
-array have to be of the same type 
+array have to be of the same type.
 
 
 ```JSON5
@@ -438,9 +439,9 @@ array have to be of the same type
 ### CountAggregator
 
 Count documents from `<database>.<collection>` matching a specific query. To use a 
-variable of the document in the query, prefix it with "$$"
+variable of the document in the query, prefix it with `$$`.
 
-For the moment, the query can't be empty or null
+The query can't be empty or null.
 
 
 
@@ -498,9 +499,9 @@ The collection `second` will contain:
 
 Get distinct values for a specific field for documents from 
 `<database>.<collection>` matching a specific query. To use a variable of 
-the document in the query, prefix it with "$$"
+the document in the query, prefix it with `$$`.
 
-For the moment, the query can't be empty or null
+The query can't be empty or null.
 
 ```JSON5
 "fieldName": {
@@ -561,9 +562,9 @@ The collection `second` will contain:
 
 Get lower ang higher values for a specific field for documents from 
 `<database>.<collection>` matching a specific query. To use a variable of 
-the document in the query, prefix it with "$$"
+the document in the query, prefix it with `$$`.
 
-For the moment, the query can't be empty or null
+The query can't be empty or null.
 
 ```JSON5
 "fieldName": {
@@ -626,7 +627,7 @@ where `m` is the min value, and `M` the max value
 
 ### Faker
 
-Generate 'real' data using [Faker library](https://github.com/manveru/faker)
+Generate 'real' data using [Faker library](https://github.com/manveru/faker).
 
 ```JSON5
 "fieldName": {
@@ -640,7 +641,7 @@ Generate 'real' data using [Faker library](https://github.com/manveru/faker)
 If you're building large datasets (1000000+ items) you should avoid faker generators 
 and use main or custom generators instead, as faker generator are way slower. 
 
-Currently, only `"en"` locale is available  
+Currently, only `"en"` locale is available.
 
 ## Report an issue and contribute
 
