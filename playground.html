@@ -118,12 +118,10 @@
                 configEditor.setValue(indent(content, indentMode), -1)
             }
 
-            content = queryEditor.getValue().trim()
-            if (content.endsWith(";")) {
-                content = content.slice(0, -1)
-            }
-            var correctQuery = /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/.test(content)
-            if (!correctQuery) {
+            var select = document.getElementById("mode")
+            var mode = select.options[select.selectedIndex].text
+            content = formatQuery(queryEditor.getValue().trim(), mode)
+            if (content === "invalid") {
                 resultEditor.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
                 return false
             }

@@ -1,5 +1,5 @@
-const compactMode = 0
-const indentMode = 1
+var compactMode = 0
+var indentMode = 1
 
 function indent(src, mode) {
     var result = ""
@@ -124,4 +124,27 @@ function newline(depth) {
         line += "  "
     }
     return line
+}
+
+function formatQuery(content, mode) {
+    var result = content
+    if (content.endsWith(";")) {
+        result = content.slice(0, -1)
+    }
+    var correctQuery = /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/.test(result)
+    if (!correctQuery) {
+        return "invalid"
+    }
+    if (mode === "json") {
+        var parts = result.split(".")
+        parts[1] = "collection"
+        result = parts.join(".")
+    }
+
+    var start = result.indexOf("(") +1
+    query = result.substring(start, result.length-1)
+    if (query !== "" && !query.endsWith("}") && !query.endsWith("]")) {
+        return "invalid"
+    }
+    return result
 }

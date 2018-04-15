@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -15,6 +16,9 @@ import (
 )
 
 func TestExtendedJSON(t *testing.T) {
+
+	t.Parallel()
+
 	extendedJSONTests := []struct {
 		a interface{}
 		b string
@@ -66,6 +70,8 @@ func TestExtendedJSON(t *testing.T) {
 }
 
 func TestJavascriptIndent(t *testing.T) {
+
+	t.Parallel()
 
 	jsIndentTests := []struct {
 		name    string
@@ -222,13 +228,7 @@ func TestJavascriptIndent(t *testing.T) {
 		},
 	}
 
-	var buffer bytes.Buffer
-	playgroundjs, err := os.Open("web/playground.js")
-	if err != nil {
-		t.Error(err)
-	}
-	io.Copy(&buffer, playgroundjs)
-	playgroundjs.Close()
+	buffer := loadPlaygroundJs(t)
 
 	testFuncFormat := `
 	{
@@ -239,12 +239,11 @@ func TestJavascriptIndent(t *testing.T) {
 	}
 	`
 
-	buffer.Write([]byte("var tests = ["))
-	for i, tt := range jsIndentTests {
-		fmt.Fprintf(&buffer, testFuncFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
-		if i != len(jsIndentTests) {
-			buffer.WriteByte(',')
-		}
+	buffer.Write([]byte(`
+		var tests = [`))
+	for _, tt := range jsIndentTests {
+		fmt.Fprintf(buffer, testFuncFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
+		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
 	]
@@ -290,15 +289,173 @@ func TestJavascriptIndent(t *testing.T) {
 	}	
 	`))
 
-	testFile, err := os.Create("tests/test.js")
+	runJsTest(t, buffer, "tests/testIndent.js")
+}
+
+func TestFormatQuery(t *testing.T) {
+
+	t.Parallel()
+
+	formatTests := []struct {
+		name                 string
+		input                string
+		formattedModeJSON    string
+		formattedModeDatagen string
+	}{
+		{
+			name:                 `trailing comma`,
+			input:                `db.collection.find();`,
+			formattedModeJSON:    `db.collection.find()`,
+			formattedModeDatagen: `db.collection.find()`,
+		},
+		{
+			name:                 `rename collection in json mode`,
+			input:                `db.otherName.find()`,
+			formattedModeJSON:    `db.collection.find()`,
+			formattedModeDatagen: `db.otherName.find()`,
+		},
+		{
+			name: `correct aggregation query`,
+			input: `db.collection.aggregate([
+				{
+					"$match": {
+						_id: ObjectId("5a934e000102030405000000"), 
+						k: {
+							"$gt": 0.2323
+						}
+					}
+				}
+			])`,
+			formattedModeJSON: `db.collection.aggregate([
+				{
+					"$match": {
+						_id: ObjectId("5a934e000102030405000000"), 
+						k: {
+							"$gt": 0.2323
+						}
+					}
+				}
+			])`,
+			formattedModeDatagen: `db.collection.aggregate([
+				{
+					"$match": {
+						_id: ObjectId("5a934e000102030405000000"), 
+						k: {
+							"$gt": 0.2323
+						}
+					}
+				}
+			])`,
+		},
+		{
+			name:                 `wrong format`,
+			input:                `dbcollection.find()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `invalid function`,
+			input:                `db.collection.findOne()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `wrong format`,
+			input:                `dbcollection.find()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `wrong format`,
+			input:                `db["collection"].find()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `wrong format`,
+			input:                `db.getCollection("coll").find()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `dot in query`,
+			input:                `db.collection.find({k: 1.123})`,
+			formattedModeJSON:    `db.collection.find({k: 1.123})`,
+			formattedModeDatagen: `db.collection.find({k: 1.123})`,
+		},
+		{
+			name:                 `chained empty method`,
+			input:                `db.collection.find().toArray()`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `chained non-empty method`,
+			input:                `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
+			formattedModeJSON:    `invalid`,
+			formattedModeDatagen: `invalid`,
+		},
+	}
+
+	buffer := loadPlaygroundJs(t)
+
+	testFuncFormat := `
+	{
+		"name": %s,
+		"input": %s, 
+		"formattedModeJSON": %s, 
+		"formattedModeDatagen": %s 
+	}
+	`
+
+	buffer.Write([]byte("var tests = ["))
+	for _, tt := range formatTests {
+		fmt.Fprintf(buffer, testFuncFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeJSON), strconv.Quote(tt.formattedModeDatagen))
+		buffer.WriteByte(',')
+	}
+	buffer.Write([]byte(`
+	]
+	
+	`))
+
+	buffer.Write([]byte(`
+	for (let i in tests) {
+		let tt = tests[i]
+
+		let got = formatQuery(tt.input, "json") 
+		if (got !== tt.formattedModeJSON) {
+			print("test " + tt.name + " format mode json failed, expected: \n" + tt.formattedModeJSON +  "\nbut got: \n" + got)
+		}
+
+		got = formatQuery(tt.input, "mgodatagen") 
+		if (got !== tt.formattedModeDatagen) {
+			print("test " + tt.name + " format mode mgodatagen failed, expected: \n" + tt.formattedModeDatagen +  "\nbut got: \n" + got)
+		}
+	}	
+	`))
+
+	runJsTest(t, buffer, "tests/testFormat.js")
+
+}
+
+func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
+	playgroundjs, err := ioutil.ReadFile("web/playground.js")
 	if err != nil {
 		t.Error(err)
 	}
-	io.Copy(testFile, &buffer)
-	testFile.Close()
+	return bytes.NewBuffer(playgroundjs)
+}
 
+func runJsTest(t *testing.T, buffer *bytes.Buffer, filename string) {
+
+	testFile, err := os.Create(filename)
+	if err != nil {
+		t.Error(err)
+	}
+	io.Copy(testFile, buffer)
+	testFile.Close()
 	// run the tests using mongodb javascript engine
-	cmd := exec.Command("mongo", "--quiet", "tests/test.js")
+	cmd := exec.Command("mongo", "--quiet", filename)
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
@@ -310,6 +467,6 @@ func TestJavascriptIndent(t *testing.T) {
 	if result != "" {
 		t.Error(result)
 	} else {
-		os.Remove("tests/test.js")
+		os.Remove(filename)
 	}
 }
