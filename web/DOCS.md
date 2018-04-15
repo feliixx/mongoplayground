@@ -1,4 +1,4 @@
-# Mongoplayground v0.1.0-alpha2
+# Mongoplayground v0.1.0
 
 ## Summary
 
