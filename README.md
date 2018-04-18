@@ -15,30 +15,11 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
   - a database can't contain more than **10 collections**
   - a collection can't contain more than **100 documents**
-  - all collections are capped to a size of **1024*100 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
+  - all collections are capped to a size of **100*1024 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
 
   ### Queries
 
   Currently, the playground can run only `find()` and `aggregate()` queries 
-
-  ### projections
-
-  projections are not accepted in `find()`
-
-  this will throw an error: 
-
-  ```JSON5
-  db.collection.find({"k": 1}, {"_id": 0})
-  ```
-
-  Instead, use `aggregate()`: 
-
-  ```JSON5
-  db.collection.aggregate([
-    {"$match": {"k": 1}}, 
-    {"$project": {"_id": 0}}
-  ])
-  ```
 
   ### shell regex
 
@@ -66,6 +47,4 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
 
-Editors are created with [ace](https://ace.c9.io/)
-JS code is formatted with [beautifyjs](http://jsbeautifier.org/)
-The documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
+Editors are created with [ace](https://ace.c9.io/), and the documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)

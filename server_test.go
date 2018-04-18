@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -20,7 +21,7 @@ import (
 
 const (
 	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
-	templateURL    = "p/eYtYmPq-C4J"
+	templateURL    = "p/snbIQ3uGHGq"
 )
 
 var (
@@ -34,7 +35,8 @@ func TestMain(m *testing.M) {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
-	s, err := newServer()
+	log := log.New(ioutil.Discard, "", 0)
+	s, err := newServer(log)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
@@ -48,6 +50,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestServeHTTP(t *testing.T) {
+
+	t.Parallel()
+
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	resp := httptest.NewRecorder()
 	testServer.ServeHTTP(resp, req)
@@ -169,7 +174,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-			result:    "Fail to parse aggregate() query: invalid character ']' after object key:value pair",
+			result:    "Fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -232,7 +237,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:    "Fail to parse find() query: invalid character ']' after object key:value pair",
+			result:    "Fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -458,7 +463,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"k": "randompattern"}]`},
 				"query":  {`db.collection.find({k: /pattern/})`},
 			},
-			result:    `Fail to parse find() query: invalid character '/' looking for beginning of value`,
+			result:    `Fail to parse content of query: invalid character '/' looking for beginning of value`,
 			createdDB: 1,
 			compact:   false,
 		},
@@ -478,7 +483,7 @@ func TestRunCreateDB(t *testing.T) {
 	nbMongoDatabases := 0
 	for _, tt := range runCreateDBTests {
 		t.Run(tt.name, func(t *testing.T) {
-			buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", tt.params)
+			buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", tt.params)
 			if tt.compact {
 				comp, err := bson.CompactJSON(buf.Bytes())
 				if err != nil {
@@ -502,8 +507,8 @@ func TestRunExistingDB(t *testing.T) {
 
 	testServer.clearDatabases(t)
 
-	// the first /run/ request should create the database
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", templateParams)
+	// the first /run request should create the database
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", templateParams)
 	comp, err := bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -511,14 +516,18 @@ func TestRunExistingDB(t *testing.T) {
 	if want, got := templateResult, string(comp); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
-	DBHash := dbHash(mgodatagenMode, []byte(templateParams.Get("config")))
+	p := &page{
+		Mode:   mgodatagenMode,
+		Config: []byte(templateParams.Get("config")),
+	}
+	DBHash := p.dbHash()
 	_, ok := testServer.activeDB.Load(DBHash)
 	if !ok {
 		t.Errorf("activeDb should contain DB %s", DBHash)
 	}
 
-	//  the second /run/ should produce the same result
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run/", templateParams)
+	//  the second /run should produce the same result
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", templateParams)
 	comp, err = bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -550,13 +559,13 @@ func TestSave(t *testing.T) {
 		{
 			name:      "template config with new query",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
-			result:    "p/JExTWG6zk6K",
+			result:    "p/DYlGRQeO0bX",
 			newRecord: true,
 		},
 		{
 			name:      "invalid config",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}},
-			result:    "p/adv9VNjZGf-",
+			result:    "p/EMmfQADkGcq",
 			newRecord: true,
 		},
 		{
@@ -568,7 +577,7 @@ func TestSave(t *testing.T) {
 		{
 			name:      "template query with new config",
 			params:    url.Values{"mode": {"json"}, "config": {`[{}]`}, "query": {templateQuery}},
-			result:    "p/vkTDdT0z08q",
+			result:    "p/4cOeA7NGLru",
 			newRecord: true,
 		},
 	}
@@ -576,7 +585,7 @@ func TestSave(t *testing.T) {
 	nbBadgerRecords := 0
 	for _, tt := range saveTests {
 		t.Run(tt.name, func(t *testing.T) {
-			buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
+			buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
 
 			if want, got := tt.result, buf.String(); want != got {
 				t.Errorf("expected %s, but got %s", want, got)
@@ -616,7 +625,7 @@ func TestView(t *testing.T) {
 				"config": {`[{"_id": 1}]`},
 				"query":  {templateQuery},
 			},
-			url:          "p/VxLxAzh9Uv9",
+			url:          "p/DEz-pkpheLX",
 			responseCode: http.StatusOK,
 			newRecord:    true,
 		},
@@ -633,7 +642,7 @@ func TestView(t *testing.T) {
 	for _, tt := range viewTests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.responseCode == http.StatusOK {
-				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save/", tt.params)
+				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
 
 				if want, got := tt.url, buf.String(); want != got {
 					t.Errorf("expected %s but got %s", want, got)
@@ -657,6 +666,9 @@ func TestView(t *testing.T) {
 }
 
 func TestBasePage(t *testing.T) {
+
+	t.Parallel()
+
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	resp := httptest.NewRecorder()
 
@@ -680,7 +692,7 @@ func TestRemoveOldDB(t *testing.T) {
 	testServer.clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run/", params)
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
 	comp, err := bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -690,12 +702,17 @@ func TestRemoveOldDB(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	DBHash := dbHash(mgodatagenMode, []byte(params.Get("config")))
+	p := &page{
+		Mode:   mgodatagenMode,
+		Config: []byte(params.Get("config")),
+	}
+	testServer.logger.Print(p.String())
+	DBHash := p.dbHash()
 	testServer.activeDB.Store(DBHash, time.Now().Add(-cleanupInterval).Unix())
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run/", params)
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
 
 	if want, got := buf.String(), noDocFound; want != got {
 		t.Errorf("expected %s but got %s", want, got)
@@ -721,6 +738,9 @@ func TestRemoveOldDB(t *testing.T) {
 }
 
 func TestStaticHandlers(t *testing.T) {
+
+	t.Parallel()
+
 	staticFileTests := []struct {
 		name         string
 		url          string
@@ -792,34 +812,6 @@ func TestStaticHandlers(t *testing.T) {
 	}
 }
 
-func BenchmarkComputeID(b *testing.B) {
-
-	config := []byte(`[
-  {
-    "collection": "collectionName",
-    "count": 100,
-    "content": {
-      "k": {
-        "type": "string",
-        "minLength": 5,
-        "maxLength": 5
-      },
-      "k2": {
-        "type": "string",
-        "maxLength": 4
-      }
-    }
-  }
-]`)
-	query := []byte("db.collectionName.find()")
-	mode := []byte("json")
-
-	for n := 0; n < b.N; n++ {
-		_ = computeID(mode, config, query)
-	}
-
-}
-
 func BenchmarkNewPage(b *testing.B) {
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	b.ResetTimer()
@@ -830,7 +822,7 @@ func BenchmarkNewPage(b *testing.B) {
 }
 
 func BenchmarkView(b *testing.B) {
-	req, _ := http.NewRequest(http.MethodPost, "/save/", strings.NewReader(templateParams.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, "/save", strings.NewReader(templateParams.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
 	testServer.saveHandler(resp, req)
@@ -849,14 +841,14 @@ func BenchmarkSave(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
 		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest(http.MethodPost, "/save/", strings.NewReader(params.Encode()))
+		req, _ := http.NewRequest(http.MethodPost, "/save", strings.NewReader(params.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		testServer.saveHandler(resp, req)
 	}
 }
 
 func BenchmarkRunExistingDB(b *testing.B) {
-	req, _ := http.NewRequest(http.MethodPost, "/run/", strings.NewReader(templateParams.Encode()))
+	req, _ := http.NewRequest(http.MethodPost, "/run", strings.NewReader(templateParams.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
 	testServer.runHandler(resp, req)
@@ -874,7 +866,7 @@ func BenchmarkRunNonExistingDB(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
 		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest(http.MethodPost, "/run/", strings.NewReader(params.Encode()))
+		req, _ := http.NewRequest(http.MethodPost, "/run", strings.NewReader(params.Encode()))
 		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 		testServer.runHandler(resp, req)
 	}
@@ -883,7 +875,7 @@ func BenchmarkRunNonExistingDB(b *testing.B) {
 func BenchmarkServeStaticFile(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest(http.MethodGet, "/static/docs.html", nil)
+		req, _ := http.NewRequest(http.MethodGet, "/static/docs-3.html", nil)
 		testServer.staticHandler(resp, req)
 	}
 }

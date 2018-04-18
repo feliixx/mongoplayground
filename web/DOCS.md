@@ -655,4 +655,4 @@ Contributions are welcome!
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
 
-The documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
+Editors are created with [ace](https://ace.c9.io/), and the documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)

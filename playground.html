@@ -75,7 +75,7 @@
         function run(doSave) {
             if (isCorrect()) {
                 var r = new XMLHttpRequest()
-                r.open("POST", doSave ? "/save/" : "/run/")
+                r.open("POST", doSave ? "/save" : "/run")
                 r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
                 r.onreadystatechange = function () {
                     if (r.readyState !== 4) { return }
@@ -144,7 +144,7 @@
             <label>Mode:
                 <select id="mode" onchange="changeFunc()">
                     <option>json</option>
-                    <option {{if .ModeMgodatagen}}selected="selected" {{end}}>mgodatagen</option>
+                    <option {{if eq .Mode 0 }}selected="selected" {{end}}>mgodatagen</option>
                 </select>
             </label>
         </div>

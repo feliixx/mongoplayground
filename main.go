@@ -1,17 +1,16 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
 )
 
 func main() {
-	s, err := newServer()
+	l := log.New(os.Stdout, "", log.LstdFlags)
+	s, err := newServer(l)
 	if err != nil {
-		fmt.Printf("aborting: %v\n", err)
-		os.Exit(1)
+		l.Fatalf("aborting: %v\n", err)
 	}
-	log.Fatal(http.ListenAndServe(":80", s))
+	l.Fatal(http.ListenAndServe(":80", s))
 }

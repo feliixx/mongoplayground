@@ -3,7 +3,7 @@ echo "POST http://localhost:80/run?config=%5B%7B%22collection%22%3A%22collection
 
 
 echo "\nsaving one playground\n" 
-curl http://localhost:80/save/ -s -X "POST" -H "application/x-www-form-urlencoded" -d "config=%5B%7B%22database%22%3A%22dbName%22%2C%22collection%22%3A%22collection%22%2C%22count%22%3A100%2C%22content%22%3A%7B%22fieldName%22%3A%7B%22type%22%3A%22string%22%2C%22minLength%22%3A5%2C%22maxLength%22%3A10%7D%7D%7D%5D&query=db.collection.find()" -o tmp.txt
+curl "http://localhost:80/save" -s -X "POST" -H "application/x-www-form-urlencoded" -d "config=%5B%7B%22database%22%3A%22dbName%22%2C%22collection%22%3A%22collection%22%2C%22count%22%3A100%2C%22content%22%3A%7B%22fieldName%22%3A%7B%22type%22%3A%22string%22%2C%22minLength%22%3A5%2C%22maxLength%22%3A10%7D%7D%7D%5D&query=db.collection.find()" -o tmp.txt
 
 echo "\n/p/xxx on a saved playground\n"
 echo "POST http://localhost:80/$(cat tmp.txt)" | vegeta attack -duration=5s | tee results.bin | vegeta report
@@ -21,4 +21,4 @@ echo "\nsave distinct playground"
 vegeta attack -lazy -duration=5s -targets=targets.txt | tee results.bin | vegeta report
 
 echo "GET docs.html"
-echo "GET http://localhost:80/static/docs.html" | vegeta attack -duration=5s | tee results.bin | vegeta report 
+echo "GET http://localhost:80/static/docs-3.html" | vegeta attack -duration=5s | tee results.bin | vegeta report 
