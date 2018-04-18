@@ -110,7 +110,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
-// view a saved playground page identified by his ID
+// view a saved playground page identified by its ID
 func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := strings.TrimPrefix(r.URL.Path, "/p/")
@@ -306,13 +306,8 @@ func (s *server) fillCollection(db *mgo.Database, c cfg.Collection) error {
 	// always the same sequence of ObjectId
 	if _, hasID := c.Content["_id"]; !hasID {
 		g.Generators = append(g.Generators, &SeededObjectIDGenerator{
-			idx: 0,
-			EmptyGenerator: generators.EmptyGenerator{
-				K:              append([]byte("_id"), byte(0)),
-				NullPercentage: 0,
-				T:              bson.ElementObjectId,
-				Out:            ci.Encoder,
-			},
+			EmptyGenerator: generators.NewEmptyGenerator("_id", 0, bson.ElementObjectId, ci.Encoder),
+			idx:            0,
 		})
 	}
 	coll := createCollection(db, c.Name)

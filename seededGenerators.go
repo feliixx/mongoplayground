@@ -16,10 +16,10 @@ func objectIDBytes(n int32) []byte {
 		byte(t >> 16),
 		byte(t >> 8),
 		byte(t),
-		byte(1), // Machine, first 3 bytes of md5(hostname)
+		byte(1), // 1,2,3 for hostname bytes
 		byte(2),
 		byte(3),
-		byte(4), // Pid, 2 bytes, specs don't specify endianness, but we use big endian.
+		byte(4), // 4,5 for pid bytes
 		byte(5),
 		byte(n >> 16), // Increment, 3 bytes, big endian
 		byte(n >> 8),
