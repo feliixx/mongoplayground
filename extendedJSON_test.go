@@ -69,7 +69,7 @@ func TestExtendedJSON(t *testing.T) {
 	}
 }
 
-func TestJavascriptIndent(t *testing.T) {
+func TestJavascriptIndentRoundTrip(t *testing.T) {
 
 	t.Parallel()
 
@@ -230,7 +230,7 @@ func TestJavascriptIndent(t *testing.T) {
 
 	buffer := loadPlaygroundJs(t)
 
-	testFuncFormat := `
+	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
@@ -242,7 +242,7 @@ func TestJavascriptIndent(t *testing.T) {
 	buffer.Write([]byte(`
 		var tests = [`))
 	for _, tt := range jsIndentTests {
-		fmt.Fprintf(buffer, testFuncFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -260,11 +260,11 @@ func TestJavascriptIndent(t *testing.T) {
 
 		let indentResult = indent(tt.input, indentMode)
 		if (indentResult !== tt.expectedIndent) {
-			print("test " + tt.name + " failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
+			print("test " + tt.name + " ident failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 		let compactResult = indent(tt.input, compactMode)
 		if (compactResult !== tt.expectedCompact) {
-			print("test " + tt.name + " failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
+			print("test " + tt.name + " compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 
 		indentResult = indent(indentResult, indentMode)
@@ -399,7 +399,7 @@ func TestFormatQuery(t *testing.T) {
 
 	buffer := loadPlaygroundJs(t)
 
-	testFuncFormat := `
+	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
@@ -410,7 +410,7 @@ func TestFormatQuery(t *testing.T) {
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFuncFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeJSON), strconv.Quote(tt.formattedModeDatagen))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeJSON), strconv.Quote(tt.formattedModeDatagen))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`

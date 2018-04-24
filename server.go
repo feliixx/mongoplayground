@@ -194,7 +194,7 @@ func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 // serve static ressources (css/js/html)
 func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
-	name := strings.TrimLeft(r.URL.Path, "/static/")
+	name := strings.TrimPrefix(r.URL.Path, "/static/")
 	sub := strings.Split(name, ".")
 
 	contentType := "text/html; charset=utf-8"
@@ -247,7 +247,7 @@ func (s *server) run(p *page) ([]byte, error) {
 				return nil, fmt.Errorf("fail to parse configuration: %v", err)
 			}
 			if len(listColl) > maxCollNb {
-				return nil, fmt.Errorf("Max number of collections to create is %d, but found %d collections", maxCollNb, len(listColl))
+				return nil, fmt.Errorf("max number of collections to create is %d, but found %d collections", maxCollNb, len(listColl))
 			}
 			for _, c := range listColl {
 				err := s.fillCollection(db, c)
@@ -294,6 +294,7 @@ func createCollection(db *mgo.Database, name string) *mgo.Collection {
 
 func (s *server) fillCollection(db *mgo.Database, c cfg.Collection) error {
 	// use a constant seed to always have the same output
+	// TODO: use the actual server version here
 	ci := generators.NewCollInfo(c.Count, false, []int{3, 6}, 1)
 	if ci.Count > maxDoc || ci.Count <= 0 {
 		ci.Count = maxDoc
@@ -355,29 +356,28 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	var pipeline []bson.M
 	err := bson.UnmarshalJSON(queryBytes, &pipeline)
 	if err != nil {
-		return nil, fmt.Errorf("Fail to parse content of query: %v", err)
+		return nil, fmt.Errorf("fail to parse content of query: %v", err)
 	}
 
 	var docs []interface{}
-	collection := db.C(string(p[1]))
 
+	collection := db.C(string(p[1]))
 	method := string(p[2][:start])
+
 	switch method {
 	case "find":
 		for len(pipeline) < 2 {
 			pipeline = append(pipeline, bson.M{})
 		}
 		err = collection.Find(pipeline[0]).Select(pipeline[1]).All(&docs)
-		if err != nil {
-			return nil, fmt.Errorf("Find query failed: %v", err)
-		}
 	case "aggregate":
 		err = collection.Pipe(pipeline).All(&docs)
-		if err != nil {
-			return nil, fmt.Errorf("Aggregate query failed: %v", err)
-		}
 	default:
-		return nil, fmt.Errorf("invalid method: %s", method)
+		err = fmt.Errorf("invalid method: %s", method)
+	}
+
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %v", err)
 	}
 	if len(docs) == 0 {
 		return []byte(noDocFound), nil

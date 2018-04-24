@@ -174,7 +174,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-			result:    "Fail to parse content of query: invalid character ']' after object key:value pair",
+			result:    "fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -195,7 +195,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-			result:    "Aggregate query failed: $project specification must be an object",
+			result:    "query failed: $project specification must be an object",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -216,7 +216,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"$set": 12})`}},
-			result:    "Find query failed: unknown top level operator: $set",
+			result:    "query failed: unknown top level operator: $set",
 			createdDB: 1,
 			compact:   false,
 		},
@@ -237,7 +237,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:    "Fail to parse content of query: invalid character ']' after object key:value pair",
+			result:    "fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -331,7 +331,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`db.collection.findOne()`},
 			},
-			result:    "invalid method: findOne",
+			result:    "query failed: invalid method: findOne",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -463,7 +463,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"k": "randompattern"}]`},
 				"query":  {`db.collection.find({k: /pattern/})`},
 			},
-			result:    `Fail to parse content of query: invalid character '/' looking for beginning of value`,
+			result:    `fail to parse content of query: invalid character '/' looking for beginning of value`,
 			createdDB: 1,
 			compact:   false,
 		},
@@ -739,8 +739,6 @@ func TestRemoveOldDB(t *testing.T) {
 
 func TestStaticHandlers(t *testing.T) {
 
-	t.Parallel()
-
 	staticFileTests := []struct {
 		name         string
 		url          string
@@ -780,6 +778,9 @@ func TestStaticHandlers(t *testing.T) {
 	}
 	for _, tt := range staticFileTests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			t.Parallel()
+
 			resp := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
 			testServer.staticHandler(resp, req)

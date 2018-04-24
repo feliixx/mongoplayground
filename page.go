@@ -56,7 +56,7 @@ func (p *page) String() string {
 	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
 }
 
-// encode a page into a []byte
+// encode a page into a byte slice
 //
 // v[0:4] -> an int32 to store the position of the last byte of the configuration
 // v[4] -> the mode (mgodatagen / json) to use for building the database
@@ -64,8 +64,10 @@ func (p *page) String() string {
 // v[endConfig:] -> the query
 func (p *page) encode() []byte {
 	v := make([]byte, 5+len(p.Config)+len(p.Query))
+
 	endConfig := len(p.Config) + 5
 	binary.LittleEndian.PutUint32(v[0:4], uint32(endConfig))
+
 	v[4] = p.Mode
 	copy(v[5:endConfig], p.Config)
 	copy(v[endConfig:], p.Query)
@@ -73,9 +75,9 @@ func (p *page) encode() []byte {
 }
 
 // decode a slice of byte into the p page
-func (p *page) decode(val []byte) {
-	endConfig := binary.LittleEndian.Uint32(val[0:4])
-	p.Mode = val[4]
-	p.Config = val[5:endConfig]
-	p.Query = val[endConfig:]
+func (p *page) decode(v []byte) {
+	endConfig := binary.LittleEndian.Uint32(v[0:4])
+	p.Mode = v[4]
+	p.Config = v[5:endConfig]
+	p.Query = v[endConfig:]
 }
