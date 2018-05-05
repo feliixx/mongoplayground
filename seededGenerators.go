@@ -1,8 +1,10 @@
 package main
 
 import (
-	"github.com/feliixx/mgodatagen/generators"
 	"time"
+
+	"github.com/feliixx/mgodatagen/datagen/generators"
+	"github.com/globalsign/mgo/bson"
 )
 
 var (
@@ -27,15 +29,20 @@ func objectIDBytes(n int32) []byte {
 	}
 }
 
-// SeededObjectIDGenerator generator creating always the same sequence of
+// seededObjectIDGenerator generator creating always the same sequence of
 // bson objectID
-type SeededObjectIDGenerator struct {
-	generators.EmptyGenerator
+type seededObjectIDGenerator struct {
+	key []byte
 	idx int32
+	buf *generators.DocBuffer
 }
 
+func (g *seededObjectIDGenerator) Key() []byte  { return g.key }
+func (g *seededObjectIDGenerator) Exists() bool { return true }
+func (g *seededObjectIDGenerator) Type() byte   { return bson.ElementObjectId }
+
 // Value encode an objectId in the encoder
-func (g *SeededObjectIDGenerator) Value() {
-	g.Out.Write(objectIDBytes(g.idx))
+func (g *seededObjectIDGenerator) Value() {
+	g.buf.Write(objectIDBytes(g.idx))
 	g.idx++
 }

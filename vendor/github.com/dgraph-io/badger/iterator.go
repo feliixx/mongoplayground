@@ -22,6 +22,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dgraph-io/badger/options"
+
 	"github.com/dgraph-io/badger/y"
 	farm "github.com/dgryski/go-farm"
 )
@@ -51,18 +53,30 @@ type Item struct {
 	txn       *Txn
 }
 
+// String returns a string representation of Item
+func (item *Item) String() string {
+	return fmt.Sprintf("key=%q, version=%d, meta=%x", item.Key(), item.Version(), item.meta)
+}
+
+// Deprecated
 // ToString returns a string representation of Item
 func (item *Item) ToString() string {
-	return fmt.Sprintf("key=%q, version=%d, meta=%x", item.Key(), item.Version(), item.meta)
-
+	return item.String()
 }
 
 // Key returns the key.
 //
 // Key is only valid as long as item is valid, or transaction is valid.  If you need to use it
-// outside its validity, please copy it.
+// outside its validity, please use KeyCopy
 func (item *Item) Key() []byte {
 	return item.key
+}
+
+// KeyCopy returns a copy of the key of the item, writing it to dst slice.
+// If nil is passed, or capacity of dst isn't sufficient, a new slice would be allocated and
+// returned.
+func (item *Item) KeyCopy(dst []byte) []byte {
+	return y.SafeCopy(dst, item.key)
 }
 
 // Version returns the commit timestamp of the item.
@@ -72,8 +86,14 @@ func (item *Item) Version() uint64 {
 
 // Value retrieves the value of the item from the value log.
 //
-// The returned value is only valid as long as item is valid, or transaction is valid. So, if you
-// need to use it outside, please parse or copy it.
+// This method must be called within a transaction. Calling it outside a
+// transaction is considered undefined behavior. If an iterator is being used,
+// then Item.Value() is defined in the current iteration only, because items are
+// reused.
+//
+// If you need to use a value outside a transaction, please use Item.ValueCopy
+// instead, or copy it yourself. Value might change once discard or commit is called.
+// Use ValueCopy if you want to do a Set after Get.
 func (item *Item) Value() ([]byte, error) {
 	item.wg.Wait()
 	if item.status == prefetched {
@@ -110,6 +130,11 @@ func (item *Item) hasValue() bool {
 	return true
 }
 
+// IsDeletedOrExpired returns true if item contains deleted or expired value.
+func (item *Item) IsDeletedOrExpired() bool {
+	return isDeletedOrExpired(item.meta, item.expiresAt)
+}
+
 func (item *Item) yieldItemValue() ([]byte, func(), error) {
 	if !item.hasValue() {
 		return nil, nil, nil
@@ -127,7 +152,7 @@ func (item *Item) yieldItemValue() ([]byte, func(), error) {
 
 	var vp valuePointer
 	vp.Decode(item.vptr)
-	return item.db.vlog.Read(vp)
+	return item.db.vlog.Read(vp, item.slice)
 }
 
 func runCallback(cb func()) {
@@ -145,9 +170,13 @@ func (item *Item) prefetchValue() {
 	if val == nil {
 		return
 	}
-	buf := item.slice.Resize(len(val))
-	copy(buf, val)
-	item.val = buf
+	if item.db.opt.ValueLogLoadingMode == options.MemoryMap {
+		buf := item.slice.Resize(len(val))
+		copy(buf, val)
+		item.val = buf
+	} else {
+		item.val = val
+	}
 }
 
 // EstimatedSize returns approximate size of the key-value pair.
@@ -304,6 +333,19 @@ func (it *Iterator) ValidForPrefix(prefix []byte) bool {
 // Close would close the iterator. It is important to call this when you're done with iteration.
 func (it *Iterator) Close() {
 	it.iitr.Close()
+
+	// It is important to wait for the fill goroutines to finish. Otherwise, we might leave zombie
+	// goroutines behind, which are waiting to acquire file read locks after DB has been closed.
+	waitFor := func(l list) {
+		item := l.pop()
+		for item != nil {
+			item.wg.Wait()
+			item = l.pop()
+		}
+	}
+	waitFor(it.waste)
+	waitFor(it.data)
+
 	// TODO: We could handle this error.
 	_ = it.txn.db.vlog.decrIteratorCount()
 }
@@ -327,14 +369,14 @@ func (it *Iterator) Next() {
 	}
 }
 
-func isDeletedOrExpired(vs y.ValueStruct) bool {
-	if vs.Meta&bitDelete > 0 {
+func isDeletedOrExpired(meta byte, expiresAt uint64) bool {
+	if meta&bitDelete > 0 {
 		return true
 	}
-	if vs.ExpiresAt == 0 {
+	if expiresAt == 0 {
 		return false
 	}
-	return vs.ExpiresAt <= uint64(time.Now().Unix())
+	return expiresAt <= uint64(time.Now().Unix())
 }
 
 // parseItem is a complex function because it needs to handle both forward and reverse iteration
@@ -369,11 +411,8 @@ func (it *Iterator) parseItem() bool {
 	}
 
 	if it.opt.AllVersions {
-		// First check if value has been expired.
-		if isDeletedOrExpired(mi.Value()) {
-			mi.Next()
-			return false
-		}
+		// Return deleted or expired values also, otherwise user can't figure out
+		// whether the key was deleted.
 		item := it.newItem()
 		it.fill(item)
 		setItem(item)
@@ -398,7 +437,8 @@ func (it *Iterator) parseItem() bool {
 
 FILL:
 	// If deleted, advance and return.
-	if isDeletedOrExpired(mi.Value()) {
+	vs := mi.Value()
+	if isDeletedOrExpired(vs.Meta, vs.ExpiresAt) {
 		mi.Next()
 		return false
 	}

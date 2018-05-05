@@ -46,6 +46,9 @@ type Options struct {
 	// How should LSM tree be accessed.
 	TableLoadingMode options.FileLoadingMode
 
+	// How should value log be accessed
+	ValueLogLoadingMode options.FileLoadingMode
+
 	// 3. Flags that user might want to review
 	// ----------------------------------------
 	// The following affect all levels of LSM tree.
@@ -83,6 +86,15 @@ type Options struct {
 
 	maxBatchCount int64 // max entries in batch
 	maxBatchSize  int64 // max batch size in bytes
+
+	// Open the DB as read-only. With this set, multiple processes can
+	// open the same Badger DB. Note: if the DB being opened had crashed
+	// before and has vlog data to be replayed, ReadOnly will cause Open
+	// to fail with an appropriate message.
+	ReadOnly bool
+
+	// Truncate value log to delete corrupt data, if any. Would not truncate if ReadOnly is set.
+	Truncate bool
 }
 
 // DefaultOptions sets a list of recommended options for good performance.
@@ -92,6 +104,7 @@ var DefaultOptions = Options{
 	LevelOneSize:        256 << 20,
 	LevelSizeMultiplier: 10,
 	TableLoadingMode:    options.LoadToRAM,
+	ValueLogLoadingMode: options.MemoryMap,
 	// table.MemoryMap to mmap() the tables.
 	// table.Nothing to not preload the tables.
 	MaxLevels:               7,
@@ -105,4 +118,18 @@ var DefaultOptions = Options{
 	// MemoryMap to mmap() the value log files
 	ValueLogFileSize: 1 << 30,
 	ValueThreshold:   20,
+	Truncate:         false,
+}
+
+// LSMOnlyOptions follows from DefaultOptions, but sets a higher ValueThreshold so values would
+// be colocated with the LSM tree, with value log largely acting as a write-ahead log only. These
+// options would reduce the disk usage of value log, and make Badger act like a typical LSM tree.
+var LSMOnlyOptions = Options{}
+
+func init() {
+	LSMOnlyOptions = DefaultOptions
+
+	LSMOnlyOptions.ValueThreshold = 65500      // Max value length which fits in uint16.
+	LSMOnlyOptions.ValueLogFileSize = 64 << 20 // Allow easy space reclamation.
+	LSMOnlyOptions.ValueLogLoadingMode = options.FileIO
 }

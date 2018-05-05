@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	cfg "github.com/feliixx/mgodatagen/config"
-	"github.com/feliixx/mgodatagen/generators"
+	"github.com/feliixx/mgodatagen/datagen"
+	"github.com/feliixx/mgodatagen/datagen/generators"
 	"github.com/globalsign/mgo"
 	"github.com/globalsign/mgo/bson"
 )
@@ -242,15 +242,17 @@ func (s *server) run(p *page) ([]byte, error) {
 		db.DropDatabase()
 		switch p.Mode {
 		case mgodatagenMode:
-			listColl, err := cfg.ParseConfig(p.Config, true)
+			listColl, err := datagen.ParseConfig(p.Config, true)
 			if err != nil {
 				return nil, fmt.Errorf("fail to parse configuration: %v", err)
 			}
 			if len(listColl) > maxCollNb {
 				return nil, fmt.Errorf("max number of collections to create is %d, but found %d collections", maxCollNb, len(listColl))
 			}
+			mapRef := map[int][][]byte{}
+			mapRefType := map[int]byte{}
 			for _, c := range listColl {
-				err := s.fillCollection(db, c)
+				err := s.fillCollection(db, c, mapRef, mapRefType)
 				if err != nil {
 					return nil, fmt.Errorf("fail to create DB: %v", err)
 				}
@@ -292,10 +294,10 @@ func createCollection(db *mgo.Database, name string) *mgo.Collection {
 	return c
 }
 
-func (s *server) fillCollection(db *mgo.Database, c cfg.Collection) error {
+func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef map[int][][]byte, mapRefType map[int]byte) error {
 	// use a constant seed to always have the same output
 	// TODO: use the actual server version here
-	ci := generators.NewCollInfo(c.Count, false, []int{3, 6}, 1)
+	ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
 	if ci.Count > maxDoc || ci.Count <= 0 {
 		ci.Count = maxDoc
 	}
@@ -306,10 +308,12 @@ func (s *server) fillCollection(db *mgo.Database, c cfg.Collection) error {
 	// if the config doesn't contain an _id generator, add a seeded one to generate
 	// always the same sequence of ObjectId
 	if _, hasID := c.Content["_id"]; !hasID {
-		g.Generators = append(g.Generators, &SeededObjectIDGenerator{
-			EmptyGenerator: generators.NewEmptyGenerator("_id", 0, bson.ElementObjectId, ci.Encoder),
-			idx:            0,
-		})
+		sg := &seededObjectIDGenerator{
+			key: append([]byte("_id"), byte(0)),
+			idx: 0,
+			buf: ci.DocBuffer,
+		}
+		g.Add(sg)
 	}
 	coll := createCollection(db, c.Name)
 	bulk := coll.Bulk()
@@ -317,8 +321,8 @@ func (s *server) fillCollection(db *mgo.Database, c cfg.Collection) error {
 
 	for i := 0; i < ci.Count; i++ {
 		g.Value()
-		b := make([]byte, len(ci.Encoder.Data))
-		copy(b, ci.Encoder.Data)
+		b := make([]byte, ci.DocBuffer.Len())
+		copy(b, ci.DocBuffer.Bytes())
 		bulk.Insert(bson.Raw{Data: b})
 	}
 	_, err = bulk.Run()

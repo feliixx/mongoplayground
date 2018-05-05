@@ -208,7 +208,7 @@ type ObjectId string
 func ObjectIdHex(s string) ObjectId {
 	d, err := hex.DecodeString(s)
 	if err != nil || len(d) != 12 {
-		panic(fmt.Errorf("invalid input to ObjectIdHex: %q", s))
+		panic(fmt.Sprintf("invalid input to ObjectIdHex: %q", s))
 	}
 	return ObjectId(d)
 }

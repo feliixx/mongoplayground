@@ -298,7 +298,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "fail to create DB: fail to create collection coll2: error while creating generators from configuration file:\n\tcause: invalid type  for field k",
+			result:    "fail to create DB: fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
 			createdDB: 0,
 			compact:   false,
 		},

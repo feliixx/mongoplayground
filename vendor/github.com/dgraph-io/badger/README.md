@@ -1,4 +1,4 @@
-# BadgerDB [![GoDoc](https://godoc.org/github.com/dgraph-io/badger?status.svg)](https://godoc.org/github.com/dgraph-io/badger) [![Go Report Card](https://goreportcard.com/badge/github.com/dgraph-io/badger)](https://goreportcard.com/report/github.com/dgraph-io/badger) [![Build Status](https://travis-ci.org/dgraph-io/badger.svg?branch=master)](https://travis-ci.org/dgraph-io/badger) ![Appveyor](https://ci.appveyor.com/api/projects/status/github/dgraph-io/badger?branch=master&svg=true) [![Coverage Status](https://coveralls.io/repos/github/dgraph-io/badger/badge.svg?branch=master)](https://coveralls.io/github/dgraph-io/badger?branch=master)
+# BadgerDB [![GoDoc](https://godoc.org/github.com/dgraph-io/badger?status.svg)](https://godoc.org/github.com/dgraph-io/badger) [![Go Report Card](https://goreportcard.com/badge/github.com/dgraph-io/badger)](https://goreportcard.com/report/github.com/dgraph-io/badger) [![Build Status](https://teamcity.dgraph.io/guestAuth/app/rest/builds/buildType:(id:Badger_UnitTests)/statusIcon.svg)](https://teamcity.dgraph.io/viewLog.html?buildTypeId=Badger_UnitTests&buildId=lastFinished&guest=1) ![Appveyor](https://ci.appveyor.com/api/projects/status/github/dgraph-io/badger?branch=master&svg=true) [![Coverage Status](https://coveralls.io/repos/github/dgraph-io/badger/badge.svg?branch=master)](https://coveralls.io/github/dgraph-io/badger?branch=master)
 
 ![Badger mascot](images/diggy-shadow.png)
 
@@ -11,7 +11,7 @@ Badger v1.0 was released in Nov 2017. Check the [Changelog] for the full details
 
 [Changelog]:https://github.com/dgraph-io/badger/blob/master/CHANGELOG.md
 
-We introduced transactions in [v0.9.0] which involved a major API change. If you have a Badger 
+We introduced transactions in [v0.9.0] which involved a major API change. If you have a Badger
 datastore prior to that, please use [v0.8.1], but we strongly urge you to upgrade. Upgrading from
 both v0.8 and v0.9 will require you to [take backups](#database-backup) and restore using the new
 version.
@@ -30,6 +30,7 @@ version.
       - [Managing transactions manually](#managing-transactions-manually)
     + [Using key/value pairs](#using-keyvalue-pairs)
     + [Monotonically increasing integers](#monotonically-increasing-integers)
+    * [Merge Operations](#merge-operations)
     + [Setting Time To Live(TTL) and User Metadata on Keys](#setting-time-to-livettl-and-user-metadata-on-keys)
     + [Iterating over keys](#iterating-over-keys)
       - [Prefix scans](#prefix-scans)
@@ -101,7 +102,7 @@ cannot open the same database at the same time.
 To start a read-only transaction, you can use the `DB.View()` method:
 
 ```go
-err := db.View(func(tx *badger.Txn) error {
+err := db.View(func(txn *badger.Txn) error {
   // Your code here…
   return nil
 })
@@ -116,7 +117,7 @@ seen by calls made within the closure.
 To start a read-write transaction, you can use the `DB.Update()` method:
 
 ```go
-err := db.Update(func(tx *badger.Txn) error {
+err := db.Update(func(txn *badger.Txn) error {
   // Your code here…
   return nil
 })
@@ -127,8 +128,8 @@ All database operations are allowed inside a read-write transaction.
 Always check the returned error value. If you return an error
 within your closure it will be passed through.
 
-An `ErrConflict` error will be reported in case of a conflict. Depending on the state 
-of your application, you have the option to retry the operation if you receive 
+An `ErrConflict` error will be reported in case of a conflict. Depending on the state
+of your application, you have the option to retry the operation if you receive
 this error.
 
 An `ErrTxnTooBig` will be reported in case the number of pending writes/deletes in
@@ -140,10 +141,10 @@ not checking for errors in some places for simplicity):
 updates := make(map[string]string)
 txn := db.NewTransaction(true)
 for k,v := range updates {
-  if err := txn.Set(byte[](k),byte[](v)); err == ErrTxnTooBig {
+  if err := txn.Set([]byte(k),[]byte(v)); err == ErrTxnTooBig {
     _ = txn.Commit()
     txn = db.NewTransaction(..)
-    _ = txn.Set(k,v) 
+    _ = txn.Set([]byte(k),[]byte(v))
   }
 }
 _ = txn.Commit()
@@ -247,12 +248,59 @@ bandwidth provided to `DB.GetSequence`. The frequency at which disk writes are
 done is determined by this lease bandwidth and the frequency of `Next`
 invocations. Setting a bandwith too low would do more disk writes, setting it
 too high would result in wasted integers if Badger is closed or crashes.
+To avoid wasted integers, call `Release` before closing Badger.
 
 ```go
 seq, err := db.GetSequence(key, 1000)
+defer seq.Release()
 for {
   num, err := seq.Next()
 }
+```
+
+### Merge Operations
+Badger provides support for unordered merge operations. You can define a func
+of type `MergeFunc` which takes in an existing value, and a value to be
+_merged_ with it. It returns a new value which is the result of the _merge_
+operation. All values are specified in byte arrays. For e.g., here is a merge
+function (`add`) which adds a `uint64` value to an existing `uint64` value.
+
+```Go
+uint64ToBytes(i uint64) []byte {
+  var buf [8]byte
+  binary.BigEndian.PutUint64(buf[:], i)
+  return buf[:]
+}
+
+func bytesToUint64(b []byte) uint64 {
+  return binary.BigEndian.Uint64(b)
+}
+
+// Merge function to add two uint64 numbers
+func add(existing, new []byte) []byte {
+  return uint64ToBytes(bytesToUint64(existing) + bytesToUint64(new))
+}
+```
+
+This function can then be passed to the `DB.GetMergeOperator()` method, along
+with a key, and a duration value. The duration specifies how often the merge
+function is run on values that have been added using the `MergeOperator.Add()`
+method.
+
+`MergeOperator.Get()` method can be used to retrieve the cumulative value of the key
+associated with the merge operation.
+
+```Go
+key := []byte("merge")
+m := db.GetMergeOperator(key, add, 200*time.Millisecond)
+defer m.Stop()
+
+m.Add(uint64ToBytes(1))
+m.Add(uint64ToBytes(2))
+m.Add(uint64ToBytes(3))
+
+res, err := m.Get() // res should have value 6 encoded
+fmt.Println(bytesToUint64(res))
 ```
 
 ### Setting Time To Live(TTL) and User Metadata on Keys
@@ -266,6 +314,9 @@ is represented by a single byte. It can be used to set certain bits along
 with the key to aid in interpreting or decoding the key-value pair. User
 metadata can be set using the `Txn.SetWithMeta()` API method.
 
+`Txn.SetEntry()` can be used to set the key, value, user metatadata and TTL,
+all at once.
+
 ### Iterating over keys
 To iterate over keys, we can use an `Iterator`, which can be obtained using the
 `Txn.NewIterator()` method. Iteration happens in byte-wise lexicographical sorting
@@ -277,6 +328,7 @@ err := db.View(func(txn *badger.Txn) error {
   opts := badger.DefaultIteratorOptions
   opts.PrefetchSize = 10
   it := txn.NewIterator(opts)
+  defer it.Close()
   for it.Rewind(); it.Valid(); it.Next() {
     item := it.Item()
     k := item.Key()
@@ -304,7 +356,8 @@ To iterate over a key prefix, you can combine `Seek()` and `ValidForPrefix()`:
 
 ```go
 db.View(func(txn *badger.Txn) error {
-  it := txn.NewIterator(&DefaultIteratorOptions)
+  it := txn.NewIterator(badger.DefaultIteratorOptions)
+  defer it.Close()
   prefix := []byte("1234")
   for it.Seek(prefix); it.ValidForPrefix(prefix); it.Next() {
     item := it.Item()
@@ -332,6 +385,7 @@ err := db.View(func(txn *badger.Txn) error {
   opts := badger.DefaultIteratorOptions
   opts.PrefetchValues = false
   it := txn.NewIterator(opts)
+  defer it.Close()
   for it.Rewind(); it.Valid(); it.Next() {
     item := it.Item()
     k := item.Key()
@@ -361,11 +415,16 @@ garbage collection.
 * `DB.PurgeVersionsBelow(key, ts)`: This method is useful to do a more targeted clean up of older versions
 of key-value pairs. You can specify a key, and a timestamp. All versions of the key older than the timestamp
 are marked as deleted, making them eligible for garbage collection.
-* `DB.RunValueLogGC()`: This method triggers a value log garbage collection for a single log file. There
-are no guarantees that a call would result in space reclamation. Every run would rewrite at most one log
-file. So, repeated calls may be necessary. Please ensure that you call the `DB.Purge…()` methods first
-before invoking this method.
+* `DB.RunValueLogGC()`: This method is designed to do garbage collection while
+  Badger is online. Please ensure that you call the `DB.Purge…()` methods first
+  before invoking this method. It uses any statistics generated by the
+  `DB.Purge(…)` methods to pick files that are likely to lead to maximum space
+  reclamation. It loops until it encounters a file which does not lead to any
+  garbage collection.
 
+  It could lead to increased I/O if `DB.RunValueLogGC()` hasn’t been called for
+  a long time, and many deletes have happened in the meanwhile. So it is recommended
+  that this method be called regularly.
 
 ### Database backup
 There are two public API methods `DB.Backup()` and `DB.Load()` which can be
@@ -397,19 +456,23 @@ badger_backup --dir <path/to/badgerdb> --backup-file badger.bak
 ```
 
 ### Memory usage
+Badger's memory usage can be managed by tweaking several options available in
+the `Options` struct that is passed in when opening the database using
+`DB.Open`.
 
-Badger's memory usage is a function of:
-
-- Number of memtables `(Options::NumMemtables)`
-  - If you modify `NumMemtables`, also adjust `NumLevelZeroTables` and
-    `NumLevelZeroTablesStall` accordingly.
-- Number of concurrent compactions `(Options::NumCompactors)`
-- Mode in which LSM tree is loaded `(Options::TableLoadingMode)`
-- Size of table `(Options::MaxTableSize)`
-- Size of value log file `(Options::ValueLogFileSize)`
+- `Options.ValueLogLoadingMode` can be set to `options.FileIO` (instead of the
+  default `options.MemoryMap`) to avoid memory-mapping log files. This can be
+  useful in environments with low RAM.
+- Number of memtables (`Options.NumMemtables`)
+  - If you modify `Options.NumMemtables`, also adjust `Options.NumLevelZeroTables` and
+   `Options.NumLevelZeroTablesStall` accordingly.
+- Number of concurrent compactions (`Options.NumCompactors`)
+- Mode in which LSM tree is loaded (`Options.TableLoadingMode`)
+- Size of table (`Options.MaxTableSize`)
+- Size of value log file (`Options.ValueLogFileSize`)
 
 If you want to decrease the memory usage of Badger instance, tweak these
-options ideally doing them one at a time until you achieve the desired
+options (ideally one at a time) until you achieve the desired
 memory usage.
 
 ### Statistics
@@ -479,11 +542,14 @@ above).
 [badger-bench]: https://github.com/dgraph-io/badger-bench
 
 ## Other Projects Using Badger
-Below is a list of public, open source projects that use Badger:
+Below is a list of known projects that use Badger:
 
-* [Dgraph](https://github.com/dgraph-io/dgraph) - Distributed graph database.
-* [go-ipfs](https://github.com/ipfs/go-ipfs) - Go client for the InterPlanetary File System (IPFS), a new hypermedia distribution protocol.
 * [0-stor](https://github.com/zero-os/0-stor) - Single device object store.
+* [Dgraph](https://github.com/dgraph-io/dgraph) - Distributed graph database.
+* [Sandglass](https://github.com/celrenheit/sandglass) - distributed, horizontally scalable, persistent, time sorted message queue.
+* [Usenet Express](https://usenetexpress.com/) - Serving over 300TB of data with Badger.
+* [go-ipfs](https://github.com/ipfs/go-ipfs) - Go client for the InterPlanetary File System (IPFS), a new hypermedia distribution protocol.
+* [gorush](https://github.com/appleboy/gorush) - A push notification server written in Go.
 
 If you are using Badger in a project please send a pull request to add it to the list.
 
@@ -524,11 +590,24 @@ get compacted to disk. The compaction would only happen once `MaxTableSize` has 
 you're doing a few writes and then checking, you might not see anything on disk. Once you `Close`
 the database, you'll see these writes on disk.
 
+- **Reverse iteration doesn't give me the right results.**
+
+Just like forward iteration goes to the first key which is equal or greater than the SEEK key, reverse iteration goes to the first key which is equal or lesser than the SEEK key. Therefore, SEEK key would not be part of the results. You can typically add a tilde (~) as a suffix to the SEEK key to include it in the results. See the following issues: [#436](https://github.com/dgraph-io/badger/issues/436) and [#347](https://github.com/dgraph-io/badger/issues/347).
+
 - **Which instances should I use for Badger?**
 
 We recommend using instances which provide local SSD storage, without any limit
 on the maximum IOPS. In AWS, these are storage optimized instances like i3. They
 provide local SSDs which clock 100K IOPS over 4KB blocks easily.
+
+- **I'm getting a closed channel error. Why?**
+
+```
+panic: close of closed channel
+panic: send on closed channel
+```
+
+If you're seeing panics like above, this would be because you're operating on a closed DB. This can happen, if you call `Close()` before sending a write, or multiple times. You should ensure that you only call `Close()` once, and all your read/write operations finish before closing.
 
 - **Are there any Go specific settings that I should use?**
 
