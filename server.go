@@ -309,7 +309,7 @@ func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef m
 	// always the same sequence of ObjectId
 	if _, hasID := c.Content["_id"]; !hasID {
 		sg := &seededObjectIDGenerator{
-			key: append([]byte("_id"), byte(0)),
+			key: []byte("_id"),
 			idx: 0,
 			buf: ci.DocBuffer,
 		}

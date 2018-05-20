@@ -81,7 +81,6 @@ func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error {
 	var scan scanner
 	scan.reset()
 	needIndent := false
-	inParenthesis := false
 	depth := 0
 	for _, c := range src {
 		scan.bytes++
@@ -114,11 +113,7 @@ func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error {
 
 		case ',':
 			dst.WriteByte(c)
-			if inParenthesis {
-				dst.WriteByte(' ')
-			} else {
-				newline(dst, prefix, indent, depth)
-			}
+			newline(dst, prefix, indent, depth)
 
 		case ':':
 			dst.WriteByte(c)
@@ -132,13 +127,6 @@ func Indent(dst *bytes.Buffer, src []byte, prefix, indent string) error {
 				depth--
 				newline(dst, prefix, indent, depth)
 			}
-			dst.WriteByte(c)
-		case '(':
-			inParenthesis = true
-			dst.WriteByte(c)
-
-		case ')':
-			inParenthesis = false
 			dst.WriteByte(c)
 
 		default:

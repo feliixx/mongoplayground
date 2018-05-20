@@ -21,55 +21,11 @@ import (
 	"github.com/manveru/faker"
 )
 
-var (
-	// machine ID to generate unique object ID
-	machineID = readMachineID()
-	// process ID to generate unique object ID
-	processID = os.Getpid()
-	// objectIdCounter is atomically incremented when generating a new ObjectId
-	objectIDCounter = getRandomUint32()
-	// precomputed index. Most of the array
-	// will be of short length, so precompute
-	// the first indexes values to avoid calls
-	// to strconv.Itoa
-	// Use array as access is faster than with map
-	indexesBytes = [10]byte{
-		byte(48),
-		byte(49),
-		byte(50),
-		byte(51),
-		byte(52),
-		byte(53),
-		byte(54),
-		byte(55),
-		byte(56),
-		byte(57),
-	}
-)
-
-// readMachineId generates and returns a machine id.
-func readMachineID() []byte {
-	id := uint32Bytes(getRandomUint32())
-	hostname, err := os.Hostname()
-	if err == nil {
-		h := md5.New()
-		h.Write([]byte(hostname))
-		id = h.Sum(nil)
-	}
-	return id[0:3]
-}
-
-func getRandomUint32() uint32 {
-	seed := uint64(time.Now().Unix())
-	pcg32 := pcg.NewPCG32().Seed(seed, seed)
-	return pcg32.Random()
-}
-
 // Generator is an interface for generator that can be used to
 // generate random value of a specific type, and encode them in bson
 // format
 type Generator interface {
-	// Key returns the generator key folowed by 0x00 as a slice of bytes
+	// Key returns the element key
 	Key() []byte
 	// Type returns the bson type of the element as defined in bson spec: http://bsonspec.org/
 	Type() byte
@@ -82,7 +38,6 @@ type Generator interface {
 // base implements Key(), Type() and Exists() methods. Intended to be
 // embeded in each generator
 type base struct {
-	// []byte(key) + OxOO
 	key []byte
 	// probability that the element doesn't exist
 	nullPercentage uint32
@@ -94,7 +49,7 @@ type base struct {
 // newBase returns a new base
 func newBase(key string, nullPercentage uint32, bsonType byte, out *DocBuffer, pcg32 *pcg.PCG32) base {
 	return base{
-		key:            append([]byte(key), byte(0)),
+		key:            []byte(key),
 		nullPercentage: nullPercentage,
 		bsonType:       bsonType,
 		buffer:         out,
@@ -208,6 +163,33 @@ func (g *boolGenerator) Value() {
 	g.buffer.WriteSingleByte(byte(g.pcg32.Random() & 0x01))
 }
 
+// readMachineId generates and returns a machine id.
+func readMachineID() []byte {
+	id := uint32Bytes(getRandomUint32())
+	hostname, err := os.Hostname()
+	if err == nil {
+		h := md5.New()
+		h.Write([]byte(hostname))
+		id = h.Sum(nil)
+	}
+	return id[0:3]
+}
+
+func getRandomUint32() uint32 {
+	seed := uint64(time.Now().Unix())
+	pcg32 := pcg.NewPCG32().Seed(seed, seed)
+	return pcg32.Random()
+}
+
+var (
+	// machine ID to generate unique object ID
+	machineID = readMachineID()
+	// process ID to generate unique object ID
+	processID = os.Getpid()
+	// objectIdCounter is atomically incremented when generating a new ObjectId
+	objectIDCounter = getRandomUint32()
+)
+
 // Generator for creating bson.ObjectId
 type objectIDGenerator struct {
 	base
@@ -250,6 +232,7 @@ func (g *DocumentGenerator) Value() {
 			if gen.Type() != bson.ElementNil {
 				g.buffer.WriteSingleByte(gen.Type())
 				g.buffer.Write(gen.Key())
+				g.buffer.WriteSingleByte(byte(0))
 			}
 			gen.Value()
 		}
@@ -276,12 +259,31 @@ func (g *embeddedObjectGenerator) Value() {
 			if gen.Type() != bson.ElementNil {
 				g.buffer.WriteSingleByte(gen.Type())
 				g.buffer.Write(gen.Key())
+				g.buffer.WriteSingleByte(byte(0))
 			}
 			gen.Value()
 		}
 	}
 	g.buffer.WriteSingleByte(byte(0))
 	g.buffer.WriteAt(current, int32Bytes(int32(g.buffer.Len()-current)))
+}
+
+// precomputed index. Most of the array
+// will be of short length, so precompute
+// the first indexes values to avoid calls
+// to strconv.Itoa
+// Use array as access is faster than with map
+var indexesBytes = [10]byte{
+	byte(48),
+	byte(49),
+	byte(50),
+	byte(51),
+	byte(52),
+	byte(53),
+	byte(54),
+	byte(55),
+	byte(56),
+	byte(57),
 }
 
 // Generator for creating random array

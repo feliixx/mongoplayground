@@ -23,8 +23,8 @@
     "table",
     "y"
   ]
-  revision = "754278dbecbe8bfa0fec445d6af3bc2e0cf21911"
-  version = "v1.4.0"
+  revision = "3ff1bfbb11c02c78c11269096669396c2d2cbbd3"
+  version = "v1.5.0"
 
 [[projects]]
   branch = "master"
@@ -38,8 +38,8 @@
     "datagen",
     "datagen/generators"
   ]
-  revision = "0ab9a4731e3a046e8c66a76a7f10823c30e3f7e1"
-  version = "0.7.1"
+  revision = "d4c7f25a19391ba3201de876bf4976c6a9de60ac"
+  version = "0.7.2"
 
 [[projects]]
   branch = "master"
@@ -96,7 +96,7 @@
   branch = "master"
   name = "github.com/olekukonko/tablewriter"
   packages = ["."]
-  revision = "d5dd8a50526aadb3d5f2c9b5233277bc2db90e88"
+  revision = "d4647c9c7a84d847478d890b816b7d8b62b0b279"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -112,17 +112,17 @@
     "internal/timeseries",
     "trace"
   ]
-  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
+  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/sys"
   packages = ["unix"]
-  revision = "6f686a352de66814cdd080d970febae7767857a3"
+  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b0fecbfaa09ce8851d9f1a4b2cf537446353fb2049e9736da658e20db7e8f60c"
+  inputs-digest = "d07a5bdec26a57b7b42fc0c24f6d86347911f546e99ab2480524048055bfa284"
   solver-name = "gps-cdcl"
   solver-version = 1
