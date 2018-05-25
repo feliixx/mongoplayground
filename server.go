@@ -301,7 +301,7 @@ func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef m
 	if ci.Count > maxDoc || ci.Count <= 0 {
 		ci.Count = maxDoc
 	}
-	g, err := ci.DocumentGenerator(c.Content)
+	g, err := ci.NewDocumentGenerator(c.Content)
 	if err != nil {
 		return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
 	}
@@ -311,7 +311,7 @@ func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef m
 		sg := &seededObjectIDGenerator{
 			key: []byte("_id"),
 			idx: 0,
-			buf: ci.DocBuffer,
+			buf: g.Buffer,
 		}
 		g.Add(sg)
 	}
@@ -320,10 +320,12 @@ func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef m
 	bulk.Unordered()
 
 	for i := 0; i < ci.Count; i++ {
-		g.Value()
-		b := make([]byte, ci.DocBuffer.Len())
-		copy(b, ci.DocBuffer.Bytes())
-		bulk.Insert(bson.Raw{Data: b})
+		docBytes := g.Generate()
+		doc := bson.Raw{
+			Data: make([]byte, len(docBytes)),
+		}
+		copy(doc.Data, docBytes)
+		bulk.Insert(doc)
 	}
 	_, err = bulk.Run()
 	return err
