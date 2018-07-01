@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -86,6 +87,7 @@ func newServer(logger *log.Logger) (*server, error) {
 	s.mux.HandleFunc("/run", s.runHandler)
 	s.mux.HandleFunc("/save", s.saveHandler)
 	s.mux.HandleFunc("/static/", s.staticHandler)
+	s.mux.HandleFunc("/_status/healthcheck", s.healthcheckHandler)
 	return s, nil
 }
 
@@ -465,4 +467,39 @@ func (s *server) add(zw *gzip.Writer, buf *bytes.Buffer, index int) error {
 	s.staticContentMap[zw.Name] = index
 	s.staticContent = append(s.staticContent, c)
 	return nil
+}
+
+func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
+
+	currentStatus := struct {
+		Status string `json:"status"`
+		Count  int    `json:"count"`
+	}{
+		"ok",
+		s.countSavedPages(),
+	}
+	responseBytes, err := json.Marshal(currentStatus)
+	if err != nil {
+		s.logger.Printf("fail to marshal status %v: %v", currentStatus, err)
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "encoding/json")
+	w.Write(responseBytes)
+
+}
+
+func (s *server) countSavedPages() int {
+	count := 0
+	s.storage.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+		}
+		return nil
+	})
+	return count
 }

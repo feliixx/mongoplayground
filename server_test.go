@@ -813,6 +813,20 @@ func TestStaticHandlers(t *testing.T) {
 	}
 }
 
+func TestHealthcheck(t *testing.T) {
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/_status/healthcheck", nil)
+
+	testServer.healthcheckHandler(resp, req)
+	if resp.Code != http.StatusOK {
+		t.Errorf("expected response code %v, got %v", http.StatusOK, resp.Code)
+	}
+	want := `{"status":"ok","count":0}`
+	if got := resp.Body.String(); want != got {
+		t.Errorf("expected response %s, but got %s", want, got)
+	}
+}
+
 func BenchmarkNewPage(b *testing.B) {
 	req, _ := http.NewRequest(http.MethodGet, "/", nil)
 	b.ResetTimer()
@@ -937,7 +951,7 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
 		t.Errorf("expected %d DB, but got %d", want, got)
 	}
-	if want, got := nbBadgerRecords, testServer.savedPageNb(); want != got {
+	if want, got := nbBadgerRecords, testServer.countSavedPages(); want != got {
 		t.Errorf("expected %d page saved, but got %d", want, got)
 	}
 }
@@ -951,21 +965,6 @@ func filterDBNames(dbNames []string) []string {
 		}
 	}
 	return r
-}
-
-func (s *server) savedPageNb() int {
-	count := 0
-	s.storage.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			count++
-		}
-		return nil
-	})
-	return count
 }
 
 func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
