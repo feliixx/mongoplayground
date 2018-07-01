@@ -956,7 +956,7 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	}
 }
 
-// return only created db, and get rid of 'indexes', 'local' ect
+// return only created db, and get rid of 'indexes', 'local'
 func filterDBNames(dbNames []string) []string {
 	r := make([]string, 0)
 	for _, n := range dbNames {
