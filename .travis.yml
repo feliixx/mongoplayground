@@ -1,12 +1,12 @@
 language: go
 
 go:
-  - 1.11
+  - 1.11.x
 
 env:
   matrix:
-    - VERSION=3.6.7
-    - VERSION=4.0.1
+    - VERSION=3.6.8
+    - VERSION=4.0.3
 
 before_script: 
   - wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1404-$VERSION.tgz
