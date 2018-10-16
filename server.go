@@ -233,6 +233,10 @@ const (
 
 func (s *server) run(p *page) ([]byte, error) {
 
+	if len(p.Config) == 0 {
+		return nil, fmt.Errorf("invalid configuration:\n  must be an array or an object")
+	}
+
 	session := s.session.Copy()
 	defer session.Close()
 
@@ -241,7 +245,9 @@ func (s *server) run(p *page) ([]byte, error) {
 
 	_, exists := s.activeDB.LoadOrStore(DBHash, time.Now().Unix())
 	if !exists {
+
 		db.DropDatabase()
+
 		switch p.Mode {
 		case mgodatagenMode:
 			listColl, err := datagen.ParseConfig(p.Config, true)
@@ -260,25 +266,45 @@ func (s *server) run(p *page) ([]byte, error) {
 				}
 			}
 		case jsonMode:
-			var docs []bson.M
-			err := bson.UnmarshalJSON(p.Config, &docs)
-			if err != nil {
-				return nil, fmt.Errorf("fail to parse bson documents: %v", err)
+
+			var err error
+			collections := map[string][]bson.M{}
+
+			switch p.Config[0] {
+			case '{':
+				err = bson.UnmarshalJSON(p.Config, &collections)
+			case '[':
+				var docs []bson.M
+				err = bson.UnmarshalJSON(p.Config, &docs)
+
+				collections["collection"] = docs
 			}
-			coll := createCollection(db, "collection")
-			bulk := coll.Bulk()
-			bulk.Unordered()
-			if len(docs) > 0 {
-				for i, doc := range docs {
-					if _, hasID := doc["_id"]; !hasID {
-						doc["_id"] = bson.ObjectId(objectIDBytes(int32(i)))
+
+			if err != nil {
+				return nil, fmt.Errorf("fail to parse configuration:\n  %v", err)
+			}
+
+			if len(collections) > 10 {
+				return nil, fmt.Errorf("max number of collections allowed is 10, but found %d collections", len(collections))
+			}
+
+			for name, docs := range collections {
+
+				coll := createCollection(db, name)
+				bulk := coll.Bulk()
+				bulk.Unordered()
+				if len(docs) > 0 {
+					for i, doc := range docs {
+						if _, hasID := doc["_id"]; !hasID {
+							doc["_id"] = bson.ObjectId(objectIDBytes(int32(i)))
+						}
+						bulk.Insert(doc)
 					}
-					bulk.Insert(doc)
 				}
-			}
-			_, err = bulk.Run()
-			if err != nil {
-				return nil, err
+				_, err := bulk.Run()
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	}

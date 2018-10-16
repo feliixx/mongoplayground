@@ -347,15 +347,37 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   false,
 		},
 		{
-			name: "require array of json documents",
+			name: "require array of json documents or a single document",
 			params: url.Values{
 				"mode":   {"json"},
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    "fail to parse bson documents: json: cannot unmarshal object into Go value of type []bson.M",
+			result:    "fail to parse configuration:\n  json: cannot unmarshal number into Go value of type []bson.M",
 			createdDB: 0,
 			compact:   false,
+		},
+		{
+			name: "multiple collection in json mode",
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":10}]}`},
+				"query":  {`db.collection1.find()`},
+			},
+			result:    `[{"_id":1,"k":8}]`,
+			createdDB: 1,
+			compact:   true,
+		},
+		{
+			name: "multiple collection in json mode with lookup",
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":1}]}`},
+				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"_id",foreignField:"_id","as":"lookupDoc"}})`},
+			},
+			result:    `[{"_id":1,"k":8,"lookupDoc":[{"_id":1,"k2":1}]}]`,
+			createdDB: 1,
+			compact:   true,
 		},
 		{
 			name: `json create only collection "collection"`,
@@ -452,7 +474,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result:    `fail to parse bson documents: invalid input to ObjectIdHex: "5a9"`,
+			result:    "fail to parse configuration:\n  invalid input to ObjectIdHex: \"5a9\"",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -477,6 +499,17 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `[{"k":1},{"k":2},{"k":3}]`,
 			createdDB: 1,
 			compact:   true,
+		},
+		{
+			name: `empty config`,
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {""},
+				"query":  {"db.c.find()"},
+			},
+			result:    "invalid configuration:\n  must be an array or an object",
+			createdDB: 0,
+			compact:   false,
 		},
 	}
 
