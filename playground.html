@@ -15,8 +15,8 @@
         window.onload = function () {
             var configDiv = document.getElementById("config")
             var queryDiv = document.getElementById("query")
-            configDiv.innerHTML = indent(configDiv.innerHTML, indentMode)
-            queryDiv.innerHTML = indent(queryDiv.innerHTML, indentMode)
+            configDiv.innerHTML = indent(configDiv.innerHTML)
+            queryDiv.innerHTML = indent(queryDiv.innerHTML)
 
             var commonOpts = {
                 "mode": "ace/mode/javascript",
@@ -87,7 +87,7 @@
                         else {
                             var response = r.responseText
                             if (response.startsWith("[")) {
-                                response = indent(response, indentMode)
+                                response = indent(response)
                             }
                             resultEditor.setValue(response, -1)
                         }
@@ -95,13 +95,15 @@
                 }
                 var select = document.getElementById("mode")
                 r.send("mode=" + select.options[select.selectedIndex].text
-                    + "&config=" + encodeURIComponent(indent(configEditor.getValue(), compactMode))
-                    + "&query=" + encodeURIComponent(indent(queryEditor.getValue(), compactMode)))
+                    + "&config=" + encodeURIComponent(compact(configEditor.getValue()))
+                    + "&query=" + encodeURIComponent(compact(queryEditor.getValue())))
             }
         }
 
         function isCorrect() {
+
             showDoc(false)
+
             resultEditor.setValue("", -1)
             var errors = document.querySelectorAll(".ace_error")
             if (errors.length > 0) {
@@ -109,24 +111,24 @@
                 return false
             }
 
-            var content = configEditor.getValue().trim()
-            if (!content.startsWith("[") || !content.endsWith("]")) {
-                resultEditor.setValue("invalid config: must be an array")
-                return false
-            }
-            if (hasChanged) {
-                configEditor.setValue(indent(content, indentMode), -1)
-            }
-
             var select = document.getElementById("mode")
             var mode = select.options[select.selectedIndex].text
-            content = formatQuery(queryEditor.getValue().trim(), mode)
-            if (content === "invalid") {
-                resultEditor.setValue("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)", -1)
+
+            var formattedConfig = formatConfig(configEditor.getValue().trim(), mode)
+            if (formattedConfig === "invalid") {
+                configEditor.setValue("invalid configuration: \n  must be an array or an object")
+            }
+            if (hasChanged) {
+                configEditor.setValue(indent(formattedConfig), -1)
+            }
+
+            var formattedQuery = formatQuery(queryEditor.getValue().trim(), mode)
+            if (formattedQuery === "invalid") {
+                resultEditor.setValue("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)", -1)
                 return false
             }
             if (hasChanged) {
-                queryEditor.setValue(indent(content, indentMode), -1)
+                queryEditor.setValue(indent(formattedQuery), -1)
             }
             return true
         }

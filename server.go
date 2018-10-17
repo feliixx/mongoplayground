@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -248,70 +249,105 @@ func (s *server) run(p *page) ([]byte, error) {
 
 		db.DropDatabase()
 
+		collections := map[string][]bson.M{}
+
 		switch p.Mode {
 		case mgodatagenMode:
-			listColl, err := datagen.ParseConfig(p.Config, true)
+			err := createContentFromMgodatagen(collections, p.Config)
 			if err != nil {
-				return nil, fmt.Errorf("fail to parse configuration: %v", err)
-			}
-			if len(listColl) > maxCollNb {
-				return nil, fmt.Errorf("max number of collections to create is %d, but found %d collections", maxCollNb, len(listColl))
-			}
-			mapRef := map[int][][]byte{}
-			mapRefType := map[int]byte{}
-			for _, c := range listColl {
-				err := s.fillCollection(db, c, mapRef, mapRefType)
-				if err != nil {
-					return nil, fmt.Errorf("fail to create DB: %v", err)
-				}
+				return nil, err
 			}
 		case jsonMode:
-
-			var err error
-			collections := map[string][]bson.M{}
-
-			switch p.Config[0] {
-			case '{':
-				err = bson.UnmarshalJSON(p.Config, &collections)
-			case '[':
-				var docs []bson.M
-				err = bson.UnmarshalJSON(p.Config, &docs)
-
-				collections["collection"] = docs
-			}
-
+			err := loadContentFromJSON(collections, p.Config)
 			if err != nil {
 				return nil, fmt.Errorf("fail to parse configuration:\n  %v", err)
 			}
-
-			if len(collections) > 10 {
-				return nil, fmt.Errorf("max number of collections allowed is 10, but found %d collections", len(collections))
-			}
-
-			for name, docs := range collections {
-
-				coll := createCollection(db, name)
-				bulk := coll.Bulk()
-				bulk.Unordered()
-				if len(docs) > 0 {
-					for i, doc := range docs {
-						if _, hasID := doc["_id"]; !hasID {
-							doc["_id"] = bson.ObjectId(objectIDBytes(int32(i)))
-						}
-						bulk.Insert(doc)
-					}
-				}
-				_, err := bulk.Run()
-				if err != nil {
-					return nil, err
-				}
-			}
+		}
+		err := createDatabase(db, collections)
+		if err != nil {
+			return nil, err
 		}
 	}
 	return runQuery(db, p.Query)
 }
 
-func createCollection(db *mgo.Database, name string) *mgo.Collection {
+func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
+
+	collConfigs, err := datagen.ParseConfig(config, true)
+	if err != nil {
+		return fmt.Errorf("fail to parse configuration: %v", err)
+	}
+
+	mapRef := map[int][][]byte{}
+	mapRefType := map[int]byte{}
+
+	for _, c := range collConfigs {
+
+		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
+		if ci.Count > maxDoc || ci.Count <= 0 {
+			ci.Count = maxDoc
+		}
+		g, err := ci.NewDocumentGenerator(c.Content)
+		if err != nil {
+			return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
+		}
+		docs := make([]bson.M, ci.Count)
+		for i := 0; i < ci.Count; i++ {
+			err := bson.Unmarshal(g.Generate(), &docs[i])
+			if err != nil {
+				return err
+			}
+		}
+		collections[c.Name] = docs
+	}
+	return nil
+}
+
+func loadContentFromJSON(collections map[string][]bson.M, config []byte) (err error) {
+	switch config[0] {
+	case '{':
+		err = bson.UnmarshalJSON(config, &collections)
+	case '[':
+		var docs []bson.M
+		err = bson.UnmarshalJSON(config, &docs)
+
+		collections["collection"] = docs
+	}
+	return err
+}
+
+func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
+
+	names := make(sort.StringSlice, len(collections))
+	for name := range collections {
+		names = append(names, name)
+	}
+	names.Sort()
+
+	base := 0
+	for _, name := range names {
+
+		bulk := createBulk(db, name)
+
+		docs := collections[name]
+		if len(docs) > 0 {
+			for i, doc := range docs {
+				if _, hasID := doc["_id"]; !hasID {
+					doc["_id"] = seededObjectID(int32(base + i))
+				}
+				bulk.Insert(doc)
+			}
+		}
+		_, err := bulk.Run()
+		if err != nil {
+			return err
+		}
+		base += len(docs)
+	}
+	return nil
+}
+
+func createBulk(db *mgo.Database, name string) *mgo.Bulk {
 	info := &mgo.CollectionInfo{
 		Capped:   true,
 		MaxDocs:  maxDoc,
@@ -319,44 +355,31 @@ func createCollection(db *mgo.Database, name string) *mgo.Collection {
 	}
 	c := db.C(name)
 	c.Create(info)
-	return c
-}
 
-func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef map[int][][]byte, mapRefType map[int]byte) error {
-	// use a constant seed to always have the same output
-	// TODO: use the actual server version here
-	ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
-	if ci.Count > maxDoc || ci.Count <= 0 {
-		ci.Count = maxDoc
-	}
-	g, err := ci.NewDocumentGenerator(c.Content)
-	if err != nil {
-		return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
-	}
-	// if the config doesn't contain an _id generator, add a seeded one to generate
-	// always the same sequence of ObjectId
-	if _, hasID := c.Content["_id"]; !hasID {
-		sg := &seededObjectIDGenerator{
-			key: []byte("_id"),
-			idx: 0,
-			buf: g.Buffer,
-		}
-		g.Add(sg)
-	}
-	coll := createCollection(db, c.Name)
-	bulk := coll.Bulk()
+	bulk := c.Bulk()
 	bulk.Unordered()
 
-	for i := 0; i < ci.Count; i++ {
-		docBytes := g.Generate()
-		doc := bson.Raw{
-			Data: make([]byte, len(docBytes)),
-		}
-		copy(doc.Data, docBytes)
-		bulk.Insert(doc)
-	}
-	_, err = bulk.Run()
-	return err
+	return bulk
+}
+
+func seededObjectID(n int32) bson.ObjectId {
+
+	// using date = uint32(time.Date(2018, 02, 26, 0, 0, 0, 0, time.UTC).Unix())
+
+	return bson.ObjectId([]byte{
+		byte(90),  // date << 24
+		byte(147), // date << 16
+		byte(78),  // date << 8
+		byte(0),   // date
+		byte(1),   // 1,2,3 for hostname bytes
+		byte(2),
+		byte(3),
+		byte(4), // 4,5 for pid bytes
+		byte(5),
+		byte(n >> 16), // Increment, 3 bytes, big endian
+		byte(n >> 8),
+		byte(n),
+	})
 }
 
 // run a query against the db database.

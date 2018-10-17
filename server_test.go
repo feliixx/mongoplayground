@@ -268,8 +268,8 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":5},{"_id":ObjectId("5a934e000102030405000001"),"k":5},{"_id":ObjectId("5a934e000102030405000004"),"k":4},{"_id":ObjectId("5a934e000102030405000007"),"k":5},{"_id":ObjectId("5a934e000102030405000008"),"k":5},{"_id":ObjectId("5a934e000102030405000009"),"k":4}]`,
-			createdDB: 2,
+			result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
+			createdDB: 1,
 			compact:   true,
 		},
 		{
@@ -298,7 +298,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "fail to create DB: fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
+			result:    "fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -365,6 +365,17 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {`db.collection1.find()`},
 			},
 			result:    `[{"_id":1,"k":8}]`,
+			createdDB: 1,
+			compact:   true,
+		},
+		{
+			name: "multiple collection in json mode without _id",
+			params: url.Values{
+				"mode":   {"json"},
+				"config": {`{"collection1":[{"k":8}],"collection2":[{"k2":8},{"k2":8}]}`},
+				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"k",foreignField:"k2","as":"lookupDoc"}})`},
+			},
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":8,"lookupDoc":[{"_id":ObjectId("5a934e000102030405000001"),"k2":8},{"_id":ObjectId("5a934e000102030405000002"),"k2":8}]}]`,
 			createdDB: 1,
 			compact:   true,
 		},

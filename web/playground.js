@@ -1,7 +1,12 @@
-var compactMode = 0
-var indentMode = 1
+function compact(src) {
+    return format(src, false)
+}
 
-function indent(src, mode) {
+function indent(src) {
+    return format(src, true)
+}
+
+function format(src, indent) {
     var result = ""
     var needIndent = false
     var inParenthesis = false
@@ -21,7 +26,7 @@ function indent(src, mode) {
         if (needIndent && c !== "]" && c !== "}") {
             needIndent = false
             depth++
-            result += (mode === indentMode) ? newline(depth) : ""
+            result += indent ? newline(depth) : ""
         }
 
         switch (c) {
@@ -40,7 +45,7 @@ function indent(src, mode) {
                 break
             case ",":
                 result += c
-                if (mode === indentMode) {
+                if (indent) {
                     if (inParenthesis) {
                         result += " "
                     } else {
@@ -50,7 +55,7 @@ function indent(src, mode) {
                 break
             case ":":
                 result += c
-                if (mode === indentMode) {
+                if (indent) {
                     result += " "
                 }
                 break
@@ -60,7 +65,7 @@ function indent(src, mode) {
                     needIndent = false
                 } else {
                     depth--
-                    result += (mode === indentMode) ? newline(depth) : ""
+                    result += indent ? newline(depth) : ""
                 }
                 result += c
                 break
@@ -126,6 +131,19 @@ function newline(depth) {
     return line
 }
 
+function formatConfig(content, mode) {
+    if (!content.startsWith("[") || !content.endsWith("]")) {
+        if (mode === "json") {
+            if (!content.startsWith("{") || !content.endsWith("}")) {
+                return "invalid"
+            }
+        } else {
+            return "invalid"
+        }
+    }
+    return content
+}
+
 function formatQuery(content, mode) {
     var result = content
     if (content.endsWith(";")) {
@@ -134,11 +152,6 @@ function formatQuery(content, mode) {
     var correctQuery = /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/.test(result)
     if (!correctQuery) {
         return "invalid"
-    }
-    if (mode === "json") {
-        var parts = result.split(".")
-        parts[1] = "collection"
-        result = parts.join(".")
     }
 
     var start = result.indexOf("(") +1
