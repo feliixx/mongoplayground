@@ -149,7 +149,7 @@ function formatQuery(content, mode) {
     if (content.endsWith(";")) {
         result = content.slice(0, -1)
     }
-    var correctQuery = /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/.test(result)
+    var correctQuery = /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/.test(result)
     if (!correctQuery) {
         return "invalid"
     }

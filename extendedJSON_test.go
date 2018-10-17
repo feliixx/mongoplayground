@@ -455,6 +455,12 @@ func TestFormatQuery(t *testing.T) {
 			formattedModeDatagen: `invalid`,
 		},
 		{
+			name:                 `single letter collection name`,
+			input:                `db.k.find()`,
+			formattedModeJSON:    `db.k.find()`,
+			formattedModeDatagen: `db.k.find()`,
+		},
+		{
 			name:                 `chained non-empty method`,
 			input:                `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
 			formattedModeJSON:    `invalid`,
