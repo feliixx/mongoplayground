@@ -105,6 +105,11 @@ input[type="button"]:disabled {
     background: rgb(31, 54, 99);
 }
 
+input[type="radio"] {
+    vertical-align: middle; 
+    margin: 0px;
+}
+
 select {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -119,7 +124,11 @@ select {
     text-align-last:center;
 }
 
-.divTitle {
+.bold {
+    font-size: 1.2em;
+}
+
+.div_title {
     text-align: center;
     font-size: 1.3em;
     color: #24292e;
@@ -155,6 +164,6 @@ select {
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==') !important;
 }
 
-.ignoreWarnings > .ace_gutter > .ace_layer > .ace_warning {
+.ignore_warnings > .ace_gutter > .ace_layer > .ace_warning {
     background-image: none !important; 
 }

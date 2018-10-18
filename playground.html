@@ -93,8 +93,7 @@
                         }
                     }
                 }
-                var select = document.getElementById("mode")
-                r.send("mode=" + select.options[select.selectedIndex].text
+                r.send("mode=" + document.querySelector('input[name="mode"]:checked').value
                     + "&config=" + encodeURIComponent(compact(configEditor.getValue()))
                     + "&query=" + encodeURIComponent(compact(queryEditor.getValue())))
             }
@@ -111,8 +110,7 @@
                 return false
             }
 
-            var select = document.getElementById("mode")
-            var mode = select.options[select.selectedIndex].text
+            var mode = document.querySelector('input[name="mode"]:checked').value
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), mode)
             if (formattedConfig === "invalid") {
@@ -143,12 +141,11 @@
             <input type="button" value="Format" onclick="isCorrect()">
             <input id="share" type="button" value="share" onclick="run(true)">
             <input id="link" type="text">
-            <label>Mode:
-                <select id="mode" onchange="changeFunc()">
-                    <option>bson</option>
-                    <option {{if eq .Mode 0 }}selected="selected" {{end}}>mgodatagen</option>
-                </select>
-            </label>
+            <label class="bold">Mode:</label>
+            <input id="bson" type="radio" name="mode" value="bson" onchange="changeFunc()" checked/>
+            <label for="bson">bson</label>
+            <input id="mgodatagen" type="radio" name="mode" value="mgodatagen" onchange="changeFunc()"/>
+            <label for="mgodatagen">mgodatagen</label>
         </div>
         <div id="doc">
             <input type="button" value="documentation" onclick="showDoc(true)">
@@ -156,15 +153,15 @@
     </div>
     <div id="content">
         <div id="configDiv" class="column">
-            <h3 class="divTitle">Configuration</h3>
-            <div id="config" class="ignoreWarnings">{{printf "%s" .Config}}</div>
+            <h3 class="div_title">Configuration</h3>
+            <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
         </div>
         <div id="queryDiv" class="column">
-            <h3 class="divTitle">Query</h3>
+            <h3 class="div_title">Query</h3>
             <div id="query">{{printf "%s" .Query}}</div>
         </div>
         <div id="resultDiv" class="column">
-            <h3 class="divTitle">result</h3>
+            <h3 class="div_title">result</h3>
             <div id="result"></div>
         </div>
         <div id="docDiv" class="column">
