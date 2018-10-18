@@ -139,7 +139,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{}]`,
 		},
 		{
-			name: `extended JSON`,
+			name: `valid bson`,
 			input: `[{_id: ObjectId("5a934e000102030405000000"), "date": ISODate("2000-01-01T00:00:00Z") }, 
 			{ "_id": ObjectId("5a934e000102030405000001"), ts: Timestamp(1,1), newDate: new Date(1)}, 
 			{"k": NumberInt(10), "k2": NumberLong(15), k3: NumberDecimal(177), f: 2.994499433}, 
@@ -299,25 +299,25 @@ func TestFormatConfig(t *testing.T) {
 	formatTests := []struct {
 		name                 string
 		input                string
-		formattedModeJSON    string
+		formattedModeBSON    string
 		formattedModeDatagen string
 	}{
 		{
 			name:                 `valid config`,
 			input:                `[{"k":1}]`,
-			formattedModeJSON:    `[{"k":1}]`,
+			formattedModeBSON:    `[{"k":1}]`,
 			formattedModeDatagen: `[{"k":1}]`,
 		},
 		{
 			name:                 `invalid config`,
 			input:                `[{"k":1}`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
-			name:                 `multiple collections json mode`,
+			name:                 `multiple collections bson mode`,
 			input:                `{"collection1":[{"k":1}]}`,
-			formattedModeJSON:    `{"collection1":[{"k":1}]}`,
+			formattedModeBSON:    `{"collection1":[{"k":1}]}`,
 			formattedModeDatagen: `invalid`,
 		},
 	}
@@ -328,14 +328,14 @@ func TestFormatConfig(t *testing.T) {
 	{
 		"name": %s,
 		"input": %s, 
-		"formattedModeJSON": %s, 
+		"formattedModeBSON": %s, 
 		"formattedModeDatagen": %s 
 	}
 	`
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeJSON), strconv.Quote(tt.formattedModeDatagen))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeBSON), strconv.Quote(tt.formattedModeDatagen))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -347,9 +347,9 @@ func TestFormatConfig(t *testing.T) {
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let got = formatConfig(tt.input, "json") 
-		if (got !== tt.formattedModeJSON) {
-			print("test " + tt.name + " format mode json failed, expected: \n" + tt.formattedModeJSON +  "\nbut got: \n" + got)
+		let got = formatConfig(tt.input, "bson") 
+		if (got !== tt.formattedModeBSON) {
+			print("test " + tt.name + " format mode bson failed, expected: \n" + tt.formattedModeBSON +  "\nbut got: \n" + got)
 		}
 
 		got = formatConfig(tt.input, "mgodatagen") 
@@ -370,13 +370,13 @@ func TestFormatQuery(t *testing.T) {
 	formatTests := []struct {
 		name                 string
 		input                string
-		formattedModeJSON    string
+		formattedModeBSON    string
 		formattedModeDatagen string
 	}{
 		{
 			name:                 `trailing comma`,
 			input:                `db.collection.find();`,
-			formattedModeJSON:    `db.collection.find()`,
+			formattedModeBSON:    `db.collection.find()`,
 			formattedModeDatagen: `db.collection.find()`,
 		},
 		{
@@ -391,7 +391,7 @@ func TestFormatQuery(t *testing.T) {
 					}
 				}
 			])`,
-			formattedModeJSON: `db.collection.aggregate([
+			formattedModeBSON: `db.collection.aggregate([
 				{
 					"$match": {
 						_id: ObjectId("5a934e000102030405000000"), 
@@ -415,55 +415,55 @@ func TestFormatQuery(t *testing.T) {
 		{
 			name:                 `wrong format`,
 			input:                `dbcollection.find()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `invalid function`,
 			input:                `db.collection.findOne()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `wrong format`,
 			input:                `dbcollection.find()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `wrong format`,
 			input:                `db["collection"].find()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `wrong format`,
 			input:                `db.getCollection("coll").find()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `dot in query`,
 			input:                `db.collection.find({k: 1.123})`,
-			formattedModeJSON:    `db.collection.find({k: 1.123})`,
+			formattedModeBSON:    `db.collection.find({k: 1.123})`,
 			formattedModeDatagen: `db.collection.find({k: 1.123})`,
 		},
 		{
 			name:                 `chained empty method`,
 			input:                `db.collection.find().toArray()`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 		{
 			name:                 `single letter collection name`,
 			input:                `db.k.find()`,
-			formattedModeJSON:    `db.k.find()`,
+			formattedModeBSON:    `db.k.find()`,
 			formattedModeDatagen: `db.k.find()`,
 		},
 		{
 			name:                 `chained non-empty method`,
 			input:                `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
-			formattedModeJSON:    `invalid`,
+			formattedModeBSON:    `invalid`,
 			formattedModeDatagen: `invalid`,
 		},
 	}
@@ -474,14 +474,14 @@ func TestFormatQuery(t *testing.T) {
 	{
 		"name": %s,
 		"input": %s, 
-		"formattedModeJSON": %s, 
+		"formattedModeBSON": %s, 
 		"formattedModeDatagen": %s 
 	}
 	`
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeJSON), strconv.Quote(tt.formattedModeDatagen))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeBSON), strconv.Quote(tt.formattedModeDatagen))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -493,9 +493,9 @@ func TestFormatQuery(t *testing.T) {
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let got = formatQuery(tt.input, "json") 
-		if (got !== tt.formattedModeJSON) {
-			print("test " + tt.name + " format mode json failed, expected: \n" + tt.formattedModeJSON +  "\nbut got: \n" + got)
+		let got = formatQuery(tt.input, "bson") 
+		if (got !== tt.formattedModeBSON) {
+			print("test " + tt.name + " format mode bson failed, expected: \n" + tt.formattedModeBSON +  "\nbut got: \n" + got)
 		}
 
 		got = formatQuery(tt.input, "mgodatagen") 

@@ -257,7 +257,7 @@ func (s *server) run(p *page) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-		case jsonMode:
+		case bsonMode:
 			err := loadContentFromJSON(collections, p.Config)
 			if err != nil {
 				return nil, fmt.Errorf("fail to parse configuration:\n  %v", err)
@@ -468,7 +468,7 @@ func (s *server) precompile() error {
 	zw.Name = "playground.html"
 	zw.ModTime = time.Now()
 	p := &page{
-		Mode:         jsonMode,
+		Mode:         bsonMode,
 		Config:       []byte(templateConfig),
 		Query:        []byte(templateQuery),
 		MongoVersion: s.mongodbVersion,

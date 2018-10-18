@@ -10,12 +10,12 @@ import (
 
 const (
 	mgodatagenMode byte = iota
-	jsonMode
+	bsonMode
 )
 
 func modeByte(mode string) byte {
-	if mode == "json" {
-		return jsonMode
+	if mode == "bson" {
+		return bsonMode
 	}
 	return mgodatagenMode
 }
@@ -49,8 +49,8 @@ func (p *page) dbHash() string {
 }
 
 func (p *page) String() string {
-	mode := "json"
-	if p.Mode != jsonMode {
+	mode := "bson"
+	if p.Mode != bsonMode {
 		mode = "mgodatagen"
 	}
 	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
@@ -59,7 +59,7 @@ func (p *page) String() string {
 // encode a page into a byte slice
 //
 // v[0:4] -> an int32 to store the position of the last byte of the configuration
-// v[4] -> the mode (mgodatagen / json) to use for building the database
+// v[4] -> the mode (mgodatagen / bson) to use for building the database
 // v[5:endConfig] -> the configuration
 // v[endConfig:] -> the query
 func (p *page) encode() []byte {

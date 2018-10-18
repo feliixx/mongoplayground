@@ -133,7 +133,7 @@ function newline(depth) {
 
 function formatConfig(content, mode) {
     if (!content.startsWith("[") || !content.endsWith("]")) {
-        if (mode === "json") {
+        if (mode === "bson") {
             if (!content.startsWith("{") || !content.endsWith("}")) {
                 return "invalid"
             }

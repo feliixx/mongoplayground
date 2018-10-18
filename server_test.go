@@ -305,7 +305,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: "basic json mode",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"k": 1}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -316,7 +316,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: "empty json",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -327,7 +327,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: "invalid method",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{}]`},
 				"query":  {`db.collection.findOne()`},
 			},
@@ -338,7 +338,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: "invalid query syntax",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{}]`},
 				"query":  {`find()`},
 			},
@@ -347,9 +347,9 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   false,
 		},
 		{
-			name: "require array of json documents or a single document",
+			name: "require array of bson documents or a single document",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
@@ -358,9 +358,9 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   false,
 		},
 		{
-			name: "multiple collection in json mode",
+			name: "multiple collection in bson mode",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":10}]}`},
 				"query":  {`db.collection1.find()`},
 			},
@@ -371,7 +371,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: "multiple collection in json mode without _id",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`{"collection1":[{"k":8}],"collection2":[{"k2":8},{"k2":8}]}`},
 				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"k",foreignField:"k2","as":"lookupDoc"}})`},
 			},
@@ -380,9 +380,9 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   true,
 		},
 		{
-			name: "multiple collection in json mode with lookup",
+			name: "multiple collection in bson mode with lookup",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":1}]}`},
 				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"_id",foreignField:"_id","as":"lookupDoc"}})`},
 			},
@@ -391,9 +391,9 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   true,
 		},
 		{
-			name: `json create only collection "collection"`,
+			name: `bson create only collection "collection"`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"k": 1}, {"k": 2}]`},
 				"query":  {`db.otherCollection.find()`},
 			},
@@ -404,7 +404,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `doc with "_id" should not be overwritten`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": 1}, {"_id": 2}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -415,7 +415,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `mixed doc with/without "_id"`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": 1}, {}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -426,7 +426,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `duplicate "_id" error`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id":1},{"_id":1}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -437,7 +437,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `bson "ObjectId" notation`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -448,7 +448,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `bson unkeyed notation`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
@@ -459,7 +459,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `unkeyed params in aggreagtion`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 				"query":  {`db.collection.aggregate([{$match: {_id: ObjectId("5a934e000102030405000001")}}])`},
 			},
@@ -470,7 +470,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `doc with bson "ISODate"`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{dt: ISODate("2000-01-01T00:00:00+00:00")}]`},
 				"query":  {`db.collection.find()`},
 			},
@@ -481,7 +481,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `invalid "ObjectId" should not panic`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
@@ -492,7 +492,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `regex parsing`, // TODO
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"k": "randompattern"}]`},
 				"query":  {`db.collection.find({k: /pattern/})`},
 			},
@@ -503,7 +503,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `query with projection`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"k":1},{"k":2},{"k":3}]`},
 				"query":  {`db.collection.find({}, {"_id": 0})`},
 			},
@@ -514,7 +514,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name: `empty config`,
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {""},
 				"query":  {"db.c.find()"},
 			},
@@ -620,7 +620,7 @@ func TestSave(t *testing.T) {
 		},
 		{
 			name:      "template query with new config",
-			params:    url.Values{"mode": {"json"}, "config": {`[{}]`}, "query": {templateQuery}},
+			params:    url.Values{"mode": {"bson"}, "config": {`[{}]`}, "query": {templateQuery}},
 			result:    "p/4cOeA7NGLru",
 			newRecord: true,
 		},
@@ -665,7 +665,7 @@ func TestView(t *testing.T) {
 		{
 			name: "new config",
 			params: url.Values{
-				"mode":   {"json"},
+				"mode":   {"bson"},
 				"config": {`[{"_id": 1}]`},
 				"query":  {templateQuery},
 			},
