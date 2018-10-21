@@ -42,7 +42,7 @@
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
-                    document.getElementById("docContent").innerHTML = r.responseText
+                    document.getElementById("docDiv").innerHTML = r.responseText
                 }
             }
             r.send(null)
@@ -60,13 +60,17 @@
             document.getElementById("share").disabled = showLink
         }
 
+        function setTemplate() {
+            configEditor.setValue(indent("[{}]"))            
+        }
+
         function showDoc(doShow) {
             if (doShow && document.getElementById("docDiv").style.display === "inline") {
                 doShow = false
             }
             document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
-            document.getElementById("queryDiv").style.display = doShow ? "none" : "inline"
-            document.getElementById("resultDiv").style.display = doShow ? "none" : "inline"
+            document.getElementById("query").parentNode.style.display = doShow ? "none" : "inline"
+            document.getElementById("result").parentNode.style.display = doShow ? "none" : "inline"
             if (!doShow && hasChanged) {
                 redirect("/", false)
             }
@@ -134,46 +138,47 @@
 </head>
 
 <body>
-    <div id="top">
-        <div id="title">Mongo Playground</div>
-        <div id="controls">
+    <div class="toolbar">
+        <div class="title">Mongo Playground</div>
+        <div class="controls">
             <input type="button" value="run" onclick="run(false)">
-            <input type="button" value="Format" onclick="isCorrect()">
+            <input type="button" value="format" onclick="isCorrect()">
             <input id="share" type="button" value="share" onclick="run(true)">
             <input id="link" type="text">
             <label class="bold">Mode:</label>
-            <input id="bson" type="radio" name="mode" value="bson" onchange="changeFunc()" checked/>
+            <input type="radio" name="mode" value="bson" onchange="changeFunc()" checked/>
             <label for="bson">bson</label>
-            <input id="mgodatagen" type="radio" name="mode" value="mgodatagen" onchange="changeFunc()"/>
+            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()"/>
             <label for="mgodatagen">mgodatagen</label>
-        </div>
-        <div id="doc">
+            <label class="bold">Template:</label>
+            <select id="template" onchange="setTemplate()">
+                <option value=1>bson single collection</option>
+                <option value=2>bson multiple collections</option>
+                <option value=3>mgodatagen</option>
+            </select>
             <input type="button" value="documentation" onclick="showDoc(true)">
         </div>
     </div>
-    <div id="content">
-        <div id="configDiv" class="column">
-            <h3 class="div_title">Configuration</h3>
+    <div class="content">
+        <div>
+            <h3>Configuration</h3>
             <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
         </div>
-        <div id="queryDiv" class="column">
-            <h3 class="div_title">Query</h3>
+        <div>
+            <h3>Query</h3>
             <div id="query">{{printf "%s" .Query}}</div>
         </div>
-        <div id="resultDiv" class="column">
-            <h3 class="div_title">result</h3>
+        <div>
+            <h3>Result</h3>
             <div id="result"></div>
         </div>
-        <div id="docDiv" class="column">
-            <h3></h3>
-            <div id="docContent" class="markdown-body"></div>
-        </div>
+        <div id="docDiv" class="markdown-body"></div>
     </div>
-    <div id="bottom">
-        <div id="versionDiv">MongoDB version {{ printf "%s" .MongoVersion }} -
+    <div class="footer">
+        <p>MongoDB version {{ printf "%s" .MongoVersion }} -
             <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
              Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
-        </div>
+             </p>
     </div>
 </body>
 
