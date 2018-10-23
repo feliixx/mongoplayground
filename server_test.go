@@ -82,7 +82,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name:      "non existing collection",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
-			result:    noDocFound,
+			result:    `collection "c" doesn't exist`,
 			createdDB: 1,
 			compact:   false,
 		},
@@ -391,13 +391,13 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   true,
 		},
 		{
-			name: `bson create only collection "collection"`,
+			name: `bson old syntax create only collection "collection"`,
 			params: url.Values{
 				"mode":   {"bson"},
 				"config": {`[{"k": 1}, {"k": 2}]`},
 				"query":  {`db.otherCollection.find()`},
 			},
-			result:    noDocFound,
+			result:    `collection "otherCollection" doesn't exist`,
 			createdDB: 1,
 			compact:   false,
 		},
@@ -520,6 +520,28 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    "invalid configuration:\n  must be an array or an object",
 			createdDB: 0,
+			compact:   false,
+		},
+		{
+			name: `too many collections`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`{"a":[],"b":[],"c":[],"d":[],"e":[],"f":[],"g":[],"h":[],"i":[],"j":[],"k":[]}`},
+				"query":  {"db.c.find()"},
+			},
+			result:    "max number of collection in a database is 10, but was 11",
+			createdDB: 0,
+			compact:   false,
+		},
+		{
+			name: `no documents found`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`{"a":[]}`},
+				"query":  {"db.a.find()"},
+			},
+			result:    noDocFound,
+			createdDB: 1,
 			compact:   false,
 		},
 	}
@@ -758,7 +780,7 @@ func TestRemoveOldDB(t *testing.T) {
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
 	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
 
-	if want, got := buf.String(), noDocFound; want != got {
+	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 

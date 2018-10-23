@@ -318,6 +318,10 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) (err er
 
 func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 
+	if len(collections) > maxCollNb {
+		return fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
+	}
+
 	names := make(sort.StringSlice, len(collections))
 	for name := range collections {
 		names = append(names, name)
@@ -392,6 +396,9 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	if len(p) != 3 {
 		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
+	if !exist(db, string(p[1])) {
+		return nil, fmt.Errorf(`collection "%s" doesn't exist`, p[1])
+	}
 
 	start, end := bytes.IndexByte(p[2], '('), bytes.LastIndexByte(p[2], ')')
 	queryBytes := p[2][start+1 : end]
@@ -440,6 +447,19 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 		return []byte(noDocFound), nil
 	}
 	return bson.MarshalExtendedJSON(docs)
+}
+
+func exist(db *mgo.Database, collName string) bool {
+	names, err := db.CollectionNames()
+	if err != nil {
+		return true
+	}
+	for _, name := range names {
+		if name == collName {
+			return true
+		}
+	}
+	return false
 }
 
 const (
@@ -529,8 +549,7 @@ func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	responseBytes, err := json.Marshal(currentStatus)
 	if err != nil {
-		s.logger.Printf("fail to marshal status %v: %v", currentStatus, err)
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "encoding/json")
