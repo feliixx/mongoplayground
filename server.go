@@ -244,10 +244,8 @@ func (s *server) run(p *page) ([]byte, error) {
 	DBHash := p.dbHash()
 	db := session.DB(DBHash)
 
-	_, exists := s.activeDB.LoadOrStore(DBHash, time.Now().Unix())
+	_, exists := s.activeDB.Load(DBHash)
 	if !exists {
-
-		db.DropDatabase()
 
 		collections := map[string][]bson.M{}
 
@@ -268,6 +266,9 @@ func (s *server) run(p *page) ([]byte, error) {
 			return nil, err
 		}
 	}
+
+	s.activeDB.Store(DBHash, time.Now().Unix())
+
 	return runQuery(db, p.Query)
 }
 
@@ -321,6 +322,8 @@ func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 	if len(collections) > maxCollNb {
 		return fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
 	}
+	// clean any potentially remaining data
+	db.DropDatabase()
 
 	names := make(sort.StringSlice, len(collections))
 	for name := range collections {

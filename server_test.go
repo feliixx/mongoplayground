@@ -803,6 +803,27 @@ func TestRemoveOldDB(t *testing.T) {
 
 }
 
+func TestConsistentError(t *testing.T) {
+
+	testServer.clearDatabases(t)
+
+	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{"k":1}]`}, "query": {templateQuery}}
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+
+	errorMsg := `fail to parse configuration: Error in configuration file: 
+	'collection' and 'database' fields can't be empty`
+
+	if want, got := errorMsg, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+
+	if want, got := errorMsg, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+}
+
 func TestStaticHandlers(t *testing.T) {
 
 	staticFileTests := []struct {
