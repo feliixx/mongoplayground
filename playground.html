@@ -60,8 +60,14 @@
             document.getElementById("share").disabled = showLink
         }
 
-        function setTemplate() {
-            configEditor.setValue(indent("[{}]"))            
+        var templates = [
+            '[{"key":1},{"key":2}]', 
+            '{"collection":[{"key":0}],"other":[{"key2":2}]}', 
+            '[{"collection": "collection","count": 10,"content": {"key": {"type": "int","minInt": 0,"maxInt": 10}}}]'
+        ]
+
+        function setTemplate(index) {
+            configEditor.setValue(indent(templates[index]), -1)            
         }
 
         function showDoc(doShow) {
@@ -118,7 +124,8 @@
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), mode)
             if (formattedConfig === "invalid") {
-                configEditor.setValue("invalid configuration: \n  must be an array or an object")
+                resultEditor.setValue("invalid configuration: \n  must be an array or an object")
+                return false
             }
             if (hasChanged) {
                 configEditor.setValue(indent(formattedConfig), -1)
@@ -145,17 +152,17 @@
             <input type="button" value="format" onclick="isCorrect()">
             <input id="share" type="button" value="share" onclick="run(true)">
             <input id="link" type="text">
-            <label class="bold">Mode:</label>
-            <input type="radio" name="mode" value="bson" onchange="changeFunc()" checked/>
-            <label for="bson">bson</label>
-            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()"/>
-            <label for="mgodatagen">mgodatagen</label>
             <label class="bold">Template:</label>
-            <select id="template" onchange="setTemplate()">
-                <option value=1>bson single collection</option>
-                <option value=2>bson multiple collections</option>
-                <option value=3>mgodatagen</option>
+            <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
+                <option value=0>bson single collection</option>
+                <option value=1>bson multiple collections</option>
+                <option value=2>mgodatagen</option>
             </select>
+            <label class="bold">Mode:</label>
+            <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
+            <label for="bson">bson</label>
+            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked {{end}} />
+            <label for="mgodatagen">mgodatagen</label>
             <input type="button" value="documentation" onclick="showDoc(true)">
         </div>
     </div>
@@ -175,10 +182,11 @@
         <div id="docDiv" class="markdown-body"></div>
     </div>
     <div class="footer">
-        <p>MongoDB version {{ printf "%s" .MongoVersion }} -
+        <p>
+            MongoDB version {{ printf "%s" .MongoVersion }} -
             <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
              Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
-             </p>
+        </p>
     </div>
 </body>
 

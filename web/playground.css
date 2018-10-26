@@ -34,10 +34,33 @@ body {
 }
 
 .toolbar > .controls > label.bold {
+    margin-left: 15px;
     font-size: 1.2em;
 }
 
+.toolbar > .controls > select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid gray;
+    border-radius: 4px;
+    background-color: rgb(236, 236, 236);
+    font-size: 1em; 
+    height: 30px;  
+    width: 200px; 
+    text-align: center; 
+    text-align-last:center;
+}
+
 .toolbar > .controls > input[type="text"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid gray;
+    border-radius: 4px;
+    background-color: rgb(236, 236, 236);
+    font-size: 1em; 
+    height: 24px;  
     width: 20%;
     visibility: hidden;
 }
