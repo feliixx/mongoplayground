@@ -232,7 +232,7 @@ const (
 	noDocFound = "no document found"
 )
 
-func (s *server) run(p *page) ([]byte, error) {
+func (s *server) run(p *page) (result []byte, err error) {
 
 	if len(p.Config) == 0 {
 		return nil, fmt.Errorf("invalid configuration:\n  must be an array or an object")
@@ -251,16 +251,15 @@ func (s *server) run(p *page) ([]byte, error) {
 
 		switch p.Mode {
 		case mgodatagenMode:
-			err := createContentFromMgodatagen(collections, p.Config)
-			if err != nil {
-				return nil, err
-			}
+			err = createContentFromMgodatagen(collections, p.Config)
 		case bsonMode:
-			err := loadContentFromJSON(collections, p.Config)
-			if err != nil {
-				return nil, fmt.Errorf("fail to parse configuration:\n  %v", err)
-			}
+			err = loadContentFromJSON(collections, p.Config)
 		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error in configuration:\n  %v", err)
+		}
+
 		err := createDatabase(db, collections)
 		if err != nil {
 			return nil, err
@@ -276,7 +275,7 @@ func createContentFromMgodatagen(collections map[string][]bson.M, config []byte)
 
 	collConfigs, err := datagen.ParseConfig(config, true)
 	if err != nil {
-		return fmt.Errorf("fail to parse configuration: %v", err)
+		return err
 	}
 
 	mapRef := map[int][][]byte{}
@@ -392,53 +391,38 @@ func seededObjectID(n int32) bson.ObjectId {
 // run a query against the db database.
 // query syntax is checked on client side and look like
 //
-// db.(\w+).(find|aggregate)(...)
+// db.(\w*).(find|aggregate)(...)
 func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
 		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
-	if !exist(db, string(p[1])) {
+
+	collection, queryBytes := db.C(string(p[1])), p[2]
+
+	if !exist(collection) {
 		return nil, fmt.Errorf(`collection "%s" doesn't exist`, p[1])
 	}
 
-	start, end := bytes.IndexByte(p[2], '('), bytes.LastIndexByte(p[2], ')')
-	queryBytes := p[2][start+1 : end]
+	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
 
-	if len(queryBytes) == 0 {
-		queryBytes = []byte("{}")
-	}
-	// because projections are allowed, transform
-	// {}, {"_id": 0} into [{}, {"_id": 0}] so we
-	// can parse it as a []bson.M
-	if queryBytes[0] != '[' {
-		b := make([]byte, 0, len(queryBytes)+2)
-		b = append(b, '[')
-		b = append(b, queryBytes...)
-		b = append(b, ']')
-		queryBytes = b
-	}
-
-	var pipeline []bson.M
-	err := bson.UnmarshalJSON(queryBytes, &pipeline)
+	stages, err := stages(queryBytes[start+1 : end])
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse content of query: %v", err)
 	}
 
-	var docs []interface{}
-
-	collection := db.C(string(p[1]))
-	method := string(p[2][:start])
+	var docs []bson.M
+	method := string(queryBytes[:start])
 
 	switch method {
 	case "find":
-		for len(pipeline) < 2 {
-			pipeline = append(pipeline, bson.M{})
+		for len(stages) < 2 {
+			stages = append(stages, bson.M{})
 		}
-		err = collection.Find(pipeline[0]).Select(pipeline[1]).All(&docs)
+		err = collection.Find(stages[0]).Select(stages[1]).All(&docs)
 	case "aggregate":
-		err = collection.Pipe(pipeline).All(&docs)
+		err = collection.Pipe(stages).All(&docs)
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
@@ -452,13 +436,35 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	return bson.MarshalExtendedJSON(docs)
 }
 
-func exist(db *mgo.Database, collName string) bool {
-	names, err := db.CollectionNames()
+func stages(queryBytes []byte) (stages []bson.M, err error) {
+
+	if len(queryBytes) == 0 {
+		return make([]bson.M, 2), nil
+	}
+
+	// because projections are allowed, transform
+	// {}, {"_id": 0} into [{}, {"_id": 0}] so we
+	// can parse it as a []bson.M
+	if queryBytes[0] != '[' {
+		b := make([]byte, 0, len(queryBytes)+2)
+		b = append(b, '[')
+		b = append(b, queryBytes...)
+		b = append(b, ']')
+		queryBytes = b
+	}
+
+	err = bson.UnmarshalJSON(queryBytes, &stages)
+
+	return stages, err
+}
+
+func exist(collection *mgo.Collection) bool {
+	names, err := collection.Database.CollectionNames()
 	if err != nil {
 		return true
 	}
 	for _, name := range names {
-		if name == collName {
+		if name == collection.Name {
 			return true
 		}
 	}
@@ -560,8 +566,8 @@ func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *server) countSavedPages() int {
-	count := 0
+func (s *server) countSavedPages() (count int) {
+
 	s.storage.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false

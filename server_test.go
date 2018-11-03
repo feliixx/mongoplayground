@@ -75,7 +75,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name:      "incorrect config",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
-			result:    "fail to parse configuration: Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
+			result:    "error in configuration:\n  Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -298,7 +298,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
+			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -353,7 +353,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    "fail to parse configuration:\n  json: cannot unmarshal number into Go value of type []bson.M",
+			result:    "error in configuration:\n  json: cannot unmarshal number into Go value of type []bson.M",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -485,7 +485,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result:    "fail to parse configuration:\n  invalid input to ObjectIdHex: \"5a9\"",
+			result:    "error in configuration:\n  invalid input to ObjectIdHex: \"5a9\"",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -553,13 +553,13 @@ func TestRunCreateDB(t *testing.T) {
 			if tt.compact {
 				comp, err := bson.CompactJSON(buf.Bytes())
 				if err != nil {
-					t.Errorf("fail to compact JSON: %v", err)
+					t.Errorf("could not compact result: %s (%v)", buf.Bytes(), err)
 				}
 				buf = bytes.NewBuffer(comp)
 			}
 
 			if want, got := tt.result, buf.String(); want != got {
-				t.Errorf("expected '%s' but got '%s'", want, got)
+				t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
 			}
 		})
 		nbMongoDatabases += tt.createdDB
@@ -810,8 +810,7 @@ func TestConsistentError(t *testing.T) {
 	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{"k":1}]`}, "query": {templateQuery}}
 	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
 
-	errorMsg := `fail to parse configuration: Error in configuration file: 
-	'collection' and 'database' fields can't be empty`
+	errorMsg := "error in configuration:\n  Error in configuration file: \n\t'collection' and 'database' fields can't be empty"
 
 	if want, got := errorMsg, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
