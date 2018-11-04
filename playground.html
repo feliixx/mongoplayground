@@ -61,13 +61,13 @@
         }
 
         var templates = [
-            '[{"key":1},{"key":2}]', 
-            'db={"collection":[{"key":0},{"key":12}],"other":[{"key2":2}]}', 
+            '[{"key":1},{"key":2}]',
+            'db={"collection":[{"key":0},{"key":12}],"other":[{"key2":2}]}',
             '[{"collection": "collection","count": 10,"content": {"key": {"type": "int","minInt": 0,"maxInt": 10}}}]'
         ]
 
         function setTemplate(index) {
-            configEditor.setValue(indent(templates[index]), -1)            
+            configEditor.setValue(indent(templates[index]), -1)
         }
 
         function showDoc(doShow) {
@@ -82,31 +82,47 @@
             }
         }
 
-        function run(doSave) {
-            if ( isCorrect() || doSave ) {
+        function run() {
+            if (isCorrect()) {
+                
                 var r = new XMLHttpRequest()
-                r.open("POST", doSave ? "/save" : "/run")
+                r.open("POST", "/run")
                 r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
                 r.onreadystatechange = function () {
                     if (r.readyState !== 4) { return }
                     if (r.status === 200) {
-                        if (doSave) {
-                            redirect(r.responseText, true)
-                            hasChanged = false
+                        var response = r.responseText
+                        if (response.startsWith("[")) {
+                            response = indent(response)
                         }
-                        else {
-                            var response = r.responseText
-                            if (response.startsWith("[")) {
-                                response = indent(response)
-                            }
-                            resultEditor.setValue(response, -1)
-                        }
+                        resultEditor.setValue(response, -1)
                     }
                 }
-                r.send("mode=" + document.querySelector('input[name="mode"]:checked').value
-                    + "&config=" + encodeURIComponent(compact(configEditor.getValue()))
-                    + "&query=" + encodeURIComponent(compact(queryEditor.getValue())))
+                r.send(encodePlayground())
             }
+        }
+
+        function save() {
+
+            isCorrect()
+
+            var r = new XMLHttpRequest()
+            r.open("POST", "/save")
+            r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
+            r.onreadystatechange = function () {
+                if (r.readyState !== 4) { return }
+                if (r.status === 200) {
+                    redirect(r.responseText, true)
+                    hasChanged = false
+                }
+            }
+            r.send(encodePlayground())
+        }
+
+        function encodePlayground() {
+            return "mode=" + document.querySelector('input[name="mode"]:checked').value
+                + "&config=" + encodeURIComponent(compact(configEditor.getValue()))
+                + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
         }
 
         function isCorrect() {
@@ -154,9 +170,9 @@
     <div class="toolbar">
         <div class="title">Mongo Playground</div>
         <div class="controls">
-            <input type="button" value="run" onclick="run(false)">
+            <input type="button" value="run" onclick="run()">
             <input type="button" value="format" onclick="isCorrect()">
-            <input id="share" type="button" value="share" onclick="run(true)">
+            <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
             <input id="link" type="text">
             <label class="bold">Template:</label>
             <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
@@ -167,7 +183,8 @@
             <label class="bold">Mode:</label>
             <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
             <label for="bson">bson</label>
-            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked {{end}} />
+            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
+                {{end}} />
             <label for="mgodatagen">mgodatagen</label>
             <input type="button" value="documentation" onclick="showDoc(true)">
         </div>
@@ -191,7 +208,7 @@
         <p>
             MongoDB version {{ printf "%s" .MongoVersion }} -
             <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
-             Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
+            Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
         </p>
     </div>
 </body>

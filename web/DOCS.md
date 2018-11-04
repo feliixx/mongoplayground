@@ -1,8 +1,8 @@
 ##   Summary
 
 - [Create a database](#user-content-create-a-database)
-  - [with bson documents](#user-content-use-bson-documents)
-  - [with random data](#user-content-create-random-documents-with-mgodatagen)
+  - [with bson documents](#user-content-from-bson-documents)
+  - [with random data](#user-content-from-mgodatagen)
 - [Limitations](#user-content-limitations)
 - [Report an issue / contribute](#user-content-report-an-issue-and-contribute)
 - [Credits](#user-content-credits)
