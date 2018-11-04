@@ -21,4 +21,4 @@ echo "\nsave distinct playground"
 vegeta attack -lazy -duration=5s -targets=targets.txt | tee results.bin | vegeta report
 
 echo "GET docs.html"
-echo "GET http://localhost:80/static/docs-3.html" | vegeta attack -duration=5s | tee results.bin | vegeta report 
+echo "GET http://localhost:80/static/docs-4.html" | vegeta attack -duration=5s | tee results.bin | vegeta report 

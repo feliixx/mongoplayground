@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"html/template"
@@ -553,36 +552,22 @@ func (s *server) add(zw *gzip.Writer, buf *bytes.Buffer, index int) error {
 	return nil
 }
 
+var statusOK = []byte(`{"status":"ok"}"`)
+
 func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
-	currentStatus := struct {
-		Status string `json:"status"`
-		Count  int    `json:"count"`
-	}{
-		"ok",
-		s.countSavedPages(),
+	p := &page{
+		Mode:   bsonMode,
+		Config: []byte(`[{"_id":1}]`),
+		Query:  []byte(templateQuery),
 	}
-	responseBytes, err := json.Marshal(currentStatus)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+
+	w.Header().Set("Content-Type", "encoding/json")
+
+	result, err := s.run(p)
+	if err != nil || bytes.Compare(bytes.TrimSuffix(result, []byte("\n")), p.Config) != 0 {
+		fmt.Fprintf(w, `{"status":"unexpected result: (err: %v, result: %s"}`, err, result)
 		return
 	}
-	w.Header().Set("Content-Type", "encoding/json")
-	w.Write(responseBytes)
-
-}
-
-func (s *server) countSavedPages() (count int) {
-
-	s.storage.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			count++
-		}
-		return nil
-	})
-	return count
+	w.Write(statusOK)
 }

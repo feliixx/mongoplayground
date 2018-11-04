@@ -905,77 +905,30 @@ func TestHealthcheck(t *testing.T) {
 	if resp.Code != http.StatusOK {
 		t.Errorf("expected response code %v, got %v", http.StatusOK, resp.Code)
 	}
-	want := `{"status":"ok","count":0}`
-	if got := resp.Body.String(); want != got {
+	if want, got := string(statusOK), resp.Body.String(); want != got {
 		t.Errorf("expected response %s, but got %s", want, got)
 	}
 }
 
-func BenchmarkNewPage(b *testing.B) {
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		resp := httptest.NewRecorder()
-		testServer.newPageHandler(resp, req)
-	}
-}
+func TestHealthcheckServerError(t *testing.T) {
 
-func BenchmarkView(b *testing.B) {
-	req, _ := http.NewRequest(http.MethodPost, "/save", strings.NewReader(templateParams.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	testServer.session.SetSocketTimeout(1 * time.Microsecond)
+	defer testServer.session.SetSocketTimeout(100 * time.Millisecond)
+
 	resp := httptest.NewRecorder()
-	testServer.saveHandler(resp, req)
-	req, _ = http.NewRequest(http.MethodGet, "/"+templateURL, nil)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		resp := httptest.NewRecorder()
-		testServer.viewHandler(resp, req)
-	}
-}
+	req, _ := http.NewRequest(http.MethodGet, "/_status/healthcheck", nil)
 
-func BenchmarkSave(b *testing.B) {
-	configFormat := `[{"collection": "coll%v","count": 10,"content": {}}]`
-	params := url.Values{"mode": {"mgodatagen"}, "query": {templateQuery}}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		resp := httptest.NewRecorder()
-		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest(http.MethodPost, "/save", strings.NewReader(params.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		testServer.saveHandler(resp, req)
-	}
-}
+	testServer.healthcheckHandler(resp, req)
 
-func BenchmarkRunExistingDB(b *testing.B) {
-	req, _ := http.NewRequest(http.MethodPost, "/run", strings.NewReader(templateParams.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	resp := httptest.NewRecorder()
-	testServer.runHandler(resp, req)
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		resp = httptest.NewRecorder()
-		testServer.runHandler(resp, req)
+	if resp.Code != http.StatusOK {
+		t.Errorf("expected response code %v, got %v", http.StatusOK, resp.Code)
 	}
-}
 
-func BenchmarkRunNonExistingDB(b *testing.B) {
-	configFormat := `[{"collection": "collection","count": 10,"content": {"k": {"type": "int", "minInt": 0, "maxInt": %d}}}]`
-	params := url.Values{"mode": {"mgodatagen"}, "query": {templateQuery}}
-	b.ResetTimer()
-	for n := 0; n < b.N; n++ {
-		resp := httptest.NewRecorder()
-		params.Set("config", fmt.Sprintf(configFormat, n))
-		req, _ := http.NewRequest(http.MethodPost, "/run", strings.NewReader(params.Encode()))
-		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-		testServer.runHandler(resp, req)
-	}
-}
+	want := `{"status":"unexpected result:`
+	got := resp.Body.String()
 
-func BenchmarkServeStaticFile(b *testing.B) {
-	for n := 0; n < b.N; n++ {
-		resp := httptest.NewRecorder()
-		req, _ := http.NewRequest(http.MethodGet, "/static/docs-3.html", nil)
-		testServer.staticHandler(resp, req)
+	if !strings.HasPrefix(got, want) {
+		t.Errorf("expected response to start with %s, but got %s", want, got)
 	}
 }
 
@@ -1049,6 +1002,20 @@ func filterDBNames(dbNames []string) []string {
 		}
 	}
 	return r
+}
+
+func (s *server) countSavedPages() (count int) {
+	s.storage.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+		}
+		return nil
+	})
+	return count
 }
 
 func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
