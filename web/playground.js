@@ -134,7 +134,8 @@ function newline(depth) {
 function formatConfig(content, mode) {
     if (!content.startsWith("[") || !content.endsWith("]")) {
         if (mode === "bson") {
-            if (!content.startsWith("{") || !content.endsWith("}")) {
+            var correctConfigMultipleCollections = /^\s*db\s*=\s*\{[\s\S]*\}$/.test(content)
+            if (!correctConfigMultipleCollections) {
                 return "invalid"
             }
         } else {

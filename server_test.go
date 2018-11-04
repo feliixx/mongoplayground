@@ -353,7 +353,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    "error in configuration:\n  json: cannot unmarshal number into Go value of type []bson.M",
+			result:    fmt.Sprintf("error in configuration:\n  %v", invalidConfig),
 			createdDB: 0,
 			compact:   false,
 		},
@@ -361,7 +361,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: "multiple collection in bson mode",
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":10}]}`},
+				"config": {`db={"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":10}]}`},
 				"query":  {`db.collection1.find()`},
 			},
 			result:    `[{"_id":1,"k":8}]`,
@@ -372,7 +372,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: "multiple collection in json mode without _id",
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`{"collection1":[{"k":8}],"collection2":[{"k2":8},{"k2":8}]}`},
+				"config": {`db={"collection1":[{"k":8}],"collection2":[{"k2":8},{"k2":8}]}`},
 				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"k",foreignField:"k2","as":"lookupDoc"}})`},
 			},
 			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":8,"lookupDoc":[{"_id":ObjectId("5a934e000102030405000001"),"k2":8},{"_id":ObjectId("5a934e000102030405000002"),"k2":8}]}]`,
@@ -383,7 +383,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: "multiple collection in bson mode with lookup",
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`{"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":1}]}`},
+				"config": {`db={"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":1}]}`},
 				"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"_id",foreignField:"_id","as":"lookupDoc"}})`},
 			},
 			result:    `[{"_id":1,"k":8,"lookupDoc":[{"_id":1,"k2":1}]}]`,
@@ -518,7 +518,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {""},
 				"query":  {"db.c.find()"},
 			},
-			result:    "invalid configuration:\n  must be an array or an object",
+			result:    fmt.Sprintf("error in configuration:\n  %v", invalidConfig),
 			createdDB: 0,
 			compact:   false,
 		},
@@ -526,7 +526,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: `too many collections`,
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`{"a":[],"b":[],"c":[],"d":[],"e":[],"f":[],"g":[],"h":[],"i":[],"j":[],"k":[]}`},
+				"config": {`db={"a":[],"b":[],"c":[],"d":[],"e":[],"f":[],"g":[],"h":[],"i":[],"j":[],"k":[]}`},
 				"query":  {"db.c.find()"},
 			},
 			result:    "max number of collection in a database is 10, but was 11",
@@ -537,7 +537,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: `no documents found`,
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`{"a":[]}`},
+				"config": {`db={"a":[]}`},
 				"query":  {"db.a.find()"},
 			},
 			result:    noDocFound,

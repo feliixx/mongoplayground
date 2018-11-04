@@ -226,6 +226,23 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
     k: new Date(89928  }  ]`,
 			compact: `[{k:new Date(89928  }  ]`,
 		},
+		{
+			name: `multiple collection bson`,
+			input: `
+ db  =   {
+	 coll1: [
+		 {k:NumberInt(1234)}
+	]
+}`,
+			compact: `db={coll1:[{k:NumberInt(1234)}]}`,
+			indent: `db={
+  coll1: [
+    {
+      k: NumberInt(1234)
+    }
+  ]
+}`,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -316,8 +333,8 @@ func TestFormatConfig(t *testing.T) {
 		},
 		{
 			name:                 `multiple collections bson mode`,
-			input:                `{"collection1":[{"k":1}]}`,
-			formattedModeBSON:    `{"collection1":[{"k":1}]}`,
+			input:                `db={"collection1":[{"k":1}]}`,
+			formattedModeBSON:    `db={"collection1":[{"k":1}]}`,
 			formattedModeDatagen: `invalid`,
 		},
 	}

@@ -145,6 +145,6 @@ body {
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==') !important;
 }
 
-.ignore_warnings > .ace_gutter > .ace_layer > .ace_warning {
+.ignore_warnings > .ace_gutter > .ace_layer > .ace_warning, .ace_info {
     background-image: none !important; 
 }

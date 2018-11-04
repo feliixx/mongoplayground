@@ -62,7 +62,7 @@
 
         var templates = [
             '[{"key":1},{"key":2}]', 
-            '{"collection":[{"key":0}],"other":[{"key2":2}]}', 
+            'db={"collection":[{"key":0},{"key":12}],"other":[{"key2":2}]}', 
             '[{"collection": "collection","count": 10,"content": {"key": {"type": "int","minInt": 0,"maxInt": 10}}}]'
         ]
 
@@ -83,7 +83,7 @@
         }
 
         function run(doSave) {
-            if (isCorrect()) {
+            if ( isCorrect() || doSave ) {
                 var r = new XMLHttpRequest()
                 r.open("POST", doSave ? "/save" : "/run")
                 r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -130,7 +130,7 @@
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), mode)
             if (formattedConfig === "invalid") {
-                resultEditor.setValue("invalid configuration: \n  must be an array or an object", -1)
+                resultEditor.setValue("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'", -1)
                 return false
             }
             if (hasChanged) {
@@ -179,7 +179,7 @@
         </div>
         <div>
             <h3>Query</h3>
-            <div id="query">{{printf "%s" .Query}}</div>
+            <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
         </div>
         <div>
             <h3>Result</h3>

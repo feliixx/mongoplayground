@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -230,13 +231,11 @@ const (
 	maxBytes = maxDoc * 1024
 	// noDocFound error message when no docs match the query
 	noDocFound = "no document found"
+	// invalidConfig error message when the configuration doesn't match expected format
+	invalidConfig = "invalid configuration:\n    must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ]' }"
 )
 
 func (s *server) run(p *page) (result []byte, err error) {
-
-	if len(p.Config) == 0 {
-		return nil, fmt.Errorf("invalid configuration:\n  must be an array or an object")
-	}
 
 	session := s.session.Copy()
 	defer session.Close()
@@ -303,17 +302,23 @@ func createContentFromMgodatagen(collections map[string][]bson.M, config []byte)
 	return nil
 }
 
-func loadContentFromJSON(collections map[string][]bson.M, config []byte) (err error) {
-	switch config[0] {
-	case '{':
-		err = bson.UnmarshalJSON(config, &collections)
-	case '[':
+func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
+
+	if bytes.HasPrefix(config, []byte("[")) {
+
 		var docs []bson.M
-		err = bson.UnmarshalJSON(config, &docs)
+		err := bson.UnmarshalJSON(config, &docs)
 
 		collections["collection"] = docs
+
+		return err
 	}
-	return err
+
+	if bytes.HasPrefix(config, []byte("db={")) {
+		return bson.UnmarshalJSON(config[3:], &collections)
+	}
+
+	return errors.New(invalidConfig)
 }
 
 func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
