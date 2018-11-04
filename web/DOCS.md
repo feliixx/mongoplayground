@@ -1,77 +1,58 @@
-# Mongoplayground v0.1.0
+##   Summary
 
-## Summary
-
-
-- [Limitations](#user-content-limitations)
 - [Create a database](#user-content-create-a-database)
-  - [with json documents](#user-content-use-json-documents)
-  - [with random data](#user-content-create-random-documents-with-mgodatagen)
+  - [with bson documents](#user-content-from-bson-documents)
+  - [with random data](#user-content-from-mgodatagen)
+- [Limitations](#user-content-limitations)
 - [Report an issue / contribute](#user-content-report-an-issue-and-contribute)
 - [Credits](#user-content-credits)
 
-## Limitations
+# Create a database 
 
-### Size limitations
+## From BSON documents
 
-This playground has several limitations: 
-
- - a database can't contain more than **10 collections**
- - a collection can't contain more than **100 documents**
- - all collections are capped to a size of **1024*100 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
-
-### Queries
-
-Currently, the playground can run only `find()` and `aggregate()` queries. Options in aggregation queries are **not** supported.
-
-### shell regex
-
-Currently, shell regex doesn't work in query. 
-
-so instead of 
-
-```JSON5
-db.collection.find({
-  "k": /pattern/
-})
-```
-
-use 
-
-```JSON5 
-db.collection.find({
-  "k": {
-    "$regex": "pattern"
-  }
-})
-```
-
-### Number decimal
-
-Currently, `NumberDecimal()` notation is not supported in json mode. 
-
-
-## Create a database 
-
-## Use JSON documents
-
-It is possible to use JSON documents to create a database. Documents will be inserted in a **collection named `collection`**.
-
-Select `JSON` mode and add the JSON documents in an array, for example: 
+It is possible to create a collection from an array of BSON documents. If no collection name is specified, documents will be inserted in a collection named **`collection`**, for example
 
 ```JSON5
 [
   {
     "_id": 1, 
     "k": "value"
-  }, {
+  },
+  {
     "_id": 2, 
     "k": "someOtherValue"
   }
 ]
 ```
 
-## Create random documents with mgodatagen
+It is possible to create **multiple collections** in `bson` mode with custom names like this
+
+```JSON5
+db={
+  "coll1": [
+    {
+      "_id": 1, 
+      "k": "value"
+    }, 
+    {
+      "_id": 2, 
+      "k": "someOtherValue"
+    }
+  ], 
+  "coll2": [
+    {
+      "_id": 1, 
+      "k2": "value"
+    }
+  ]
+}
+```
+
+This will create two collections named `coll1` and `coll2`
+
+
+## From mgodatagen
 
 You can create random documents using **[mgodatagen](github.com/feliixx/mgodatagen)**. Select `mgodatagen` mode and create a 
 custom configuration file. 
@@ -195,7 +176,7 @@ If `unique` is set to true, the field will only contains unique strings. Unique 
 have a **fixed length**, `minLength` is taken as length for the string. 
 There is  `64^x`  possible unique string for strings of length `x`. This number has to 
 be inferior or equal to the number of documents you want to generate. 
-For example, if you want unique strings of length 3, the is `64 * 64 * 64 = 262144` possible 
+For example, if you want unique strings of length 3, there is `64 * 64 * 64 = 262144` possible 
 strings.
 
 They will look like 
@@ -372,7 +353,7 @@ Add the same value to each document.
 "fieldName": {
     "type": "constant",       // required
     "nullPercentage": <int>,  // optional
-    "constVal": <object>      // required, an be of any type including object and array
+    "constVal": <object>      // required, can be of any type including object and array
                               // eg: {"k": 1, "v": "val"} 
 }
 ```
@@ -643,6 +624,47 @@ and use main or custom generators instead, as faker generator are way slower.
 
 Currently, only `"en"` locale is available.
 
+# Limitations
+
+### Size limitations
+
+This playground has several limitations: 
+
+ - a database can't contain more than **10 collections**
+ - a collection can't contain more than **100 documents**
+ - all collections are capped to a size of **1024*100 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
+
+### Queries
+
+Currently, the playground can run only `find()` and `aggregate()` queries. Options in aggregation queries are **not** supported.
+
+### shell regex
+
+Currently, shell regex doesn't work in query. 
+
+so instead of 
+
+```JSON5
+db.collection.find({
+  "k": /pattern/
+})
+```
+
+use 
+
+```JSON5 
+db.collection.find({
+  "k": {
+    "$regex": "pattern"
+  }
+})
+```
+
+### Number decimal
+
+Currently, `NumberDecimal()` notation is not supported in bson mode.
+
+
 ## Report an issue and contribute
 
 You can report issues here: [mongoplayground/issues](https://github.com/feliixx/mongoplayground/issues)
@@ -651,7 +673,7 @@ The source code is available here: [mongoplayground](https://github.com/feliixx/
 
 Contributions are welcome! 
 
-## Credits 
+# Credits 
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
 

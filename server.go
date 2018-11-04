@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -229,9 +231,11 @@ const (
 	maxBytes = maxDoc * 1024
 	// noDocFound error message when no docs match the query
 	noDocFound = "no document found"
+	// invalidConfig error message when the configuration doesn't match expected format
+	invalidConfig = "invalid configuration:\n    must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ]' }"
 )
 
-func (s *server) run(p *page) ([]byte, error) {
+func (s *server) run(p *page) (result []byte, err error) {
 
 	session := s.session.Copy()
 	defer session.Close()
@@ -239,53 +243,122 @@ func (s *server) run(p *page) ([]byte, error) {
 	DBHash := p.dbHash()
 	db := session.DB(DBHash)
 
-	_, exists := s.activeDB.LoadOrStore(DBHash, time.Now().Unix())
+	_, exists := s.activeDB.Load(DBHash)
 	if !exists {
-		db.DropDatabase()
+
+		collections := map[string][]bson.M{}
+
 		switch p.Mode {
 		case mgodatagenMode:
-			listColl, err := datagen.ParseConfig(p.Config, true)
-			if err != nil {
-				return nil, fmt.Errorf("fail to parse configuration: %v", err)
-			}
-			if len(listColl) > maxCollNb {
-				return nil, fmt.Errorf("max number of collections to create is %d, but found %d collections", maxCollNb, len(listColl))
-			}
-			mapRef := map[int][][]byte{}
-			mapRefType := map[int]byte{}
-			for _, c := range listColl {
-				err := s.fillCollection(db, c, mapRef, mapRefType)
-				if err != nil {
-					return nil, fmt.Errorf("fail to create DB: %v", err)
-				}
-			}
-		case jsonMode:
-			var docs []bson.M
-			err := bson.UnmarshalJSON(p.Config, &docs)
-			if err != nil {
-				return nil, fmt.Errorf("fail to parse bson documents: %v", err)
-			}
-			coll := createCollection(db, "collection")
-			bulk := coll.Bulk()
-			bulk.Unordered()
-			if len(docs) > 0 {
-				for i, doc := range docs {
-					if _, hasID := doc["_id"]; !hasID {
-						doc["_id"] = bson.ObjectId(objectIDBytes(int32(i)))
-					}
-					bulk.Insert(doc)
-				}
-			}
-			_, err = bulk.Run()
-			if err != nil {
-				return nil, err
-			}
+			err = createContentFromMgodatagen(collections, p.Config)
+		case bsonMode:
+			err = loadContentFromJSON(collections, p.Config)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("error in configuration:\n  %v", err)
+		}
+
+		err := createDatabase(db, collections)
+		if err != nil {
+			return nil, err
 		}
 	}
+
+	s.activeDB.Store(DBHash, time.Now().Unix())
+
 	return runQuery(db, p.Query)
 }
 
-func createCollection(db *mgo.Database, name string) *mgo.Collection {
+func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
+
+	collConfigs, err := datagen.ParseConfig(config, true)
+	if err != nil {
+		return err
+	}
+
+	mapRef := map[int][][]byte{}
+	mapRefType := map[int]byte{}
+
+	for _, c := range collConfigs {
+
+		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
+		if ci.Count > maxDoc || ci.Count <= 0 {
+			ci.Count = maxDoc
+		}
+		g, err := ci.NewDocumentGenerator(c.Content)
+		if err != nil {
+			return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
+		}
+		docs := make([]bson.M, ci.Count)
+		for i := 0; i < ci.Count; i++ {
+			err := bson.Unmarshal(g.Generate(), &docs[i])
+			if err != nil {
+				return err
+			}
+		}
+		collections[c.Name] = docs
+	}
+	return nil
+}
+
+func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
+
+	if bytes.HasPrefix(config, []byte("[")) {
+
+		var docs []bson.M
+		err := bson.UnmarshalJSON(config, &docs)
+
+		collections["collection"] = docs
+
+		return err
+	}
+
+	if bytes.HasPrefix(config, []byte("db={")) {
+		return bson.UnmarshalJSON(config[3:], &collections)
+	}
+
+	return errors.New(invalidConfig)
+}
+
+func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
+
+	if len(collections) > maxCollNb {
+		return fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
+	}
+	// clean any potentially remaining data
+	db.DropDatabase()
+
+	names := make(sort.StringSlice, len(collections))
+	for name := range collections {
+		names = append(names, name)
+	}
+	names.Sort()
+
+	base := 0
+	for _, name := range names {
+
+		bulk := createBulk(db, name)
+
+		docs := collections[name]
+		if len(docs) > 0 {
+			for i, doc := range docs {
+				if _, hasID := doc["_id"]; !hasID {
+					doc["_id"] = seededObjectID(int32(base + i))
+				}
+				bulk.Insert(doc)
+			}
+		}
+		_, err := bulk.Run()
+		if err != nil {
+			return err
+		}
+		base += len(docs)
+	}
+	return nil
+}
+
+func createBulk(db *mgo.Database, name string) *mgo.Bulk {
 	info := &mgo.CollectionInfo{
 		Capped:   true,
 		MaxDocs:  maxDoc,
@@ -293,93 +366,69 @@ func createCollection(db *mgo.Database, name string) *mgo.Collection {
 	}
 	c := db.C(name)
 	c.Create(info)
-	return c
-}
 
-func (s *server) fillCollection(db *mgo.Database, c datagen.Collection, mapRef map[int][][]byte, mapRefType map[int]byte) error {
-	// use a constant seed to always have the same output
-	// TODO: use the actual server version here
-	ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
-	if ci.Count > maxDoc || ci.Count <= 0 {
-		ci.Count = maxDoc
-	}
-	g, err := ci.NewDocumentGenerator(c.Content)
-	if err != nil {
-		return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
-	}
-	// if the config doesn't contain an _id generator, add a seeded one to generate
-	// always the same sequence of ObjectId
-	if _, hasID := c.Content["_id"]; !hasID {
-		sg := &seededObjectIDGenerator{
-			key: []byte("_id"),
-			idx: 0,
-			buf: g.Buffer,
-		}
-		g.Add(sg)
-	}
-	coll := createCollection(db, c.Name)
-	bulk := coll.Bulk()
+	bulk := c.Bulk()
 	bulk.Unordered()
 
-	for i := 0; i < ci.Count; i++ {
-		docBytes := g.Generate()
-		doc := bson.Raw{
-			Data: make([]byte, len(docBytes)),
-		}
-		copy(doc.Data, docBytes)
-		bulk.Insert(doc)
-	}
-	_, err = bulk.Run()
-	return err
+	return bulk
 }
 
-// run a query against the db database.
-// query syntax is checked on client side and look like
-//
-// db.(\w+).(find|aggregate)(...)
+func seededObjectID(n int32) bson.ObjectId {
+
+	// using date = uint32(time.Date(2018, 02, 26, 0, 0, 0, 0, time.UTC).Unix())
+
+	return bson.ObjectId([]byte{
+		byte(90),  // date << 24
+		byte(147), // date << 16
+		byte(78),  // date << 8
+		byte(0),   // date
+		byte(1),   // 1,2,3 for hostname bytes
+		byte(2),
+		byte(3),
+		byte(4), // 4,5 for pid bytes
+		byte(5),
+		byte(n >> 16), // Increment, 3 bytes, big endian
+		byte(n >> 8),
+		byte(n),
+	})
+}
+
 func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 
+	// query should look like
+	// db.(\w*).(find|aggregate)(...)
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
 		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
 
-	start, end := bytes.IndexByte(p[2], '('), bytes.LastIndexByte(p[2], ')')
-	queryBytes := p[2][start+1 : end]
+	collection := db.C(string(p[1]))
 
-	if len(queryBytes) == 0 {
-		queryBytes = []byte("{}")
-	}
-	// because projections are allowed, transform
-	// {}, {"_id": 0} into [{}, {"_id": 0}] so we
-	// can parse it as a []bson.M
-	if queryBytes[0] != '[' {
-		b := make([]byte, 0, len(queryBytes)+2)
-		b = append(b, '[')
-		b = append(b, queryBytes...)
-		b = append(b, ']')
-		queryBytes = b
+	if !exist(collection) {
+		return nil, fmt.Errorf(`collection "%s" doesn't exist`, p[1])
 	}
 
-	var pipeline []bson.M
-	err := bson.UnmarshalJSON(queryBytes, &pipeline)
+	// last part of query contains the method and the stages, for example find({k:1})
+	queryBytes := p[2]
+	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
+
+	method := string(queryBytes[:start])
+
+	stages, err := stages(queryBytes[start+1 : end])
 	if err != nil {
 		return nil, fmt.Errorf("fail to parse content of query: %v", err)
 	}
 
-	var docs []interface{}
-
-	collection := db.C(string(p[1]))
-	method := string(p[2][:start])
+	var docs []bson.M
 
 	switch method {
 	case "find":
-		for len(pipeline) < 2 {
-			pipeline = append(pipeline, bson.M{})
+		for len(stages) < 2 {
+			stages = append(stages, bson.M{})
 		}
-		err = collection.Find(pipeline[0]).Select(pipeline[1]).All(&docs)
+		err = collection.Find(stages[0]).Select(stages[1]).All(&docs)
 	case "aggregate":
-		err = collection.Pipe(pipeline).All(&docs)
+		err = collection.Pipe(stages).All(&docs)
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
@@ -391,6 +440,41 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 		return []byte(noDocFound), nil
 	}
 	return bson.MarshalExtendedJSON(docs)
+}
+
+func stages(queryBytes []byte) (stages []bson.M, err error) {
+
+	if len(queryBytes) == 0 {
+		return make([]bson.M, 2), nil
+	}
+
+	// because projections are allowed, transform
+	// {}, {"_id": 0} into [{}, {"_id": 0}] so we
+	// can parse it as a []bson.M
+	if queryBytes[0] != '[' {
+		b := make([]byte, 0, len(queryBytes)+2)
+		b = append(b, '[')
+		b = append(b, queryBytes...)
+		b = append(b, ']')
+		queryBytes = b
+	}
+
+	err = bson.UnmarshalJSON(queryBytes, &stages)
+
+	return stages, err
+}
+
+func exist(collection *mgo.Collection) bool {
+	names, err := collection.Database.CollectionNames()
+	if err != nil {
+		return true
+	}
+	for _, name := range names {
+		if name == collection.Name {
+			return true
+		}
+	}
+	return false
 }
 
 const (
@@ -419,7 +503,7 @@ func (s *server) precompile() error {
 	zw.Name = "playground.html"
 	zw.ModTime = time.Now()
 	p := &page{
-		Mode:         jsonMode,
+		Mode:         bsonMode,
 		Config:       []byte(templateConfig),
 		Query:        []byte(templateQuery),
 		MongoVersion: s.mongodbVersion,
@@ -480,8 +564,7 @@ func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	responseBytes, err := json.Marshal(currentStatus)
 	if err != nil {
-		s.logger.Printf("fail to marshal status %v: %v", currentStatus, err)
-		w.WriteHeader(http.StatusNotFound)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "encoding/json")
@@ -489,8 +572,8 @@ func (s *server) healthcheckHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *server) countSavedPages() int {
-	count := 0
+func (s *server) countSavedPages() (count int) {
+
 	s.storage.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false

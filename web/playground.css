@@ -1,61 +1,16 @@
-html {
-    height: 100%;
-}
-
 body {
-    padding: 0;
+    height: 100vh;
     margin: 0;
-    width: 100%;
-    height: 100%;
 }
 
-#top {
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: 0;
-    height: 50px;
+.toolbar {
+    width: 100%; 
+    height: 5%;
     background-color:rgb(51, 51, 51);
 }
 
-#content {
-    padding: 5px;
-}
-
-#bottom {
-    position: absolute;
-    top: 95%;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgb(255, 255, 255);
-}
-
-#configDiv {
-    left: 0;
-}
-
-#queryDiv {
-    left: 33%
-}
-
-#resultDiv {
-    left: 66%;
-}
-
-#docDiv {
-    left: 40%;
-    width: 60%;
-    display: none;
-}
-
-#docContent {
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: scroll;
-}
-
-#title {
+.toolbar > .title {
+    width: 12%;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI", Helvetica, Arial, sans-serif;
     float: left;
     font-size: 1.6em;
@@ -63,49 +18,27 @@ body {
     padding: 8px 10px;
 }
 
-#controls {
+.toolbar > .controls {
+    width: 85%;
     float: left;
     padding: 10px 15px;
 }
-
-#link {
-    width: 380px;
-    visibility: hidden;
+/* doc button */
+.toolbar > .controls > :last-child {
+    float: right !important; 
 }
 
-#doc {
-    padding: 10px 15px;
-    float: right;
-}
-
-#versionDiv {
-    text-align: center; 
-    font-size: 14px; 
-    padding: 10px;
-    color: rgb(100, 98, 98);
-    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
-}
-
-label {
+.toolbar > .controls > label {
     color: lightgray; 
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI", Helvetica, Arial, sans-serif;
 }
 
-input[type="button"] {
-    height: 30px;
-    border: 1px solid rgb(55, 94, 171);
-    font-size: 1em; 
-    background: rgb(55, 94, 171);
-    color: rgb(255, 255, 255);
-    border-radius: 5px;
+.toolbar > .controls > label.bold {
+    margin-left: 15px;
+    font-size: 1.2em;
 }
 
-input[type="button"]:hover,
-input[type="button"]:disabled {
-    background: rgb(31, 54, 99);
-}
-
-select {
+.toolbar > .controls > select {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -114,29 +47,86 @@ select {
     background-color: rgb(236, 236, 236);
     font-size: 1em; 
     height: 30px;  
-    width: 150px; 
+    width: 200px; 
     text-align: center; 
     text-align-last:center;
 }
 
-.divTitle {
+.toolbar > .controls > input[type="text"] {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    border: 1px solid gray;
+    border-radius: 4px;
+    background-color: rgb(236, 236, 236);
+    font-size: 1em; 
+    height: 24px;  
+    width: 20%;
+    visibility: hidden;
+}
+
+.toolbar > .controls > input[type="button"] {
+    height: 30px;
+    border: 1px solid rgb(55, 94, 171);
+    font-size: 1em; 
+    background: rgb(55, 94, 171);
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+}
+
+.toolbar > .controls > input[type="button"]:hover, input[type="button"]:disabled {
+    background: rgb(31, 54, 99) !important;
+}
+
+.toolbar > .controls > input[type="radio"] {
+    vertical-align: middle; 
+    margin: 0;
+}
+
+.content {
+    width:100%;
+    height: 90%; 
+}
+
+.content > div {
+    width: 32%;
+    height: 95%;
+    float: left;
+    padding: 0 0 0 1%;
+}
+
+/* documentation div */
+.content > div:last-child {
+    float: right;
+    margin-top: 1%;
+    height: 99% !important;
+    width: 66% !important;
+    display: none;
+    overflow-x: hidden;
+    overflow-y: scroll;
+}
+
+.content > div > h3 {
     text-align: center;
-    font-size: 1.3em;
+    font-size: 1.2em;
     color: #24292e;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
 }
 
-.column {
-    width: 32%;
-    top: 40px;
-    position: absolute;
-    bottom: 12%;
-    margin: 0;
+.footer {
+    width: 100%; 
+    height: 3%;
+    background-color: rgb(255, 255, 255);
+    text-align: center; 
+    font-size: 14px; 
+    color: rgb(100, 98, 98);
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
 }
 
+/* override some specific ace class for syntax coloration*/
 .ace_editor {
     background-color: rgb(246, 248, 250) !important;
-    height: 97% !important; 
+    height: 98% !important; 
 }
 
 .ace_string {
@@ -155,6 +145,6 @@ select {
     background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==') !important;
 }
 
-.ignoreWarnings > .ace_gutter > .ace_layer > .ace_warning {
+.ignore_warnings > .ace_gutter > .ace_layer > .ace_warning, .ace_info {
     background-image: none !important; 
 }
