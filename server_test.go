@@ -833,19 +833,19 @@ func TestStaticHandlers(t *testing.T) {
 	}{
 		{
 			name:         "css",
-			url:          "/static/playground-min-3.css",
+			url:          "/static/playground-min-4.css",
 			contentType:  "text/css; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "documentation",
-			url:          "/static/docs-3.html",
+			url:          "/static/docs-4.html",
 			contentType:  "text/html; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "documentation",
-			url:          "/static/playground-min-3.js",
+			url:          "/static/playground-min-4.js",
 			contentType:  "application/javascript; charset=utf-8",
 			responseCode: 200,
 		},
@@ -864,8 +864,6 @@ func TestStaticHandlers(t *testing.T) {
 	}
 	for _, tt := range staticFileTests {
 		t.Run(tt.name, func(t *testing.T) {
-
-			t.Parallel()
 
 			resp := httptest.NewRecorder()
 			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)

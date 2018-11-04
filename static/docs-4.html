@@ -16,7 +16,7 @@
 <h1>
 <a id="user-content-create-a-database" class="anchor" href="#create-a-database" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create a database</h1>
 <h2>
-<a id="user-content-use-bson-documents" class="anchor" href="#use-bson-documents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Use BSON documents</h2>
+<a id="user-content-from-bson-documents" class="anchor" href="#from-bson-documents" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>From BSON documents</h2>
 <p>It is possible to create a collection from an array of BSON documents. If no collection name is specified, documents will be inserted in a collection named <strong><code>collection</code></strong>, for example</p>
 <div class="highlight highlight-source-js"><pre>[
   {
@@ -28,7 +28,7 @@
     <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>someOtherValue<span class="pl-pds">"</span></span>
   }
 ]</pre></div>
-<p>It is possible to create <strong>multiple collections</strong> in <code>BSON</code> mode with custom names like this</p>
+<p>It is possible to create <strong>multiple collections</strong> in <code>bson</code> mode with custom names like this</p>
 <div class="highlight highlight-source-js"><pre>db<span class="pl-k">=</span>{
   <span class="pl-s"><span class="pl-pds">"</span>coll1<span class="pl-pds">"</span></span><span class="pl-k">:</span> [
     {
@@ -49,7 +49,7 @@
 }</pre></div>
 <p>This will create two collections named <code>coll1</code> and <code>coll2</code></p>
 <h2>
-<a id="user-content-create-random-documents-with-mgodatagen" class="anchor" href="#create-random-documents-with-mgodatagen" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Create random documents with mgodatagen</h2>
+<a id="user-content-from-mgodatagen" class="anchor" href="#from-mgodatagen" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>From mgodatagen</h2>
 <p>You can create random documents using <strong><a href="github.com/feliixx/mgodatagen">mgodatagen</a></strong>. Select <code>mgodatagen</code> mode and create a
 custom configuration file.</p>
 <p>The config file is an array of JSON documents, where each documents holds the configuration

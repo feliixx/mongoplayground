@@ -9,7 +9,7 @@
 
 # Create a database 
 
-## Use BSON documents
+## From BSON documents
 
 It is possible to create a collection from an array of BSON documents. If no collection name is specified, documents will be inserted in a collection named **`collection`**, for example
 
@@ -26,7 +26,7 @@ It is possible to create a collection from an array of BSON documents. If no col
 ]
 ```
 
-It is possible to create **multiple collections** in `BSON` mode with custom names like this
+It is possible to create **multiple collections** in `bson` mode with custom names like this
 
 ```JSON5
 db={
@@ -52,7 +52,7 @@ db={
 This will create two collections named `coll1` and `coll2`
 
 
-## Create random documents with mgodatagen
+## From mgodatagen
 
 You can create random documents using **[mgodatagen](github.com/feliixx/mgodatagen)**. Select `mgodatagen` mode and create a 
 custom configuration file. 

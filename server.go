@@ -393,24 +393,26 @@ func seededObjectID(n int32) bson.ObjectId {
 	})
 }
 
-// run a query against the db database.
-// query syntax is checked on client side and look like
-//
-// db.(\w*).(find|aggregate)(...)
 func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 
+	// query should look like
+	// db.(\w*).(find|aggregate)(...)
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
 		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
 
-	collection, queryBytes := db.C(string(p[1])), p[2]
+	collection := db.C(string(p[1]))
 
 	if !exist(collection) {
 		return nil, fmt.Errorf(`collection "%s" doesn't exist`, p[1])
 	}
 
+	// last part of query contains the method and the stages, for example find({k:1})
+	queryBytes := p[2]
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
+
+	method := string(queryBytes[:start])
 
 	stages, err := stages(queryBytes[start+1 : end])
 	if err != nil {
@@ -418,7 +420,6 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	}
 
 	var docs []bson.M
-	method := string(queryBytes[:start])
 
 	switch method {
 	case "find":
