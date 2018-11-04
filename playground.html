@@ -114,9 +114,15 @@
             showDoc(false)
 
             resultEditor.setValue("", -1)
-            var errors = document.querySelectorAll(".ace_error")
+            var errors = document.querySelectorAll("#config > .ace_gutter > .ace_layer > .ace_error")
             if (errors.length > 0) {
-                resultEditor.setValue("error(s) found in config or query", -1)
+                resultEditor.setValue("error(s) found in configuration", -1)
+                return false
+            }
+
+            errors = document.querySelectorAll("#query > .ace_gutter > .ace_layer > .ace_error")
+            if (errors.length > 0) {
+                resultEditor.setValue("error(s) found in query", -1)
                 return false
             }
 
@@ -124,7 +130,7 @@
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), mode)
             if (formattedConfig === "invalid") {
-                resultEditor.setValue("invalid configuration: \n  must be an array or an object")
+                resultEditor.setValue("invalid configuration: \n  must be an array or an object", -1)
                 return false
             }
             if (hasChanged) {
