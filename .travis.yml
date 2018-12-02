@@ -1,17 +1,18 @@
 language: go
 
+dist: xenial
+
 go:
   - 1.11.x
 
 env:
   matrix:
-    - VERSION=3.6.8
-    - VERSION=4.0.3
+    - VERSION=4.0.4
 
 before_script: 
-  - wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1404-$VERSION.tgz
-  - tar xzvf mongodb-linux-x86_64-ubuntu1404-$VERSION.tgz
-  - export PATH=$PWD/mongodb-linux-x86_64-ubuntu1404-$VERSION/bin:$PATH
+  - wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-$VERSION.tgz
+  - tar xzvf mongodb-linux-x86_64-ubuntu1604-$VERSION.tgz
+  - export PATH=$PWD/mongodb-linux-x86_64-ubuntu1604-$VERSION/bin:$PATH
   - mkdir $PWD/db
   - mongod --dbpath $PWD/db > /dev/null &
 
