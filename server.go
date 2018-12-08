@@ -99,11 +99,12 @@ func (s *server) removeExpiredDB() {
 	defer session.Close()
 	s.activeDB.Range(func(k, v interface{}) bool {
 		if now.Sub(time.Unix(v.(int64), 0)) > expireInterval {
-			s.activeDB.Delete(k)
 			err := session.DB(k.(string)).DropDatabase()
 			if err != nil {
 				s.logger.Printf("fail to drop database %v: %v", k, err)
+				return true
 			}
+			s.activeDB.Delete(k)
 		}
 		return true
 	})
