@@ -329,7 +329,7 @@ func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 	// clean any potentially remaining data
 	db.DropDatabase()
 
-	names := make(sort.StringSlice, len(collections))
+	names := make(sort.StringSlice, 0, len(collections))
 	for name := range collections {
 		names = append(names, name)
 	}
@@ -341,14 +341,17 @@ func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 		bulk := createBulk(db, name)
 
 		docs := collections[name]
-		if len(docs) > 0 {
-			for i, doc := range docs {
-				if _, hasID := doc["_id"]; !hasID {
-					doc["_id"] = seededObjectID(int32(base + i))
-				}
-				bulk.Insert(doc)
-			}
+		if len(docs) == 0 {
+			continue
 		}
+
+		for i, doc := range docs {
+			if _, hasID := doc["_id"]; !hasID {
+				doc["_id"] = seededObjectID(int32(base + i))
+			}
+			bulk.Insert(doc)
+		}
+
 		_, err := bulk.Run()
 		if err != nil {
 			return err
