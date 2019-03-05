@@ -3,11 +3,11 @@ language: go
 dist: xenial
 
 go:
-  - 1.11.x
+  - 1.12.x
 
 env:
   matrix:
-    - VERSION=4.0.4
+    - VERSION=4.0.6
 
 before_script: 
   - wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-$VERSION.tgz
