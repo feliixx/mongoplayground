@@ -5,17 +5,10 @@ dist: xenial
 go:
   - 1.12.x
 
-env:
-  matrix:
-    - VERSION=4.0.6
+services:
+  - mongodb
 
 before_script: 
-  - wget https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1604-$VERSION.tgz
-  - tar xzvf mongodb-linux-x86_64-ubuntu1604-$VERSION.tgz
-  - export PATH=$PWD/mongodb-linux-x86_64-ubuntu1604-$VERSION/bin:$PATH
-  - mkdir $PWD/db
-  - mongod --dbpath $PWD/db > /dev/null &
-
   - go build 
   - go get -u golang.org/x/lint/golint
   - golint ./... 
