@@ -38,8 +38,8 @@
     "datagen",
     "datagen/generators"
   ]
-  revision = "0f9da7f62813959afad9dd36c144bc58770d47fe"
-  version = "0.7.3"
+  revision = "2e781700728621f9878d5346e6135351e02ddb02"
+  version = "0.7.4"
 
 [[projects]]
   branch = "master"
@@ -105,6 +105,11 @@
   version = "v0.8.0"
 
 [[projects]]
+  name = "github.com/satori/go.uuid"
+  packages = ["."]
+  revision = "b2ce2384e17bbe0c6d34077efa39dbab3e09123b"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = [
@@ -123,6 +128,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2b6bb08c35695e4869ea95db794ad0aa6635c0af553c0c67352f0577313de876"
+  inputs-digest = "c183c5d96df2b6833848f63830eb225430c670c697a3b6803d8ad1d160a08fe4"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -18,6 +18,7 @@ import (
 	"github.com/MichaelTJones/pcg"
 	"github.com/globalsign/mgo/bson"
 	"github.com/manveru/faker"
+	"github.com/satori/go.uuid"
 )
 
 // DocumentGenerator is a Generator for creating random bson documents
@@ -70,7 +71,7 @@ type Generator interface {
 }
 
 // base implements Key(), Type() and Exists() methods. Intended to be
-// embeded in each generator
+// embedded in each generator
 type base struct {
 	key []byte
 	// probability that the element doesn't exist
@@ -114,7 +115,7 @@ type stringGenerator struct {
 	maxLength uint32
 }
 
-// folowing code is an adaptation of existing code from this question:
+// following code is an adaptation of existing code from this question:
 // https://stackoverflow.com/questions/22892120/how-to-generate-a-random-string-of-a-fixed-length-in-golang/
 const (
 	letterBytes   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-_"
@@ -424,6 +425,19 @@ func (g *fromArrayGenerator) Value() {
 	}
 	g.buffer.Write(g.array[g.index])
 	g.index++
+}
+
+type uuidGenerator struct {
+	base
+}
+
+func (g *uuidGenerator) Value() {
+	uuid, _ := uuid.NewV4()
+	strUUID := uuid.String()
+
+	g.buffer.Write(int32Bytes(int32(len(strUUID) + 1)))
+	g.buffer.Write([]byte(strUUID))
+	g.buffer.WriteSingleByte(byte(0))
 }
 
 // Generator for creating random string using faker library

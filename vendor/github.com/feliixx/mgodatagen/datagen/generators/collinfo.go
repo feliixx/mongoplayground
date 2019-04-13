@@ -128,6 +128,7 @@ const (
 	TypeAutoincrement = "autoincrement"
 	TypeBinary        = "binary"
 	TypeDate          = "date"
+	TypeUUID          = "uuid"
 	TypeFaker         = "faker"
 )
 
@@ -190,6 +191,7 @@ var mapTypes = map[string]byte{
 	TypeAutoincrement: bson.ElementNil, // type bson.ElementInt32 or bson.ElementInt64
 	TypeBinary:        bson.ElementBinary,
 	TypeDate:          bson.ElementDatetime,
+	TypeUUID:          bson.ElementString,
 	TypeFaker:         bson.ElementString,
 
 	TypeCountAggregator: bson.ElementNil,
@@ -417,7 +419,7 @@ func (ci *CollInfo) newGenerator(buffer *DocBuffer, key string, config *Config) 
 			if err != nil {
 				return nil, fmt.Errorf("for field %s, couldn't marshal value: %v", key, err)
 			}
-			// remove first 4 bytes (bson document size) adn last bytes (terminating 0x00
+			// remove first 4 bytes (bson document size) and last bytes (terminating 0x00
 			// indicating end of document) to keep only the bson content
 			array[i] = raw[4 : len(raw)-1]
 		}
@@ -460,7 +462,7 @@ func (ci *CollInfo) newGenerator(buffer *DocBuffer, key string, config *Config) 
 		}
 		return &constGenerator{
 			base: base,
-			// remove first 4 bytes (bson document size) adn last bytes (terminating 0x00
+			// remove first 4 bytes (bson document size) and last bytes (terminating 0x00
 			// indicating end of document) to keep only the bson content
 			val: raw[4 : len(raw)-1],
 		}, nil
@@ -482,6 +484,9 @@ func (ci *CollInfo) newGenerator(buffer *DocBuffer, key string, config *Config) 
 		default:
 			return nil, fmt.Errorf("invalid type %v for field %v", config.Type, key)
 		}
+
+	case TypeUUID:
+		return &uuidGenerator{base: base}, nil
 
 	case TypeFaker:
 		// TODO: use "en" locale for now, but should be configurable
