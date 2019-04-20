@@ -13,13 +13,6 @@ const (
 	bsonMode
 )
 
-func modeByte(mode string) byte {
-	if mode == "bson" {
-		return bsonMode
-	}
-	return mgodatagenMode
-}
-
 type page struct {
 	Mode byte
 	// configuration used to generate the sample database
@@ -28,6 +21,13 @@ type page struct {
 	Query []byte
 	// mongodb version
 	MongoVersion []byte
+}
+
+func modeByte(mode string) byte {
+	if mode == "bson" {
+		return bsonMode
+	}
+	return mgodatagenMode
 }
 
 // generate an unique url for this page
