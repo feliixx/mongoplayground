@@ -24,7 +24,25 @@ const (
 	// noDocFound error message when no docs match the query
 	noDocFound = "no document found"
 	// invalidConfig error message when the configuration doesn't match expected format
-	invalidConfig = "invalid configuration:\n    must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ]' }"
+	invalidConfig = `invalid configuration:
+expecting an array of documents like 
+
+[ 
+  {_id: 1, k: "one"},
+  {_id: 2, k: "two"}
+]
+
+or a list of collections like:
+
+db = { 
+	collection1: [ 
+		{_id: 1, k: "one"},
+		{_id: 2, k: "two"}
+	],
+	collection2: [
+		{_id: 1, v: 1}
+	]
+}`
 )
 
 // run a query and return the results as plain text
