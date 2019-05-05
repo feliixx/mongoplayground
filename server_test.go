@@ -101,9 +101,12 @@ func TestRemoveOldDB(t *testing.T) {
 		Mode:   mgodatagenMode,
 		Config: []byte(params.Get("config")),
 	}
-	testServer.logger.Print(p.String())
+
 	DBHash := p.dbHash()
-	testServer.activeDB[DBHash] = time.Now().Add(-cleanupInterval).Unix()
+	dbInfo, _ := testServer.activeDB[DBHash]
+	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
+	testServer.activeDB[DBHash] = dbInfo
+
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))

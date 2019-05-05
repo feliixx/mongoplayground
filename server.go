@@ -30,12 +30,17 @@ const (
 	backupInterval = 24 * time.Hour
 )
 
+type dbMetaInfo struct {
+	collections []string
+	lastUsed    int64
+}
+
 type server struct {
 	mux              *http.ServeMux
 	session          *mgo.Session
 	storage          *badger.DB
 	logger           *log.Logger
-	activeDB         map[string]int64
+	activeDB         map[string]dbMetaInfo
 	mutex            sync.RWMutex
 	mongodbVersion   []byte
 	staticContentMap map[string]int
@@ -63,7 +68,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		mux:            http.DefaultServeMux,
 		session:        session,
 		storage:        db,
-		activeDB:       map[string]int64{},
+		activeDB:       map[string]dbMetaInfo{},
 		logger:         logger,
 		mongodbVersion: version,
 	}
@@ -121,13 +126,13 @@ func (s *server) removeExpiredDB() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	for dbName, lastUsed := range s.activeDB {
-		if now.Sub(time.Unix(lastUsed, 0)) > expireInterval {
-			err := session.DB(dbName).DropDatabase()
+	for name, infos := range s.activeDB {
+		if now.Sub(time.Unix(infos.lastUsed, 0)) > expireInterval {
+			err := session.DB(name).DropDatabase()
 			if err != nil {
-				s.logger.Printf("fail to drop database %v: %v", dbName, err)
+				s.logger.Printf("fail to drop database %v: %v", name, err)
 			}
-			delete(s.activeDB, dbName)
+			delete(s.activeDB, name)
 		}
 	}
 }

@@ -63,27 +63,40 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *server) run(p *page) (result []byte, err error) {
+func (s *server) run(p *page) ([]byte, error) {
 
 	session := s.session.Copy()
 	defer session.Close()
 
 	db := session.DB(p.dbHash())
 
-	err = s.createDatabase(db, p.Mode, p.Config)
+	dbInfos, err := s.createDatabase(db, p.Mode, p.Config)
 	if err != nil {
 		return nil, err
 	}
-	return runQuery(db, p.Query)
+	collectionName, method, stages, err := parseQuery(p.Query)
+	if err != nil {
+		return nil, err
+	}
+	// mongodb returns an empy array ( [] ) if we try to run a query on a collection
+	// that doesn't exist. Check that the collection exist before running the query,
+	// to return a clear error message in that case
+	if !exist(collectionName, dbInfos) {
+		return nil, fmt.Errorf(`collection "%s" doesn't exist`, collectionName)
+	}
+	collection := db.C(collectionName)
+
+	return runQuery(collection, method, stages)
 }
 
-func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (err error) {
+func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (dbInfo dbMetaInfo, err error) {
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
-	_, exists := s.activeDB[db.Name]
+	dbInfo, exists := s.activeDB[db.Name]
 	if !exists {
+
 		collections := map[string][]bson.M{}
 
 		switch mode {
@@ -92,17 +105,25 @@ func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (err
 		case bsonMode:
 			err = loadContentFromJSON(collections, config)
 		}
-
 		if err != nil {
-			return fmt.Errorf("error in configuration:\n  %v", err)
+			return dbInfo, fmt.Errorf("error in configuration:\n  %v", err)
 		}
+
+		dbInfo = dbMetaInfo{
+			collections: make([]string, 0, len(collections)),
+		}
+		for name := range collections {
+			dbInfo.collections = append(dbInfo.collections, name)
+		}
+
 		err = fillDatabase(db, collections)
 	}
 
 	if err == nil {
-		s.activeDB[db.Name] = time.Now().Unix()
+		dbInfo.lastUsed = time.Now().Unix()
+		s.activeDB[db.Name] = dbInfo
 	}
-	return err
+	return dbInfo, err
 }
 
 func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
@@ -231,31 +252,40 @@ func seededObjectID(n int32) bson.ObjectId {
 	})
 }
 
-func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
+// query has to match the folowing regex:
+//
+//   /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/
+//
+// for example:
+//
+//   db.collection.find({k:1})
+//   db.collection.aggregate([{$project:{_id:0}}])
+//
+//
+func parseQuery(query []byte) (collectionName, method string, stages []bson.M, err error) {
 
-	// query should look like
-	// db.(\w*).(find|aggregate)(...)
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
-		return nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
+		return "", "", nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
 	}
 
-	collection := db.C(string(p[1]))
-
-	if !exist(collection) {
-		return nil, fmt.Errorf(`collection "%s" doesn't exist`, p[1])
-	}
+	collectionName = string(p[1])
 
 	// last part of query contains the method and the stages, for example find({k:1})
 	queryBytes := p[2]
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
 
-	method := string(queryBytes[:start])
+	method = string(queryBytes[:start])
 
-	stages, err := stages(queryBytes[start+1 : end])
+	stages, err = unmarshalStages(queryBytes[start+1 : end])
 	if err != nil {
-		return nil, fmt.Errorf("fail to parse content of query: %v", err)
+		return "", "", nil, fmt.Errorf("fail to parse content of query: %v", err)
 	}
+
+	return collectionName, method, stages, nil
+}
+
+func runQuery(collection *mgo.Collection, method string, stages []bson.M) (result []byte, err error) {
 
 	var docs []bson.M
 
@@ -280,7 +310,7 @@ func runQuery(db *mgo.Database, query []byte) ([]byte, error) {
 	return bson.MarshalExtendedJSON(docs)
 }
 
-func stages(queryBytes []byte) (stages []bson.M, err error) {
+func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 
 	if len(queryBytes) == 0 {
 		return make([]bson.M, 2), nil
@@ -302,13 +332,9 @@ func stages(queryBytes []byte) (stages []bson.M, err error) {
 	return stages, err
 }
 
-func exist(collection *mgo.Collection) bool {
-	names, err := collection.Database.CollectionNames()
-	if err != nil {
-		return true
-	}
-	for _, name := range names {
-		if name == collection.Name {
+func exist(collectionName string, dbInfos dbMetaInfo) bool {
+	for _, name := range dbInfos.collections {
+		if name == collectionName {
 			return true
 		}
 	}
