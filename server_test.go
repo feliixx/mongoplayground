@@ -152,14 +152,13 @@ func (s *server) clearDatabases(t *testing.T) error {
 	if err != nil {
 		t.Error(err)
 	}
-	// dbNames are md5 hash, 32-char long
-	for _, name := range dbNames {
-		if len(name) == 32 {
-			s.session.DB(name).DropDatabase()
-		}
+	for _, name := range filterDBNames(dbNames) {
+		s.session.DB(name).DropDatabase()
+		delete(s.activeDB, name)
 	}
-	for k := range s.activeDB {
-		delete(s.activeDB, k)
+
+	if len(s.activeDB) > 0 {
+		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", s.activeDB)
 	}
 
 	keys := make([][]byte, 0)

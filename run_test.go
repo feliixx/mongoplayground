@@ -523,7 +523,6 @@ func TestRunCreateDB(t *testing.T) {
 	})
 
 	testStorageContent(t, nbMongoDatabases, 0)
-
 }
 
 func TestRunExistingDB(t *testing.T) {
