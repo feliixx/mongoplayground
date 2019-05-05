@@ -22,10 +22,7 @@ const (
 	badgerDir = "storage"
 	backupDir = "backups"
 	// interval between two database cleanup
-	cleanupInterval = 120 * time.Minute
-	// if a database is not used within the last
-	// expireInterval, it is removed in the next cleanup
-	expireInterval = 60 * time.Minute
+	cleanupInterval = 8 * time.Hour
 	// interval between two database backup
 	backupInterval = 24 * time.Hour
 )
@@ -115,7 +112,7 @@ func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(s.staticContent[0])
 }
 
-// remove db not used within the last expireInterval
+// remove db not used since the previous cleanup
 func (s *server) removeExpiredDB() {
 
 	session := s.session.Copy()
@@ -127,7 +124,7 @@ func (s *server) removeExpiredDB() {
 	defer s.mutex.Unlock()
 
 	for name, infos := range s.activeDB {
-		if now.Sub(time.Unix(infos.lastUsed, 0)) > expireInterval {
+		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
 			err := session.DB(name).DropDatabase()
 			if err != nil {
 				s.logger.Printf("fail to drop database %v: %v", name, err)
