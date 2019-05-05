@@ -496,23 +496,31 @@ func TestRunCreateDB(t *testing.T) {
 	}
 
 	nbMongoDatabases := 0
-	for _, tt := range runCreateDBTests {
-		t.Run(tt.name, func(t *testing.T) {
-			buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", tt.params)
-			if tt.compact {
-				comp, err := bson.CompactJSON(buf.Bytes())
-				if err != nil {
-					t.Errorf("could not compact result: %s (%v)", buf.Bytes(), err)
-				}
-				buf = bytes.NewBuffer(comp)
-			}
 
-			if want, got := tt.result, buf.String(); want != got {
-				t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
-			}
-		})
-		nbMongoDatabases += tt.createdDB
-	}
+	t.Run("parallel run", func(t *testing.T) {
+		for _, tt := range runCreateDBTests {
+
+			test := tt // capture range variable
+			t.Run(test.name, func(t *testing.T) {
+
+				t.Parallel()
+
+				buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", test.params)
+				if test.compact {
+					comp, err := bson.CompactJSON(buf.Bytes())
+					if err != nil {
+						t.Errorf("could not compact result: %s (%v)", buf.Bytes(), err)
+					}
+					buf = bytes.NewBuffer(comp)
+				}
+
+				if want, got := test.result, buf.String(); want != got {
+					t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
+				}
+			})
+			nbMongoDatabases += test.createdDB
+		}
+	})
 
 	testStorageContent(t, nbMongoDatabases, 0)
 
@@ -536,7 +544,7 @@ func TestRunExistingDB(t *testing.T) {
 		Config: []byte(templateParams.Get("config")),
 	}
 	DBHash := p.dbHash()
-	_, ok := testServer.activeDB.Load(DBHash)
+	_, ok := testServer.activeDB[DBHash]
 	if !ok {
 		t.Errorf("activeDb should contain DB %s", DBHash)
 	}

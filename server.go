@@ -35,7 +35,8 @@ type server struct {
 	session          *mgo.Session
 	storage          *badger.DB
 	logger           *log.Logger
-	activeDB         sync.Map
+	activeDB         map[string]int64
+	mutex            sync.RWMutex
 	mongodbVersion   []byte
 	staticContentMap map[string]int
 	staticContent    [][]byte
@@ -62,7 +63,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		mux:            http.DefaultServeMux,
 		session:        session,
 		storage:        db,
-		activeDB:       sync.Map{},
+		activeDB:       map[string]int64{},
 		logger:         logger,
 		mongodbVersion: version,
 	}
@@ -116,19 +117,19 @@ func (s *server) removeExpiredDB() {
 	defer session.Close()
 
 	now := time.Now()
-	s.activeDB.Range(func(k, v interface{}) bool {
 
-		if now.Sub(time.Unix(v.(int64), 0)) > expireInterval {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
 
-			err := session.DB(k.(string)).DropDatabase()
+	for dbName, lastUsed := range s.activeDB {
+		if now.Sub(time.Unix(lastUsed, 0)) > expireInterval {
+			err := session.DB(dbName).DropDatabase()
 			if err != nil {
-				s.logger.Printf("fail to drop database %v: %v", k, err)
-				return true
+				s.logger.Printf("fail to drop database %v: %v", dbName, err)
 			}
-			s.activeDB.Delete(k)
+			delete(s.activeDB, dbName)
 		}
-		return true
-	})
+	}
 }
 
 // create a backup from the badger db, and store it in backupDir.

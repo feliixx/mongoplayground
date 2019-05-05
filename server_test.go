@@ -103,7 +103,7 @@ func TestRemoveOldDB(t *testing.T) {
 	}
 	testServer.logger.Print(p.String())
 	DBHash := p.dbHash()
-	testServer.activeDB.Store(DBHash, time.Now().Add(-cleanupInterval).Unix())
+	testServer.activeDB[DBHash] = time.Now().Add(-cleanupInterval).Unix()
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
@@ -115,7 +115,7 @@ func TestRemoveOldDB(t *testing.T) {
 
 	testServer.removeExpiredDB()
 
-	_, ok := testServer.activeDB.Load(DBHash)
+	_, ok := testServer.activeDB[DBHash]
 	if ok {
 		t.Errorf("DB %s should not be present in activeDB", DBHash)
 	}
@@ -158,10 +158,9 @@ func (s *server) clearDatabases(t *testing.T) error {
 			s.session.DB(name).DropDatabase()
 		}
 	}
-	s.activeDB.Range(func(k, v interface{}) bool {
-		s.activeDB.Delete(k)
-		return true
-	})
+	for k := range s.activeDB {
+		delete(s.activeDB, k)
+	}
 
 	keys := make([][]byte, 0)
 	err = s.storage.View(func(txn *badger.Txn) error {

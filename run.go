@@ -54,7 +54,11 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 		Query:  []byte(r.FormValue("query")),
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	s.mutex.Lock()
 	res, err := s.run(p)
+	s.mutex.Unlock()
+
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
@@ -70,7 +74,7 @@ func (s *server) run(p *page) (result []byte, err error) {
 	DBHash := p.dbHash()
 	db := session.DB(DBHash)
 
-	_, exists := s.activeDB.Load(DBHash)
+	_, exists := s.activeDB[DBHash]
 	if !exists {
 
 		collections := map[string][]bson.M{}
@@ -92,7 +96,7 @@ func (s *server) run(p *page) (result []byte, err error) {
 		}
 	}
 
-	s.activeDB.Store(DBHash, time.Now().Unix())
+	s.activeDB[DBHash] = time.Now().Unix()
 
 	return runQuery(db, p.Query)
 }
