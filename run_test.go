@@ -380,7 +380,7 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {`db.collection.find()`},
 			},
 			result:    `E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }`,
-			createdDB: 1,
+			createdDB: 0, // the config is incorrect, no db should be created
 			compact:   false,
 		},
 		{

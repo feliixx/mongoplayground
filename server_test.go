@@ -204,6 +204,9 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
 		t.Errorf("expected %d DB, but got %d", want, got)
 	}
+	if want, got := nbMongoDatabases, len(testServer.activeDB); want != got {
+		t.Errorf("expected %d db in map, but got %d", want, got)
+	}
 	if want, got := nbBadgerRecords, testServer.countSavedPages(); want != got {
 		t.Errorf("expected %d page saved, but got %d", want, got)
 	}

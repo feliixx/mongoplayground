@@ -210,6 +210,18 @@ func fillDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 
 		_, err := bulk.Run()
 		if err != nil {
+			// In some case, a collection can be partially created even if some write failed
+			//
+			// for example: [{_id:1},{_id:1}]
+			//
+			// -> the first write will suceed, but the second will fail, so a collection
+			// containing only one record will be created, and an error will be returned
+			//
+			// Because fillDatabase returns an error, the hash of the database (ie db.name)
+			// is not put in server.activeDB, so it can't be deleted from server.removeExpiredDB
+			//
+			// to avoid this kind of leaks, drop the db immediately if there is an error
+			db.DropDatabase()
 			return err
 		}
 		base += len(docs)
