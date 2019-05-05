@@ -55,10 +55,7 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
-	s.mutex.Lock()
 	res, err := s.run(p)
-	s.mutex.Unlock()
-
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
@@ -71,34 +68,41 @@ func (s *server) run(p *page) (result []byte, err error) {
 	session := s.session.Copy()
 	defer session.Close()
 
-	DBHash := p.dbHash()
-	db := session.DB(DBHash)
+	db := session.DB(p.dbHash())
 
-	_, exists := s.activeDB[DBHash]
+	err = s.createDatabase(db, p.Mode, p.Config)
+	if err != nil {
+		return nil, err
+	}
+	return runQuery(db, p.Query)
+}
+
+func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (err error) {
+
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	_, exists := s.activeDB[db.Name]
 	if !exists {
-
 		collections := map[string][]bson.M{}
 
-		switch p.Mode {
+		switch mode {
 		case mgodatagenMode:
-			err = createContentFromMgodatagen(collections, p.Config)
+			err = createContentFromMgodatagen(collections, config)
 		case bsonMode:
-			err = loadContentFromJSON(collections, p.Config)
+			err = loadContentFromJSON(collections, config)
 		}
 
 		if err != nil {
-			return nil, fmt.Errorf("error in configuration:\n  %v", err)
+			return fmt.Errorf("error in configuration:\n  %v", err)
 		}
-
-		err := createDatabase(db, collections)
-		if err != nil {
-			return nil, err
-		}
+		err = fillDatabase(db, collections)
 	}
 
-	s.activeDB[DBHash] = time.Now().Unix()
-
-	return runQuery(db, p.Query)
+	if err == nil {
+		s.activeDB[db.Name] = time.Now().Unix()
+	}
+	return err
 }
 
 func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
@@ -152,7 +156,7 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 	return errors.New(invalidConfig)
 }
 
-func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
+func fillDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 
 	if len(collections) > maxCollNb {
 		return fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
@@ -192,13 +196,13 @@ func createDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 	return nil
 }
 
-func createBulk(db *mgo.Database, name string) *mgo.Bulk {
+func createBulk(db *mgo.Database, collectionName string) *mgo.Bulk {
 	info := &mgo.CollectionInfo{
 		Capped:   true,
 		MaxDocs:  maxDoc,
 		MaxBytes: maxBytes,
 	}
-	c := db.C(name)
+	c := db.C(collectionName)
 	c.Create(info)
 
 	bulk := c.Bulk()
