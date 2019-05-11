@@ -97,7 +97,6 @@ func newServer(logger *log.Logger) (*server, error) {
 	s.mux.HandleFunc("/run", s.runHandler)
 	s.mux.HandleFunc("/save", s.saveHandler)
 	s.mux.HandleFunc("/static/", s.staticHandler)
-	s.mux.HandleFunc("/_status/healthcheck", s.healthcheckHandler)
 
 	return s, nil
 }
