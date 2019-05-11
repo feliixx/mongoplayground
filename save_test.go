@@ -48,20 +48,31 @@ func TestSave(t *testing.T) {
 		},
 	}
 
+	t.Run("parallel save", func(t *testing.T) {
+		for _, tt := range saveTests {
+
+			test := tt // capture range variable
+			t.Run(tt.name, func(t *testing.T) {
+
+				t.Parallel()
+
+				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", test.params)
+
+				if want, got := test.result, buf.String(); want != got {
+					t.Errorf("expected %s, but got %s", want, got)
+				}
+			})
+		}
+	})
+
+	// save without run should not create any database
+	nbMongoDatabases := 0
 	nbBadgerRecords := 0
 	for _, tt := range saveTests {
-		t.Run(tt.name, func(t *testing.T) {
-			buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
-
-			if want, got := tt.result, buf.String(); want != got {
-				t.Errorf("expected %s, but got %s", want, got)
-			}
-		})
 		if tt.newRecord {
 			nbBadgerRecords++
 		}
 	}
 
-	testStorageContent(t, 0, nbBadgerRecords)
-
+	testStorageContent(t, nbMongoDatabases, nbBadgerRecords)
 }

@@ -13,7 +13,7 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/p/")
 	p, err := s.loadPage([]byte(id))
 	if err != nil {
-		s.logger.Printf("requested page %s doesn't exists", id)
+		s.logger.Printf("fail to load page wtih id %s : %v", id, err)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte("this playground doesn't exist"))
 		return

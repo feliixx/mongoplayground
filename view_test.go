@@ -16,14 +16,12 @@ func TestView(t *testing.T) {
 		params       url.Values
 		url          string
 		responseCode int
-		newRecord    bool
 	}{
 		{
 			name:         "template parameters",
 			params:       templateParams,
 			url:          templateURL,
 			responseCode: http.StatusOK,
-			newRecord:    true,
 		},
 		{
 			name: "new config",
@@ -34,40 +32,36 @@ func TestView(t *testing.T) {
 			},
 			url:          "p/DEz-pkpheLX",
 			responseCode: http.StatusOK,
-			newRecord:    true,
 		},
 		{
 			name:         "non existing url",
 			params:       templateParams,
-			url:          "p/random",
+			url:          "p/unknownURL",
 			responseCode: http.StatusNotFound,
-			newRecord:    false,
 		},
 	}
 
-	nbBadgerRecords := 0
+	// start by saving all needed playground
 	for _, tt := range viewTests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.responseCode == http.StatusOK {
-				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
-
-				if want, got := tt.url, buf.String(); want != got {
-					t.Errorf("expected %s but got %s", want, got)
-				}
-			}
-			req, _ := http.NewRequest(http.MethodGet, "/"+tt.url, nil)
-			resp := httptest.NewRecorder()
-			testServer.viewHandler(resp, req)
-
-			if tt.responseCode != resp.Code {
-				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
-			}
-		})
-		if tt.newRecord {
-			nbBadgerRecords++
-		}
+		httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
 	}
 
-	testStorageContent(t, 0, nbBadgerRecords)
+	t.Run("parallel view", func(t *testing.T) {
+		for _, tt := range viewTests {
 
+			test := tt // capture range variable
+			t.Run(test.name, func(t *testing.T) {
+
+				t.Parallel()
+
+				req, _ := http.NewRequest(http.MethodGet, "/"+test.url, nil)
+				resp := httptest.NewRecorder()
+				testServer.viewHandler(resp, req)
+
+				if test.responseCode != resp.Code {
+					t.Errorf("expected response code %d but got %d", test.responseCode, resp.Code)
+				}
+			})
+		}
+	})
 }

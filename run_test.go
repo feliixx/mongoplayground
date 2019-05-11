@@ -495,8 +495,6 @@ func TestRunCreateDB(t *testing.T) {
 		},
 	}
 
-	nbMongoDatabases := 0
-
 	t.Run("parallel run", func(t *testing.T) {
 		for _, tt := range runCreateDBTests {
 
@@ -518,11 +516,16 @@ func TestRunCreateDB(t *testing.T) {
 					t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
 				}
 			})
-			nbMongoDatabases += test.createdDB
 		}
 	})
 
-	testStorageContent(t, nbMongoDatabases, 0)
+	// run only should not save anything in badger
+	nbBadgerRecords := 0
+	nbMongoDatabases := 0
+	for _, tt := range runCreateDBTests {
+		nbMongoDatabases += tt.createdDB
+	}
+	testStorageContent(t, nbMongoDatabases, nbBadgerRecords)
 }
 
 func TestRunExistingDB(t *testing.T) {
