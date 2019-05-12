@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/dgraph-io/badger"
 	"github.com/prometheus/client_golang/prometheus"
 )
@@ -10,6 +12,7 @@ var (
 		prometheus.SummaryOpts{
 			Name:       "request_durations_seconds",
 			Help:       "Request latency distributions",
+			MaxAge:     8 * time.Hour, //compute quantiles on last 8 hours
 			Objectives: map[float64]float64{0.5: 0.05, 0.75: 0.01, 0.95: 0.001},
 		},
 		[]string{"handler"},
