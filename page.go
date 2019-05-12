@@ -81,6 +81,7 @@ func (p *page) decode(v []byte) {
 	p.Query = v[endConfig:]
 }
 
+// returns a label for the page for prometheus metrics
 func (p *page) label() string {
 
 	if p.Mode == mgodatagenMode {

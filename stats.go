@@ -35,7 +35,7 @@ func init() {
 	prometheus.MustRegister(savedPlayground)
 }
 
-func (s *server) updateStats() error {
+func (s *server) computeSavedPlaygroundStats() error {
 
 	return s.storage.View(func(txn *badger.Txn) error {
 

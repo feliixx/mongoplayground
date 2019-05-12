@@ -83,7 +83,7 @@ func (s *server) precompile() error {
 		zw.Reset(&buf)
 		zw.Name = f.Name()
 		zw.ModTime = time.Now()
-		b, err := ioutil.ReadFile(staticDir + f.Name())
+		b, err := ioutil.ReadFile(staticDir + "/" + f.Name())
 		if err != nil {
 			return err
 		}

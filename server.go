@@ -20,12 +20,12 @@ var (
 )
 
 const (
-	staticDir = "static/"
+	staticDir = "static"
 	badgerDir = "storage"
 	backupDir = "backups"
-	// interval between two database cleanup
+	// interval between two MongoDB cleanup
 	cleanupInterval = 8 * time.Hour
-	// interval between two database backup
+	// interval between two Badger backup
 	backupInterval = 24 * time.Hour
 )
 
@@ -77,7 +77,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		return nil, err
 	}
 
-	err = s.updateStats()
+	err = s.computeSavedPlaygroundStats()
 	if err != nil {
 		return nil, fmt.Errorf("fail to read data from badger: %v", err)
 	}
@@ -130,7 +130,7 @@ func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(s.staticContent[0])
 }
 
-// remove db not used since the previous cleanup
+// remove database not used since the previous cleanup in MongoDB
 func (s *server) removeExpiredDB() {
 
 	session := s.session.Copy()

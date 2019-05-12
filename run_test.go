@@ -123,7 +123,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-			result:    "fail to parse content of query: invalid character ']' after object key:value pair",
+			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -186,7 +186,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:    "fail to parse content of query: invalid character ']' after object key:value pair",
+			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 			compact:   false,
 		},
@@ -291,7 +291,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`find()`},
 			},
-			result:    "invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)",
+			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
 			createdDB: 0,
 			compact:   false,
 		},
@@ -379,7 +379,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1},{"_id":1}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    `E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }`,
+			result:    "error in configuration:\n  E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { : 1.0 }",
 			createdDB: 0, // the config is incorrect, no db should be created
 			compact:   false,
 		},
@@ -445,7 +445,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"k": "randompattern"}]`},
 				"query":  {`db.collection.find({k: /pattern/})`},
 			},
-			result:    `fail to parse content of query: invalid character '/' looking for beginning of value`,
+			result:    "error in query:\n  fail to parse content of query: invalid character '/' looking for beginning of value",
 			createdDB: 1,
 			compact:   false,
 		},
@@ -472,13 +472,24 @@ func TestRunCreateDB(t *testing.T) {
 			compact:   false,
 		},
 		{
+			name: `empty query`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {templateConfig},
+				"query":  {""},
+			},
+			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
+			createdDB: 1,
+			compact:   false,
+		},
+		{
 			name: `too many collections`,
 			params: url.Values{
 				"mode":   {"bson"},
 				"config": {`db={"a":[],"b":[],"c":[],"d":[],"e":[],"f":[],"g":[],"h":[],"i":[],"j":[],"k":[]}`},
 				"query":  {"db.c.find()"},
 			},
-			result:    "max number of collection in a database is 10, but was 11",
+			result:    "error in configuration:\n  max number of collection in a database is 10, but was 11",
 			createdDB: 0,
 			compact:   false,
 		},

@@ -24,8 +24,7 @@ const (
 	// noDocFound error message when no docs match the query
 	noDocFound = "no document found"
 	// invalidConfig error message when the configuration doesn't match expected format
-	invalidConfig = `invalid configuration:
-expecting an array of documents like 
+	invalidConfig = `expecting an array of documents like 
 
 [ 
   {_id: 1, k: "one"},
@@ -43,9 +42,13 @@ db = {
 		{_id: 1, v: 1}
 	]
 }`
+	invalidQuery = `query must match db.coll.find(...) or db.coll.aggregate(...)`
 )
 
-// run a query and return the results as plain text
+// run a query and return the results as plain text.
+// the result is compacted and looks like:
+//
+//    [{_id:1,k:1},{_id:2,k:33}]
 func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 
 	p := newPage(
@@ -72,11 +75,11 @@ func (s *server) run(p *page) ([]byte, error) {
 
 	dbInfos, err := s.createDatabase(db, p.Mode, p.Config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error in configuration:\n  %v", err)
 	}
 	collectionName, method, stages, err := parseQuery(p.Query)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error in query:\n  %v", err)
 	}
 	// mongodb returns an empy array ( [] ) if we try to run a query on a collection
 	// that doesn't exist. Check that the collection exist before running the query,
@@ -106,7 +109,7 @@ func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (dbI
 			err = loadContentFromJSON(collections, config)
 		}
 		if err != nil {
-			return dbInfo, fmt.Errorf("error in configuration:\n  %v", err)
+			return dbInfo, err
 		}
 
 		dbInfo = dbMetaInfo{
@@ -280,7 +283,7 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
-		return "", "", nil, fmt.Errorf("invalid query: \nmust match db.coll.find(...) or db.coll.aggregate(...)")
+		return "", "", nil, errors.New(invalidQuery)
 	}
 
 	collectionName = string(p[1])

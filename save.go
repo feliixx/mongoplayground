@@ -7,7 +7,10 @@ import (
 	"github.com/dgraph-io/badger"
 )
 
-// save the playground and return the playground ID
+// save the playground and return the playground url, which looks
+// like:
+//
+//   https://mongoplayground.net/p/nJhd-dhf3Ea
 func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 
 	p := newPage(
