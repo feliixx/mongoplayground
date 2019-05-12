@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/base64"
@@ -23,13 +24,6 @@ type page struct {
 	MongoVersion []byte
 }
 
-func modeByte(mode string) byte {
-	if mode == "bson" {
-		return bsonMode
-	}
-	return mgodatagenMode
-}
-
 // generate an unique url for this page
 func (p *page) ID() []byte {
 	e := sha256.New()
@@ -46,14 +40,6 @@ func (p *page) ID() []byte {
 // same config and mode should generate the same dbHash
 func (p *page) dbHash() string {
 	return fmt.Sprintf("%x", md5.Sum(append(p.Config, p.Mode)))
-}
-
-func (p *page) String() string {
-	mode := "bson"
-	if p.Mode != bsonMode {
-		mode = "mgodatagen"
-	}
-	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
 }
 
 // encode a page into a byte slice
@@ -80,4 +66,30 @@ func (p *page) decode(v []byte) {
 	p.Mode = v[4]
 	p.Config = v[5:endConfig]
 	p.Query = v[endConfig:]
+}
+
+func (p *page) label() string {
+
+	if p.Mode == mgodatagenMode {
+		return "mgodatagen"
+	}
+	if p.Mode == bsonMode && bytes.HasPrefix(p.Config, []byte("db={")) {
+		return "bson_multiple_collection"
+	}
+	return "bson_single_collection"
+}
+
+func (p *page) String() string {
+	mode := "bson"
+	if p.Mode != bsonMode {
+		mode = "mgodatagen"
+	}
+	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
+}
+
+func modeByte(mode string) byte {
+	if mode == "bson" {
+		return bsonMode
+	}
+	return mgodatagenMode
 }

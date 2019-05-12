@@ -225,9 +225,7 @@ func filterDBNames(dbNames []string) []string {
 
 func (s *server) countSavedPages() (count int) {
 	s.storage.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
 			count++

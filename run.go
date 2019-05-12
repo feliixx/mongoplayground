@@ -226,6 +226,8 @@ func fillDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 		}
 		base += len(docs)
 	}
+	activeDatabases.Inc()
+
 	return nil
 }
 

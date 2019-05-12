@@ -1,17 +1,18 @@
 package main
 
 import (
-	_ "expvar"
 	"fmt"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dgraph-io/badger"
 	"github.com/globalsign/mgo"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -76,6 +77,11 @@ func newServer(logger *log.Logger) (*server, error) {
 		return nil, err
 	}
 
+	err = s.updateStats()
+	if err != nil {
+		return nil, fmt.Errorf("fail to read data from badger: %v", err)
+	}
+
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
 		os.Mkdir(backupDir, os.ModePerm)
 	}
@@ -97,12 +103,24 @@ func newServer(logger *log.Logger) (*server, error) {
 	s.mux.HandleFunc("/run", s.runHandler)
 	s.mux.HandleFunc("/save", s.saveHandler)
 	s.mux.HandleFunc("/static/", s.staticHandler)
+	s.mux.Handle("/metrics", promhttp.Handler())
 
 	return s, nil
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	start := time.Now()
 	s.mux.ServeHTTP(w, r)
+
+	label := r.URL.Path
+	if strings.HasPrefix(label, "/p/") {
+		label = "/p"
+	}
+
+	if label == "/" || label == "/run" || label == "/p" || label == "/save" {
+		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
+	}
 }
 
 // return a playground with the default configuration
@@ -130,6 +148,7 @@ func (s *server) removeExpiredDB() {
 				s.logger.Printf("fail to drop database %v: %v", name, err)
 			}
 			delete(s.activeDB, name)
+			activeDatabases.Dec()
 		}
 	}
 }
