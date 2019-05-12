@@ -216,7 +216,7 @@ func fillDatabase(db *mgo.Database, collections map[string][]bson.M) error {
 			//
 			// for example: [{_id:1},{_id:1}]
 			//
-			// -> the first write will suceed, but the second will fail, so a collection
+			// -> the first write will succeed, but the second will fail, so a collection
 			// containing only one record will be created, and an error will be returned
 			//
 			// Because fillDatabase returns an error, the hash of the database (ie db.name)
@@ -268,7 +268,7 @@ func seededObjectID(n int32) bson.ObjectId {
 	})
 }
 
-// query has to match the folowing regex:
+// query has to match the following regex:
 //
 //   /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/
 //
