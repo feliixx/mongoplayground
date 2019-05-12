@@ -163,21 +163,20 @@ func createContentFromMgodatagen(collections map[string][]bson.M, config []byte)
 
 func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 
-	if bytes.HasPrefix(config, []byte("[")) {
-
+	switch detailBsonMode(config) {
+	case bsonSingleCollection:
 		var docs []bson.M
 		err := bson.UnmarshalJSON(config, &docs)
 
 		collections["collection"] = docs
-
 		return err
-	}
 
-	if bytes.HasPrefix(config, []byte("db={")) {
+	case bsonMultipleCollection:
 		return bson.UnmarshalJSON(config[3:], &collections)
-	}
 
-	return errors.New(invalidConfig)
+	default:
+		return errors.New(invalidConfig)
+	}
 }
 
 func fillDatabase(db *mgo.Database, collections map[string][]bson.M) error {
@@ -302,9 +301,10 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 	return collectionName, method, stages, nil
 }
 
-func runQuery(collection *mgo.Collection, method string, stages []bson.M) (result []byte, err error) {
+func runQuery(collection *mgo.Collection, method string, stages []bson.M) ([]byte, error) {
 
 	var docs []bson.M
+	var err error
 
 	switch method {
 	case "find":
@@ -317,7 +317,6 @@ func runQuery(collection *mgo.Collection, method string, stages []bson.M) (resul
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
-
 	if err != nil {
 		return nil, fmt.Errorf("query failed: %v", err)
 	}

@@ -10,8 +10,19 @@ import (
 )
 
 const (
+	// main modes for playground
 	mgodatagenMode byte = iota
 	bsonMode
+	// detail modes for bson playground
+	bsonSingleCollection
+	bsonMultipleCollection
+	unknown
+
+	mgodatagenLabel             = "mgodatagen"
+	bsonLabel                   = "bson"
+	bsonSingleCollectionLabel   = "bson_single_collection"
+	bsonMultipleCollectionLabel = "bson_mutliple_collection"
+	unknownLabel                = "unknown"
 )
 
 type page struct {
@@ -27,7 +38,7 @@ type page struct {
 func newPage(modeName, config, query string) *page {
 
 	mode := bsonMode
-	if modeName == "mgodatagen" {
+	if modeName == mgodatagenLabel {
 		mode = mgodatagenMode
 	}
 	return &page{
@@ -85,18 +96,34 @@ func (p *page) decode(v []byte) {
 func (p *page) label() string {
 
 	if p.Mode == mgodatagenMode {
-		return "mgodatagen"
+		return mgodatagenLabel
 	}
-	if p.Mode == bsonMode && bytes.HasPrefix(p.Config, []byte("db={")) {
-		return "bson_multiple_collection"
+	if p.Mode == bsonMode {
+
+		switch detailBsonMode(p.Config) {
+		case bsonSingleCollection:
+			return bsonSingleCollectionLabel
+		case bsonMultipleCollection:
+			return bsonMultipleCollectionLabel
+		}
 	}
-	return "bson_single_collection"
+	return unknownLabel
+}
+
+func detailBsonMode(config []byte) byte {
+	if bytes.HasPrefix(config, []byte{'['}) {
+		return bsonSingleCollection
+	}
+	if bytes.HasPrefix(config, []byte("db={")) {
+		return bsonMultipleCollection
+	}
+	return unknown
 }
 
 func (p *page) String() string {
-	mode := "bson"
+	mode := bsonLabel
 	if p.Mode != bsonMode {
-		mode = "mgodatagen"
+		mode = mgodatagenLabel
 	}
 	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
 }
