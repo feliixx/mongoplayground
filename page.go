@@ -24,7 +24,20 @@ type page struct {
 	MongoVersion []byte
 }
 
-// generate an unique url for this page
+func newPage(modeName, config, query string) *page {
+
+	mode := bsonMode
+	if modeName == "mgodatagen" {
+		mode = mgodatagenMode
+	}
+	return &page{
+		Mode:   mode,
+		Config: []byte(config),
+		Query:  []byte(query),
+	}
+}
+
+// generate an unique id for this page
 func (p *page) ID() []byte {
 	e := sha256.New()
 	e.Write([]byte{p.Mode})
@@ -85,11 +98,4 @@ func (p *page) String() string {
 		mode = "mgodatagen"
 	}
 	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
-}
-
-func modeByte(mode string) byte {
-	if mode == "bson" {
-		return bsonMode
-	}
-	return mgodatagenMode
 }

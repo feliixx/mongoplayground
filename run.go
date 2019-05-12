@@ -48,11 +48,11 @@ db = {
 // run a query and return the results as plain text
 func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 
-	p := &page{
-		Mode:   modeByte(r.FormValue("mode")),
-		Config: []byte(r.FormValue("config")),
-		Query:  []byte(r.FormValue("query")),
-	}
+	p := newPage(
+		r.FormValue("mode"),
+		r.FormValue("config"),
+		r.FormValue("query"),
+	)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	res, err := s.run(p)
