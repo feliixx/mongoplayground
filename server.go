@@ -24,7 +24,7 @@ const (
 	badgerDir = "storage"
 	backupDir = "backups"
 	// interval between two MongoDB cleanup
-	cleanupInterval = 8 * time.Hour
+	cleanupInterval = 4 * time.Hour
 	// interval between two Badger backup
 	backupInterval = 24 * time.Hour
 )
