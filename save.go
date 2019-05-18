@@ -32,14 +32,31 @@ func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 func (s *server) save(p *page) ([]byte, error) {
 
 	id, val := p.ID(), p.encode()
-	err := s.storage.Update(func(txn *badger.Txn) error {
-		return txn.Set(id, val)
+
+	// before saving, check if the playground is not already
+	// saved
+	alreadySaved := false
+	s.storage.View(func(txn *badger.Txn) error {
+
+		_, err := txn.Get(id)
+		// if the key is not found, an 'ErrKeyNotFound' is returned.
+		// hence if the error is nil, the playground is already saved
+		if err == nil {
+			alreadySaved = true
+		}
+		return nil
 	})
-	if err != nil {
-		return nil, err
+
+	if !alreadySaved {
+		err := s.storage.Update(func(txn *badger.Txn) error {
+			return txn.Set(id, val)
+		})
+		if err != nil {
+			return nil, err
+		}
+		// At this point, we know for sure that a new playground
+		// has been saved, so update the stats
+		savedPlayground.WithLabelValues(p.label()).Inc()
 	}
-
-	savedPlayground.WithLabelValues(p.label()).Inc()
-
 	return id, nil
 }
