@@ -514,7 +514,7 @@ func TestRunCreateDB(t *testing.T) {
 
 				t.Parallel()
 
-				buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", test.params)
+				buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, test.params)
 				if test.compact {
 					comp, err := bson.CompactJSON(buf.Bytes())
 					if err != nil {
@@ -544,7 +544,7 @@ func TestRunExistingDB(t *testing.T) {
 	testServer.clearDatabases(t)
 
 	// the first /run request should create the database
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", templateParams)
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, templateParams)
 	comp, err := bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -563,7 +563,7 @@ func TestRunExistingDB(t *testing.T) {
 	}
 
 	//  the second /run should produce the same result
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", templateParams)
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, templateParams)
 	comp, err = bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -581,7 +581,7 @@ func TestConsistentError(t *testing.T) {
 	testServer.clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{"k":1}]`}, "query": {templateQuery}}
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
 	errorMsg := "error in configuration:\n  Error in configuration file: \n\t'collection' and 'database' fields can't be empty"
 
@@ -589,7 +589,7 @@ func TestConsistentError(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
 	if want, got := errorMsg, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)

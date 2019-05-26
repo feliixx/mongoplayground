@@ -23,6 +23,14 @@ const (
 	staticDir = "static"
 	badgerDir = "storage"
 	backupDir = "backups"
+
+	homeEndpoint    = "/"
+	viewEndpoint    = "/p/"
+	runEndpoint     = "/run"
+	saveEndpoint    = "/save"
+	staticEndpoint  = "/static/"
+	metricsEndpoint = "/metrics"
+
 	// interval between two MongoDB cleanup
 	cleanupInterval = 4 * time.Hour
 	// interval between two Badger backup
@@ -35,15 +43,17 @@ type dbMetaInfo struct {
 }
 
 type server struct {
-	mux              *http.ServeMux
-	session          *mgo.Session
-	storage          *badger.DB
-	logger           *log.Logger
-	activeDB         map[string]dbMetaInfo
-	mutex            sync.RWMutex
-	mongodbVersion   []byte
-	staticContentMap map[string]int
-	staticContent    [][]byte
+	mux     *http.ServeMux
+	session *mgo.Session
+	storage *badger.DB
+	logger  *log.Logger
+
+	// mutex guards the activeDB map
+	mutex    sync.RWMutex
+	activeDB map[string]dbMetaInfo
+
+	staticContent  map[string][]byte
+	mongodbVersion []byte
 }
 
 func newServer(logger *log.Logger) (*server, error) {
@@ -72,7 +82,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		mongodbVersion: version,
 	}
 
-	err = s.precompile()
+	err = s.compressStaticResources()
 	if err != nil {
 		return nil, err
 	}
@@ -80,10 +90,6 @@ func newServer(logger *log.Logger) (*server, error) {
 	err = s.computeSavedPlaygroundStats()
 	if err != nil {
 		return nil, fmt.Errorf("fail to read data from badger: %v", err)
-	}
-
-	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		os.Mkdir(backupDir, os.ModePerm)
 	}
 
 	go func(s *server) {
@@ -98,12 +104,12 @@ func newServer(logger *log.Logger) (*server, error) {
 		}
 	}(s)
 
-	s.mux.HandleFunc("/", s.newPageHandler)
-	s.mux.HandleFunc("/p/", s.viewHandler)
-	s.mux.HandleFunc("/run", s.runHandler)
-	s.mux.HandleFunc("/save", s.saveHandler)
-	s.mux.HandleFunc("/static/", s.staticHandler)
-	s.mux.Handle("/metrics", promhttp.Handler())
+	s.mux.HandleFunc(homeEndpoint, s.newPageHandler)
+	s.mux.HandleFunc(viewEndpoint, s.viewHandler)
+	s.mux.HandleFunc(runEndpoint, s.runHandler)
+	s.mux.HandleFunc(saveEndpoint, s.saveHandler)
+	s.mux.HandleFunc(staticEndpoint, s.staticHandler)
+	s.mux.Handle(metricsEndpoint, promhttp.Handler())
 
 	return s, nil
 }
@@ -114,11 +120,11 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 
 	label := r.URL.Path
-	if strings.HasPrefix(label, "/p/") {
-		label = "/p"
+	if strings.HasPrefix(label, viewEndpoint) {
+		label = viewEndpoint
 	}
 
-	if label == "/" || label == "/run" || label == "/p" || label == "/save" {
+	if label == runEndpoint || label == viewEndpoint || label == homeEndpoint || label == saveEndpoint {
 		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
 	}
 }
@@ -127,7 +133,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.Header().Set("Content-Encoding", "gzip")
-	w.Write(s.staticContent[0])
+	w.Write(s.staticContent[homeEndpoint])
 }
 
 // remove database not used since the previous cleanup in MongoDB
@@ -157,6 +163,10 @@ func (s *server) removeExpiredDB() {
 // keep a backup of last seven days only. Older backups are
 // overwritten
 func (s *server) backup() {
+
+	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+		os.Mkdir(backupDir, os.ModePerm)
+	}
 
 	fileName := fmt.Sprintf("%s/badger_%d.bak", backupDir, time.Now().Weekday())
 	f, err := os.Create(fileName)

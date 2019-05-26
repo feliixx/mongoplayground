@@ -21,6 +21,7 @@ import (
 const (
 	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
 	templateURL    = "p/snbIQ3uGHGq"
+	testDir        = "tests"
 )
 
 var (
@@ -33,6 +34,9 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
+	}
+	if _, err := os.Stat(testDir); os.IsNotExist(err) {
+		os.Mkdir(testDir, os.ModePerm)
 	}
 	log := log.New(ioutil.Discard, "", 0)
 	s, err := newServer(log)
@@ -52,7 +56,7 @@ func TestServeHTTP(t *testing.T) {
 
 	t.Parallel()
 
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req, _ := http.NewRequest(http.MethodGet, homeEndpoint, nil)
 	resp := httptest.NewRecorder()
 	testServer.ServeHTTP(resp, req)
 	if http.StatusOK != resp.Code {
@@ -64,7 +68,7 @@ func TestBasePage(t *testing.T) {
 
 	t.Parallel()
 
-	req, _ := http.NewRequest(http.MethodGet, "/", nil)
+	req, _ := http.NewRequest(http.MethodGet, homeEndpoint, nil)
 	resp := httptest.NewRecorder()
 
 	testServer.newPageHandler(resp, req)
@@ -87,7 +91,7 @@ func TestRemoveOldDB(t *testing.T) {
 	testServer.clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 	comp, err := bson.CompactJSON(buf.Bytes())
 	if err != nil {
 		t.Error(err)
@@ -110,7 +114,7 @@ func TestRemoveOldDB(t *testing.T) {
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, "/run", params)
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
 	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)

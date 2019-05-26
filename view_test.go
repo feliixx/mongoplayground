@@ -43,7 +43,7 @@ func TestView(t *testing.T) {
 
 	// start by saving all needed playground
 	for _, tt := range viewTests {
-		httpBody(t, testServer.saveHandler, http.MethodPost, "/save", tt.params)
+		httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, tt.params)
 	}
 
 	t.Run("parallel view", func(t *testing.T) {

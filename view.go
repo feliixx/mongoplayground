@@ -10,7 +10,7 @@ import (
 // view a saved playground page identified by its ID
 func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 
-	id := strings.TrimPrefix(r.URL.Path, "/p/")
+	id := strings.TrimPrefix(r.URL.Path, viewEndpoint)
 	p, err := s.loadPage([]byte(id))
 	if err != nil {
 		s.logger.Printf("fail to load page with id %s : %v", id, err)

@@ -29,48 +29,47 @@ const (
 // serve static ressources (css/js/html)
 func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
-	name := strings.TrimPrefix(r.URL.Path, "/static/")
-	sub := strings.Split(name, ".")
+	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 
-	contentType := "text/html; charset=utf-8"
-	if len(sub) > 0 {
-		switch sub[len(sub)-1] {
-		case "css":
-			contentType = "text/css; charset=utf-8"
-		case "js":
-			contentType = "application/javascript; charset=utf-8"
-		}
-	}
-	w.Header().Set("Content-Type", contentType)
-	w.Header().Set("Content-Encoding", "gzip")
-	w.Header().Set("Cache-Control", "public, max-age=31536000")
-	pos, ok := s.staticContentMap[name]
+	content, ok := s.staticContent[name]
 	if !ok {
 		s.logger.Printf("static resource %s doesn't exist", name)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	w.Write(s.staticContent[pos])
+
+	w.Header().Set("Content-Type", contentTypeFromName(name))
+	w.Header().Set("Content-Encoding", "gzip")
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
+
+	w.Write(content)
+}
+
+func contentTypeFromName(name string) string {
+
+	if strings.HasSuffix(name, ".css") {
+		return "text/css; charset=utf-8"
+	}
+	if strings.HasSuffix(name, ".js") {
+		return "application/javascript; charset=utf-8"
+	}
+	return "text/html; charset=utf-8"
 }
 
 // load static ressources (javascript, css, docs and default page)
 // and compress them in order to serve them faster
-func (s *server) precompile() error {
+func (s *server) compressStaticResources() error {
 
 	var buf bytes.Buffer
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	zw.Name = "playground.html"
-	zw.ModTime = time.Now()
-	p := &page{
-		Mode:         bsonMode,
-		Config:       []byte(templateConfig),
-		Query:        []byte(templateQuery),
-		MongoVersion: s.mongodbVersion,
-	}
+	zw.Name, zw.ModTime = homeEndpoint, time.Now()
+
+	p := newPage(bsonLabel, templateConfig, templateQuery)
+	p.MongoVersion = s.mongodbVersion
 	if err := templates.Execute(zw, p); err != nil {
 		return err
 	}
-	if err := s.add(zw, &buf, 0); err != nil {
+	if err := s.add(zw, &buf); err != nil {
 		return err
 	}
 
@@ -78,11 +77,11 @@ func (s *server) precompile() error {
 	if err != nil {
 		return err
 	}
-	for i, f := range files {
+	for _, f := range files {
 		buf.Reset()
 		zw.Reset(&buf)
-		zw.Name = f.Name()
-		zw.ModTime = time.Now()
+
+		zw.Name, zw.ModTime = f.Name(), time.Now()
 		b, err := ioutil.ReadFile(staticDir + "/" + f.Name())
 		if err != nil {
 			return err
@@ -90,24 +89,22 @@ func (s *server) precompile() error {
 		if _, err = zw.Write(b); err != nil {
 			return err
 		}
-		if err := s.add(zw, &buf, i+1); err != nil {
+		if err := s.add(zw, &buf); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (s *server) add(zw *gzip.Writer, buf *bytes.Buffer, index int) error {
+func (s *server) add(zw *gzip.Writer, buf *bytes.Buffer) error {
 	if s.staticContent == nil {
-		s.staticContent = make([][]byte, 0)
-		s.staticContentMap = map[string]int{}
+		s.staticContent = map[string][]byte{}
 	}
 	if err := zw.Close(); err != nil {
 		return err
 	}
 	c := make([]byte, buf.Len())
 	copy(c, buf.Bytes())
-	s.staticContentMap[zw.Name] = index
-	s.staticContent = append(s.staticContent, c)
+	s.staticContent[zw.Name] = c
 	return nil
 }

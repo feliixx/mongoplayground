@@ -56,7 +56,7 @@ func TestSave(t *testing.T) {
 
 				t.Parallel()
 
-				buf := httpBody(t, testServer.saveHandler, http.MethodPost, "/save", test.params)
+				buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, test.params)
 
 				if want, got := test.result, buf.String(); want != got {
 					t.Errorf("expected %s, but got %s", want, got)
