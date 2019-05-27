@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-nb=4
+nb=5
 if [ $1 == "all" ]; then 
   echo '<div class="markdown-body">' > static/docs-$nb.html
   curl https://api.github.com/markdown/raw -X "POST" -H "Content-Type: text/plain" -d "$(cat web/DOCS.md)" >> static/docs-$nb.html

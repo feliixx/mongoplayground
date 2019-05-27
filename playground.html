@@ -3,9 +3,10 @@
 
 <head>
     <title>Mongo playground</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries">
-    <link href="/static/playground-min-4.css" rel="stylesheet" type="text/css">
-    <script src="/static/playground-min-4.js" type="text/javascript"></script>
+    <link href="/static/playground-min-5.css" rel="stylesheet" type="text/css">
+    <script src="/static/playground-min-5.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.3/ace.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.3/mode-javascript.js" type="text/javascript"></script>
     <script type="text/javascript">
@@ -38,7 +39,7 @@
             queryEditor.getSession().on('change', changeFunc)
 
             var r = new XMLHttpRequest()
-            r.open("GET", "/static/docs-4.html", true)
+            r.open("GET", "/static/docs-5.html", true)
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
@@ -186,7 +187,7 @@
             <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
                 {{end}} />
             <label for="mgodatagen">mgodatagen</label>
-            <input type="button" value="documentation" onclick="showDoc(true)">
+            <input type="button" value="docs" onclick="showDoc(true)">
         </div>
     </div>
     <div class="content">

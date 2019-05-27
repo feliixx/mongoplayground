@@ -5,12 +5,12 @@ body {
 
 .toolbar {
     width: 100%; 
-    height: 5%;
+    height: 50px;
     background-color:rgb(51, 51, 51);
 }
 
 .toolbar > .title {
-    width: 12%;
+    width: 220px;
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI", Helvetica, Arial, sans-serif;
     float: left;
     font-size: 1.6em;
@@ -19,11 +19,10 @@ body {
 }
 
 .toolbar > .controls {
-    width: 85%;
-    float: left;
+    margin-left: 230px;
     padding: 10px 15px;
 }
-/* doc button */
+
 .toolbar > .controls > :last-child {
     float: right !important; 
 }
@@ -61,7 +60,7 @@ body {
     background-color: rgb(236, 236, 236);
     font-size: 1em; 
     height: 24px;  
-    width: 20%;
+    width: 335px;
     visibility: hidden;
 }
 
@@ -85,21 +84,21 @@ body {
 
 .content {
     width:100%;
-    height: 90%; 
+    height: calc(100% - 100px); 
+    clear: both; 
 }
 
 .content > div {
     width: 32%;
-    height: 95%;
+    height: 100%;
     float: left;
     padding: 0 0 0 1%;
 }
 
-/* documentation div */
 .content > div:last-child {
     float: right;
     margin-top: 1%;
-    height: 99% !important;
+    height: 98% !important;
     width: 66% !important;
     display: none;
     overflow-x: hidden;
@@ -114,8 +113,7 @@ body {
 }
 
 .footer {
-    width: 100%; 
-    height: 3%;
+    height: 20px;
     background-color: rgb(255, 255, 255);
     text-align: center; 
     font-size: 14px; 
@@ -126,7 +124,7 @@ body {
 /* override some specific ace class for syntax coloration*/
 .ace_editor {
     background-color: rgb(246, 248, 250) !important;
-    height: 98% !important; 
+    height: 93% !important; 
 }
 
 .ace_string {
@@ -147,4 +145,52 @@ body {
 
 .ignore_warnings > .ace_gutter > .ace_layer > .ace_warning, .ace_info {
     background-image: none !important; 
+}
+
+@media only screen and (max-width: 999px) {
+
+    .toolbar {
+        height: 40px;
+    }
+    
+    .toolbar > .controls {
+        padding: 3px 3px; 
+        margin: 0;
+    }
+
+    .toolbar > .title, 
+    .toolbar > .controls > :nth-child(2),
+    .toolbar > .controls > :nth-child(4),
+    .toolbar > .controls > :nth-child(5), 
+    .toolbar > .controls > :nth-child(6),
+    .toolbar > .controls > :nth-child(7) {
+        display: none;
+    }
+
+    .content > div {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+    }
+    
+    .content > div:last-child {
+        width: 100% !important;
+    }
+
+    .ace_editor {
+        height: 90% !important; 
+    }
+
+    .footer {
+        font-size: 16px;
+    }
+}
+
+@media only screen and (min-width: 1000px) and (max-width: 1450px) {
+    
+    .toolbar > .controls > :nth-child(5), 
+    .toolbar > .controls > :nth-child(6),
+    .toolbar > .controls > :nth-child(7) {
+        display: none;
+    }
 }

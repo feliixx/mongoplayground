@@ -19,19 +19,19 @@ func TestStaticHandlers(t *testing.T) {
 	}{
 		{
 			name:         "css",
-			url:          "/static/playground-min-4.css",
+			url:          "/static/playground-min-5.css",
 			contentType:  "text/css; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "documentation",
-			url:          "/static/docs-4.html",
+			url:          "/static/docs-5.html",
 			contentType:  "text/html; charset=utf-8",
 			responseCode: 200,
 		},
 		{
 			name:         "documentation",
-			url:          "/static/playground-min-4.js",
+			url:          "/static/playground-min-5.js",
 			contentType:  "application/javascript; charset=utf-8",
 			responseCode: 200,
 		},
