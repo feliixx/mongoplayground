@@ -31,7 +31,7 @@
 
 [[constraint]]
   name = "github.com/feliixx/mgodatagen"
-  version = "0.7.4"
+  revision = "c76440c0d5a58d9ba15db4db8953a4217d8e36fa"
 
 [[override]]
   name = "github.com/satori/go.uuid"
