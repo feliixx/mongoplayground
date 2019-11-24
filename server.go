@@ -143,6 +143,7 @@ func (s *server) removeExpiredDB() {
 	defer session.Close()
 
 	now := time.Now()
+	defer cleanupDuration.Set(float64(time.Since(now)) / float64(time.Millisecond))
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()

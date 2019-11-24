@@ -30,12 +30,19 @@ var (
 		},
 		[]string{"type"},
 	)
+	cleanupDuration = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "cleanup_duration_seconds",
+			Help: "Database cleanup in second",
+		},
+	)
 )
 
 func init() {
 	prometheus.MustRegister(requestDurations)
 	prometheus.MustRegister(activeDatabases)
 	prometheus.MustRegister(savedPlayground)
+	prometheus.MustRegister(cleanupDuration)
 }
 
 func (s *server) computeSavedPlaygroundStats() error {
