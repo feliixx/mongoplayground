@@ -143,11 +143,8 @@ func (s *server) removeExpiredDB() {
 	defer session.Close()
 
 	now := time.Now()
-	defer cleanupDuration.Set(float64(time.Since(now)) / float64(time.Millisecond))
 
 	s.mutex.Lock()
-	defer s.mutex.Unlock()
-
 	for name, infos := range s.activeDB {
 		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
 			err := session.DB(name).DropDatabase()
@@ -155,9 +152,12 @@ func (s *server) removeExpiredDB() {
 				s.logger.Printf("fail to drop database %v: %v", name, err)
 			}
 			delete(s.activeDB, name)
-			activeDatabases.Dec()
 		}
 	}
+	s.mutex.Unlock()
+
+	cleanupDuration.Set(time.Since(now).Seconds())
+	activeDatabases.Set(float64(len(s.activeDB)))
 }
 
 // create a backup from the badger db, and store it in backupDir.
