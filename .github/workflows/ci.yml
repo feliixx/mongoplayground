@@ -1,0 +1,34 @@
+name: Run tests
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up MongoDB
+      uses: superchargejs/mongodb-github-action@1.1.0
+      with:
+        mongodb-version: 4.2.3
+
+    - name: Set up Go 1.14
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.14
+      id: go
+
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Vet and lint code
+      run: |
+        go get -u -v golang.org/x/lint/golint 
+        /home/runner/go/bin/golint ./... 
+        go vet ./...
+
+    - name: Run test 
+      run: scripts/test.sh 
+    
+    - name: Export coverage result 
+      run: bash <(curl -s https://codecov.io/bash)

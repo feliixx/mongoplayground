@@ -1,4 +1,3 @@
-[![Linux and macOS Build Status](https://travis-ci.org/feliixx/mongoplayground.svg?branch=master)](https://travis-ci.org/feliixx/mongoplayground)
 [![Go Report Card](https://goreportcard.com/badge/github.com/feliixx/mongoplayground)](https://goreportcard.com/report/github.com/feliixx/mongoplayground)
 [![codecov](https://codecov.io/gh/feliixx/mongoplayground/branch/master/graph/badge.svg)](https://codecov.io/gh/feliixx/mongoplayground)
 
