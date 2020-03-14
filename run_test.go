@@ -21,236 +21,236 @@ func TestRunCreateDB(t *testing.T) {
 		createdDB int
 		compact   bool
 	}{
-		{
-			name:      "incorrect config",
-			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
-			result:    "error in configuration:\n  Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
-			createdDB: 0,
-			compact:   false,
-		},
-		{
-			name:      "non existing collection",
-			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
-			result:    `collection "c" doesn't exist`,
-			createdDB: 1,
-			compact:   false,
-		},
-		{
-			name:      "deterministic list of objectId",
-			params:    templateParams,
-			result:    templateResult,
-			createdDB: 0, // db already exists
-			compact:   true,
-		},
-		{
-			name: "deterministic results with generators",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 2,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {templateQuery}},
-			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
-			createdDB: 1,
-			compact:   true,
-		},
-		// same config, but aggregation
-		{
-			name: "basic aggregation",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 2,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
-			result:    `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
-			createdDB: 0,
-			compact:   true,
-		},
-		{
-			name: "doc nb > 100",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 1000,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 2,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0, "k": 0}}])`}},
-			result:    `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]`,
-			createdDB: 1,
-			compact:   true,
-		},
-		{
-			name: "invalid aggregation query (invalid json)",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 2,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
-			createdDB: 0,
-			compact:   false,
-		},
-		{
-			name: "invalid aggregation query (invalid syntax)",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 2,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-			result:    "query failed: $project specification must be an object",
-			createdDB: 0,
-			compact:   false,
-		},
-		{
-			name: "invalid find query (invalid syntax)",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.find({"$set": 12})`}},
-			result:    "query failed: unknown top level operator: $set",
-			createdDB: 1,
-			compact:   false,
-		},
-		{
-			name: "invalid find query (invalid json)",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
-						}
-					}
-				}
-			]`}, "query": {`db.collection.find({"k": "tJ")`}},
-			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
-			createdDB: 0,
-			compact:   false,
-		},
-		{
-			name: "two databases",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "coll1",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
-						}
-					}
-				}, {
-					"collection": "coll2",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "int", 
-							"minInt": 1,
-							"maxInt": 5
-						}
-					}
-				}
-			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
-			createdDB: 1,
-			compact:   true,
-		},
-		{
-			name: "two databases invalid config",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "coll1",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
-						}
-					}
-				}, {
-					"collection": "coll2",
-					"count": 10,
-					"content": {
-						"k": {
-							"minInt": 1,
-							"maxInt": 5
-						}
-					}
-				}
-			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
-			createdDB: 0,
-			compact:   false,
-		},
+		// {
+		// 	name:      "incorrect config",
+		// 	params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
+		// 	result:    "error in configuration:\n  Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
+		// 	createdDB: 0,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name:      "non existing collection",
+		// 	params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
+		// 	result:    `collection "c" doesn't exist`,
+		// 	createdDB: 1,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name:      "deterministic list of objectId",
+		// 	params:    templateParams,
+		// 	result:    templateResult,
+		// 	createdDB: 0, // db already exists
+		// 	compact:   true,
+		// },
+		// {
+		// 	name: "deterministic results with generators",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 2,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {templateQuery}},
+		// 	result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
+		// 	createdDB: 1,
+		// 	compact:   true,
+		// },
+		// // same config, but aggregation
+		// {
+		// 	name: "basic aggregation",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 2,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
+		// 	result:    `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
+		// 	createdDB: 0,
+		// 	compact:   true,
+		// },
+		// {
+		// 	name: "doc nb > 100",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 1000,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 2,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0, "k": 0}}])`}},
+		// 	result:    `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]`,
+		// 	createdDB: 1,
+		// 	compact:   true,
+		// },
+		// {
+		// 	name: "invalid aggregation query (invalid json)",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 2,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
+		// 	result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
+		// 	createdDB: 0,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name: "invalid aggregation query (invalid syntax)",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 2,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
+		// 	result:    "query failed: $project specification must be an object",
+		// 	createdDB: 0,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name: "invalid find query (invalid syntax)",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 1,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.find({"$set": 12})`}},
+		// 	result:    "query failed: unknown top level operator: $set",
+		// 	createdDB: 1,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name: "invalid find query (invalid json)",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "collection",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 1,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.collection.find({"k": "tJ")`}},
+		// 	result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
+		// 	createdDB: 0,
+		// 	compact:   false,
+		// },
+		// {
+		// 	name: "two databases",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "coll1",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 1,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}, {
+		// 			"collection": "coll2",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "int",
+		// 					"minInt": 1,
+		// 					"maxInt": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+		// 	result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
+		// 	createdDB: 1,
+		// 	compact:   true,
+		// },
+		// {
+		// 	name: "two databases invalid config",
+		// 	params: url.Values{
+		// 		"mode": {"mgodatagen"},
+		// 		"config": {`[
+		// 		{
+		// 			"collection": "coll1",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"type": "string",
+		// 					"minLength": 1,
+		// 					"maxLength": 5
+		// 				}
+		// 			}
+		// 		}, {
+		// 			"collection": "coll2",
+		// 			"count": 10,
+		// 			"content": {
+		// 				"k": {
+		// 					"minInt": 1,
+		// 					"maxInt": 5
+		// 				}
+		// 			}
+		// 		}
+		// 	]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+		// 	result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
+		// 	createdDB: 0,
+		// 	compact:   false,
+		// },
 		{
 			name: "basic json mode",
 			params: url.Values{
@@ -553,7 +553,7 @@ func TestRunExistingDB(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 	p := &page{
-		Mode:   mgodatagenMode,
+		Mode:   bsonMode,
 		Config: []byte(templateParams.Get("config")),
 	}
 	DBHash := p.dbHash()
@@ -577,6 +577,8 @@ func TestRunExistingDB(t *testing.T) {
 }
 
 func TestConsistentError(t *testing.T) {
+
+	t.Skip("skipping mgodatagen test")
 
 	testServer.clearDatabases(t)
 

@@ -17,12 +17,12 @@ func TestView(t *testing.T) {
 		url          string
 		responseCode int
 	}{
-		{
-			name:         "template parameters",
-			params:       templateParams,
-			url:          templateURL,
-			responseCode: http.StatusOK,
-		},
+		// {
+		// 	name:         "template parameters",
+		// 	params:       templateParams,
+		// 	url:          templateURL,
+		// 	responseCode: http.StatusOK,
+		// },
 		{
 			name: "new config",
 			params: url.Values{

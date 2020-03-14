@@ -103,9 +103,9 @@ func (s *server) createDatabase(db *mgo.Database, mode byte, config []byte) (dbI
 		collections := map[string][]bson.M{}
 
 		switch mode {
-		case mgodatagenMode:
-			err = createContentFromMgodatagen(collections, config)
-		case bsonMode:
+		// case mgodatagenMode:
+		// err = createContentFromMgodatagen(collections, config)
+		case mgodatagenMode, bsonMode:
 			err = loadContentFromJSON(collections, config)
 		}
 		if err != nil {
