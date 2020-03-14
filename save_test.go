@@ -8,7 +8,7 @@ import (
 
 func TestSave(t *testing.T) {
 
-	testServer.clearDatabases(t)
+	defer testServer.clearDatabases(t)
 
 	saveTests := []struct {
 		name      string

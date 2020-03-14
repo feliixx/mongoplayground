@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger"
-	"github.com/globalsign/mgo/bson"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 const (
@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	testServer = s
-	defer s.session.Close()
+	defer s.session.Disconnect(nil)
 	defer s.storage.Close()
 
 	retCode := m.Run()
@@ -88,16 +88,11 @@ func TestBasePage(t *testing.T) {
 
 func TestRemoveOldDB(t *testing.T) {
 
-	testServer.clearDatabases(t)
+	defer testServer.clearDatabases(t)
 
 	params := templateParams
 	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
-	comp, err := bson.CompactJSON(buf.Bytes())
-	if err != nil {
-		t.Error(err)
-	}
-
-	if want, got := templateResult, string(comp); want != got {
+	if want, got := templateResult, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
@@ -132,7 +127,7 @@ func TestRemoveOldDB(t *testing.T) {
 		t.Errorf("DB %s should not be present in activeDB", DBHash)
 	}
 
-	dbNames, err := testServer.session.DatabaseNames()
+	dbNames, err := testServer.session.ListDatabaseNames(nil, bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -159,18 +154,23 @@ func TestBackup(t *testing.T) {
 	}
 }
 
-func (s *server) clearDatabases(t *testing.T) error {
-	dbNames, err := s.session.DatabaseNames()
+func (s *server) clearDatabases(t *testing.T) {
+	dbNames, err := s.session.ListDatabaseNames(nil, bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
+
 	for _, name := range filterDBNames(dbNames) {
-		s.session.DB(name).DropDatabase()
+		err = s.session.Database(name).Drop(nil)
+		if err != nil {
+			fmt.Printf("fail to drop db: %v", err)
+		}
 		delete(s.activeDB, name)
 	}
 
 	if len(s.activeDB) > 0 {
 		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", s.activeDB)
+		s.activeDB = map[string]dbMetaInfo{}
 	}
 
 	keys := make([][]byte, 0)
@@ -198,7 +198,7 @@ func (s *server) clearDatabases(t *testing.T) error {
 			t.Error(err)
 		}
 	}
-	return deleteTxn.Commit(func(err error) {
+	deleteTxn.Commit(func(err error) {
 		if err != nil {
 			fmt.Printf("fail to delete: %v\n", err)
 		}
@@ -206,7 +206,7 @@ func (s *server) clearDatabases(t *testing.T) error {
 }
 
 func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
-	dbNames, err := testServer.session.DatabaseNames()
+	dbNames, err := testServer.session.ListDatabaseNames(nil, bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
