@@ -102,10 +102,10 @@ func init() {
 	jsonExtendedExt.EncodeType(primitive.Regex{}, jencRegEx)
 
 	funcExt.DecodeFunc("ObjectId", "$oidFunc", "Id")
-	jsonExt.DecodeKeyed("$oid", jdecObjectId)
-	jsonExt.DecodeKeyed("$oidFunc", jdecObjectId)
-	jsonExt.EncodeType(primitive.ObjectID{}, jencObjectId)
-	jsonExtendedExt.EncodeType(primitive.ObjectID{}, jencExtendedObjectId)
+	jsonExt.DecodeKeyed("$oid", jdecObjectID)
+	jsonExt.DecodeKeyed("$oidFunc", jdecObjectID)
+	jsonExt.EncodeType(primitive.ObjectID{}, jencObjectID)
+	jsonExtendedExt.EncodeType(primitive.ObjectID{}, jencExtendedObjectID)
 
 	funcExt.DecodeFunc("DBRef", "$dbrefFunc", "$ref", "$id")
 	jsonExt.DecodeKeyed("$dbrefFunc", jdecDBRef)
@@ -324,28 +324,28 @@ func jencRegEx(v interface{}) ([]byte, error) {
 	return Marshal(regex{re.Pattern, re.Options})
 }
 
-func jdecObjectId(data []byte) (interface{}, error) {
+func jdecObjectID(data []byte) (interface{}, error) {
 	var v struct {
-		Id   string `json:"$oid"`
+		ID   string `json:"$oid"`
 		Func struct {
-			Id string
+			ID string
 		} `json:"$oidFunc"`
 	}
 	err := jdec(data, &v)
 	if err != nil {
 		return nil, err
 	}
-	if v.Id == "" {
-		v.Id = v.Func.Id
+	if v.ID == "" {
+		v.ID = v.Func.ID
 	}
-	return primitive.ObjectIDFromHex(v.Id)
+	return primitive.ObjectIDFromHex(v.ID)
 }
 
-func jencObjectId(v interface{}) ([]byte, error) {
+func jencObjectID(v interface{}) ([]byte, error) {
 	return fbytes(`{"$oid":"%s"}`, v.(primitive.ObjectID).Hex()), nil
 }
 
-func jencExtendedObjectId(v interface{}) ([]byte, error) {
+func jencExtendedObjectID(v interface{}) ([]byte, error) {
 	return fbytes(`ObjectId("%s")`, v.(primitive.ObjectID).Hex()), nil
 }
 
