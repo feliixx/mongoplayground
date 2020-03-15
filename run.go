@@ -122,6 +122,9 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte) (d
 		if err != nil {
 			return dbInfo, err
 		}
+		// if the database is empty, ie all collections contains no document,
+		// we do not add the database to the activeDB map and just return
+		// directly
 		if emptyDatabase {
 			return dbInfo, nil
 		}
@@ -193,6 +196,8 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 	// clean any potentially remaining data
 	db.Drop(nil)
 
+	// order the collections by name, so the order of creation is
+	// garenteed to be always the same
 	collectionNames := make(sort.StringSlice, 0, len(collections))
 	for name := range collections {
 		collectionNames = append(collectionNames, name)
@@ -211,7 +216,10 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 		if len(docs) > maxDoc {
 			docs = docs[:maxDoc]
 		}
-
+		// if no _id is specified, we insert fake objectID that are
+		// garenteed to be the same from one run to another, so the
+		// output of a specific config is garenteed to always be the
+		// same, at least in bson mode
 		var toInsert = make([]interface{}, len(docs))
 		for i, doc := range docs {
 			if _, hasID := doc["_id"]; !hasID {
