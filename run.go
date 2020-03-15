@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/feliixx/mongoplayground/extendedjson"
+	"github.com/feliixx/mongoextjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -167,13 +167,13 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 	switch detailBsonMode(config) {
 	case bsonSingleCollection:
 		var docs []bson.M
-		err := extendedjson.Unmarshal(config, &docs)
+		err := mongoextjson.Unmarshal(config, &docs)
 
 		collections["collection"] = docs
 		return err
 
 	case bsonMultipleCollection:
-		return extendedjson.Unmarshal(config[3:], &collections)
+		return mongoextjson.Unmarshal(config[3:], &collections)
 
 	default:
 		return errors.New(invalidConfig)
@@ -324,7 +324,7 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 	if len(docs) == 0 {
 		return []byte(noDocFound), nil
 	}
-	return extendedjson.Marshal(docs)
+	return mongoextjson.Marshal(docs)
 }
 
 func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
@@ -344,7 +344,7 @@ func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 		queryBytes = b
 	}
 
-	err = extendedjson.Unmarshal(queryBytes, &stages)
+	err = mongoextjson.Unmarshal(queryBytes, &stages)
 
 	return stages, err
 }
