@@ -167,13 +167,13 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 	switch detailBsonMode(config) {
 	case bsonSingleCollection:
 		var docs []bson.M
-		err := extendedjson.UnmarshalJSON(config, &docs)
+		err := extendedjson.Unmarshal(config, &docs)
 
 		collections["collection"] = docs
 		return err
 
 	case bsonMultipleCollection:
-		return extendedjson.UnmarshalJSON(config[3:], &collections)
+		return extendedjson.Unmarshal(config[3:], &collections)
 
 	default:
 		return errors.New(invalidConfig)
@@ -324,7 +324,7 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 	if len(docs) == 0 {
 		return []byte(noDocFound), nil
 	}
-	return extendedjson.MarshalExtendedJSON(docs)
+	return extendedjson.Marshal(docs)
 }
 
 func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
@@ -344,7 +344,7 @@ func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 		queryBytes = b
 	}
 
-	err = extendedjson.UnmarshalJSON(queryBytes, &stages)
+	err = extendedjson.Unmarshal(queryBytes, &stages)
 
 	return stages, err
 }

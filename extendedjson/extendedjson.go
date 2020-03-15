@@ -11,17 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// UnmarshalJSON unmarshals a JSON value that may hold non-standard
+// Unmarshal unmarshals a JSON value that may hold non-standard
 // syntax as defined in BSON's extended JSON specification.
-func UnmarshalJSON(data []byte, value interface{}) error {
+func Unmarshal(data []byte, value interface{}) error {
 	d := NewDecoder(bytes.NewBuffer(data))
 	d.Extend(&jsonExt)
 	return d.Decode(value)
 }
 
-// MarshalJSON marshals a JSON value that may hold non-standard
+// MarshalCanonical marshals a JSON value that may hold non-standard
 // syntax as defined in BSON's extended JSON specification.
-func MarshalJSON(value interface{}) ([]byte, error) {
+func MarshalCanonical(value interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
 	e.Extend(&jsonExt)
@@ -32,7 +32,9 @@ func MarshalJSON(value interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func MarshalExtendedJSON(value interface{}) ([]byte, error) {
+// Marshal marshals a JSON value that may hold non-standard
+// syntax as defined in BSON's extended JSON specification.
+func Marshal(value interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	e := NewEncoder(&buf)
 	e.Extend(&jsonExtendedExt)
@@ -41,15 +43,6 @@ func MarshalExtendedJSON(value interface{}) ([]byte, error) {
 		return nil, err
 	}
 	return buf.Bytes(), nil
-}
-
-func CompactJSON(src []byte) ([]byte, error) {
-	var dst bytes.Buffer
-	err := Compact(&dst, src)
-	if err != nil {
-		return nil, err
-	}
-	return dst.Bytes(), nil
 }
 
 var jsonExt Extension
@@ -317,11 +310,7 @@ func jdecRegEx(data []byte) (interface{}, error) {
 
 func jencRegEx(v interface{}) ([]byte, error) {
 	re := v.(primitive.Regex)
-	type regex struct {
-		Regex   string `json:"$regex"`
-		Options string `json:"$options"`
-	}
-	return Marshal(regex{re.Pattern, re.Options})
+	return fbytes(`{"$regex":"%v","$options":"%v"}`, re.Pattern, re.Options), nil
 }
 
 func jdecObjectID(data []byte) (interface{}, error) {

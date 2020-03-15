@@ -1,9 +1,10 @@
-package extendedjson
+package extendedjson_test
 
 import (
 	"testing"
 	"time"
 
+	"github.com/feliixx/mongoplayground/extendedjson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -52,7 +53,7 @@ func TestExtendedJSON(t *testing.T) {
 	}
 
 	for _, tt := range extendedJSONTests {
-		b, err := MarshalExtendedJSON(tt.a)
+		b, err := extendedjson.Marshal(tt.a)
 		if err != nil {
 			t.Errorf("fail to unmarshal %v: %v", tt.a, err)
 		}
