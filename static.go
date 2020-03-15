@@ -16,9 +16,9 @@ const (
     "count": 10,
     "content": {
 		"k": {
-		  "type": "int",
-		  "minInt": 0, 
-		  "maxInt": 10
+		  "type": "long",
+		  "minLong": 0, 
+		  "maxLong": 10
 		}
 	}
   }

@@ -133,7 +133,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-			result:    "query failed: $project specification must be an object",
+			result:    "query failed: (Location15969) $project specification must be an object",
 			createdDB: 0,
 		},
 		{
@@ -153,7 +153,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"$set": 12})`}},
-			result:    "query failed: unknown top level operator: $set",
+			result:    "query failed: (BadValue) unknown top level operator: $set",
 			createdDB: 1,
 		},
 		{
@@ -196,14 +196,14 @@ func TestRunCreateDB(t *testing.T) {
 					"count": 10,
 					"content": {
 						"k": {
-							"type": "int", 
-							"minInt": 1,
-							"maxInt": 5
+							"type": "long", 
+							"minLong": 1,
+							"maxLong": 5
 						}
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
+			result:    `[{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000c"),"k":4},{"_id":ObjectId("5a934e00010203040500000d"),"k":5},{"_id":ObjectId("5a934e000102030405000010"),"k":5},{"_id":ObjectId("5a934e000102030405000011"),"k":4},{"_id":ObjectId("5a934e000102030405000012"),"k":5}]`,
 			createdDB: 1,
 		},
 		{
@@ -232,7 +232,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
+			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: for field k, invalid type ",
 			createdDB: 0,
 		},
 		{
