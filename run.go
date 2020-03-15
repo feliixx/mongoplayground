@@ -8,6 +8,9 @@ import (
 	"sort"
 	"time"
 
+	"github.com/feliixx/mgodatagen/datagen"
+	"github.com/feliixx/mgodatagen/datagen/generators"
+
 	"github.com/feliixx/mongoextjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -99,9 +102,9 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte) (d
 		collections := map[string][]bson.M{}
 
 		switch mode {
-		// case mgodatagenMode:
-		// err = createContentFromMgodatagen(collections, config)
-		case mgodatagenMode, bsonMode:
+		case mgodatagenMode:
+			err = createContentFromMgodatagen(collections, config)
+		case bsonMode:
 			err = loadContentFromJSON(collections, config)
 		}
 		if err != nil {
@@ -130,37 +133,37 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte) (d
 	return dbInfo, nil
 }
 
-// func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
+func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
 
-// 	collConfigs, err := datagen.ParseConfig(config, true)
-// 	if err != nil {
-// 		return err
-// 	}
+	collConfigs, err := datagen.ParseConfig(config, true)
+	if err != nil {
+		return err
+	}
 
-// 	mapRef := map[int][][]byte{}
-// 	mapRefType := map[int]byte{}
+	mapRef := map[int][][]byte{}
+	mapRefType := map[int]byte{}
 
-// 	for _, c := range collConfigs {
+	for _, c := range collConfigs {
 
-// 		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
-// 		if ci.Count > maxDoc || ci.Count <= 0 {
-// 			ci.Count = maxDoc
-// 		}
-// 		g, err := ci.NewDocumentGenerator(c.Content)
-// 		if err != nil {
-// 			return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
-// 		}
-// 		docs := make([]bson.M, ci.Count)
-// 		for i := 0; i < ci.Count; i++ {
-// 			err := bson.Unmarshal(g.Generate(), &docs[i])
-// 			if err != nil {
-// 				return err
-// 			}
-// 		}
-// 		collections[c.Name] = docs
-// 	}
-// 	return nil
-// }
+		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
+		if ci.Count > maxDoc || ci.Count <= 0 {
+			ci.Count = maxDoc
+		}
+		g, err := ci.NewDocumentGenerator(c.Content)
+		if err != nil {
+			return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
+		}
+		docs := make([]bson.M, ci.Count)
+		for i := 0; i < ci.Count; i++ {
+			err := bson.Unmarshal(g.Generate(), &docs[i])
+			if err != nil {
+				return err
+			}
+		}
+		collections[c.Name] = docs
+	}
+	return nil
+}
 
 func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 

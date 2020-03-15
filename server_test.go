@@ -19,13 +19,13 @@ import (
 )
 
 const (
-	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"collection":"collection","content":{"k":{"maxInt":10,"minInt":0,"type":"int"}},"count":10}]`
-	templateURL    = "p/ERa1zacO5rY"
+	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
+	templateURL    = "p/snbIQ3uGHGq"
 	testDir        = "tests"
 )
 
 var (
-	templateParams = url.Values{"mode": {"bson"}, "config": {templateConfig}, "query": {templateQuery}}
+	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
 	testServer     *server
 )
 
@@ -90,19 +90,14 @@ func TestRemoveOldDB(t *testing.T) {
 
 	defer testServer.clearDatabases(t)
 
-	params := templateParams
+	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
 	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 	if want, got := templateResult, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	mode := bsonMode
-	if params.Get("mode") == mgodatagenLabel {
-		mode = mgodatagenMode
-	}
-
 	p := &page{
-		Mode:   mode,
+		Mode:   mgodatagenMode,
 		Config: []byte(params.Get("config")),
 	}
 
@@ -112,8 +107,8 @@ func TestRemoveOldDB(t *testing.T) {
 	testServer.activeDB[DBHash] = dbInfo
 
 	// this DB should not be removed
-	configFormat := `db={"collection%v":[{"collection": "collection%v","count": 10,"content": {}}]}`
-	params.Set("config", fmt.Sprintf(configFormat, "other", "other"))
+	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
+	params.Set("config", fmt.Sprintf(configFormat, "other"))
 	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
 	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {

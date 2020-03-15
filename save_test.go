@@ -22,18 +22,18 @@ func TestSave(t *testing.T) {
 			result:    templateURL,
 			newRecord: true,
 		},
-		// {
-		// 	name:      "template config with new query",
-		// 	params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
-		// 	result:    "p/DYlGRQeO0bX",
-		// 	newRecord: true,
-		// },
-		// {
-		// 	name:      "invalid config",
-		// 	params:    url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}},
-		// 	result:    "p/EMmfQADkGcq",
-		// 	newRecord: true,
-		// },
+		{
+			name:      "template config with new query",
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
+			result:    "p/DYlGRQeO0bX",
+			newRecord: true,
+		},
+		{
+			name:      "invalid config",
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}},
+			result:    "p/EMmfQADkGcq",
+			newRecord: true,
+		},
 		{
 			name:      "save existing playground",
 			params:    templateParams,
