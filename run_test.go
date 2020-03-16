@@ -465,6 +465,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    noDocFound,
 			createdDB: 0,
 		},
+		{
+			name: `invalid query with 3 '.'`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {templateConfig},
+				"query":  {`[{"key.path.test":{"$match":10}}])`},
+			},
+			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
+			createdDB: 0,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {

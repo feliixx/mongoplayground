@@ -283,7 +283,8 @@ func seededObjectID(n int32) primitive.ObjectID {
 //   db.collection.find({k:1})
 //   db.collection.aggregate([{$project:{_id:0}}])
 //
-//
+// input is filtered from front-end side, but this should
+// not panic on pathological/malformatted input
 func parseQuery(query []byte) (collectionName, method string, stages []bson.M, err error) {
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
@@ -296,6 +297,10 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 	// last part of query contains the method and the stages, for example find({k:1})
 	queryBytes := p[2]
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
+
+	if start == -1 || end == -1 {
+		return "", "", nil, errors.New(invalidQuery)
+	}
 
 	method = string(queryBytes[:start])
 
