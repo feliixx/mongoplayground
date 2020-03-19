@@ -23,10 +23,6 @@ const (
 	maxCollNb = 10
 	// max number of documents in a collection
 	maxDoc = 100
-	// max size of a collection
-	maxBytes = maxDoc * 1024
-	// noDocFound error message when no docs match the query
-	noDocFound = "no document found"
 	// invalidConfig error message when the configuration doesn't match expected format
 	invalidConfig = `expecting an array of documents like 
 
@@ -46,7 +42,9 @@ db = {
 		{_id: 1, v: 1}
 	]
 }`
-	invalidQuery = `query must match db.coll.find(...) or db.coll.aggregate(...)`
+	invalidQuery    = "query must match db.coll.find(...) or db.coll.aggregate(...)"
+	playgroundToBig = "Playground is too big"
+	noDocFound      = "no document found"
 )
 
 // run a query and return the results as plain text.
@@ -55,12 +53,17 @@ db = {
 //    [{_id:1,k:1},{_id:2,k:33}]
 func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 
-	p := newPage(
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	p, err := newPage(
 		r.FormValue("mode"),
 		r.FormValue("config"),
 		r.FormValue("query"),
 	)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	res, err := s.run(p)
 	if err != nil {

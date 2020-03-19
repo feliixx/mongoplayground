@@ -475,6 +475,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
 			createdDB: 0,
 		},
+		{
+			name: `playground too big`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {string(make([]byte, maxByteSize))},
+				"query":  {"db.collection.find()"},
+			},
+			result:    playgroundToBig,
+			createdDB: 0,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {

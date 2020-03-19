@@ -64,7 +64,7 @@ func (s *server) compressStaticResources() error {
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
 	zw.Name, zw.ModTime = homeEndpoint, time.Now()
 
-	p := newPage(bsonLabel, templateConfig, templateQuery)
+	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
 	p.MongoVersion = s.mongodbVersion
 	if err := templates.Execute(zw, p); err != nil {
 		return err

@@ -13,12 +13,17 @@ import (
 //   https://mongoplayground.net/p/nJhd-dhf3Ea
 func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 
-	p := newPage(
+	p, err := newPage(
 		r.FormValue("mode"),
 		r.FormValue("config"),
 		r.FormValue("query"),
 	)
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+	if err != nil {
+		w.Write([]byte(err.Error()))
+		return
+	}
 
 	id, err := s.save(p)
 	if err != nil {
