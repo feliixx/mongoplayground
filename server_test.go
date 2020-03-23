@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":2},{"_id":ObjectId("5a934e000102030405000001"),"k":6},{"_id":ObjectId("5a934e000102030405000002"),"k":10},{"_id":ObjectId("5a934e000102030405000003"),"k":5},{"_id":ObjectId("5a934e000102030405000004"),"k":3},{"_id":ObjectId("5a934e000102030405000005"),"k":0},{"_id":ObjectId("5a934e000102030405000006"),"k":8},{"_id":ObjectId("5a934e000102030405000007"),"k":6},{"_id":ObjectId("5a934e000102030405000008"),"k":5},{"_id":ObjectId("5a934e000102030405000009"),"k":4}]`
-	templateURL    = "p/1l1j9jDwyiq"
+	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
+	templateURL    = "p/snbIQ3uGHGq"
 	testDir        = "tests"
 )
 

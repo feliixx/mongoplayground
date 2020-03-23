@@ -25,7 +25,7 @@ func TestSave(t *testing.T) {
 		{
 			name:      "template config with new query",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.collection.find({\"k\": 10})"}},
-			result:    "p/ohl6ZGcI1xv",
+			result:    "p/DYlGRQeO0bX",
 			newRecord: true,
 		},
 		{
