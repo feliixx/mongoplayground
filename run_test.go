@@ -133,7 +133,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-			result:    "query failed: $project specification must be an object",
+			result:    "query failed: (Location15969) $project specification must be an object",
 			createdDB: 0,
 		},
 		{
@@ -153,7 +153,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.collection.find({"$set": 12})`}},
-			result:    "query failed: unknown top level operator: $set",
+			result:    "query failed: (BadValue) unknown top level operator: $set",
 			createdDB: 1,
 		},
 		{
@@ -232,7 +232,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: invalid type  for field k",
+			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: for field k, invalid type ",
 			createdDB: 0,
 		},
 		{
