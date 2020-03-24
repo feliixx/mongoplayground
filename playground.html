@@ -131,8 +131,14 @@
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
-                    redirect(r.responseText, true)
+                    
                     hasChanged = false
+                    var response = r.responseText
+                    if (response.length == 11) {
+                        redirect(response, true)
+                    } else {
+                        resultEditor.setValue(response, -1)
+                    }
                 }
             }
             r.send(encodePlayground())
