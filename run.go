@@ -23,8 +23,8 @@ const (
 	maxCollNb = 10
 	// max number of documents in a collection
 	maxDoc = 100
-	// invalidConfig error message when the configuration doesn't match expected format
-	invalidConfig = `expecting an array of documents like 
+	// errInvalidConfig error message when the configuration doesn't match expected format
+	errInvalidConfig = `expecting an array of documents like 
 
 [ 
   {_id: 1, k: "one"},
@@ -42,9 +42,9 @@ db = {
 		{_id: 1, v: 1}
 	]
 }`
-	invalidQuery    = "query must match db.coll.find(...) or db.coll.aggregate(...)"
-	playgroundToBig = "Playground is too big"
-	noDocFound      = "no document found"
+	errInvalidQuery    = "query must match db.coll.find(...) or db.coll.aggregate(...)"
+	errPlaygroundToBig = "playground is too big"
+	noDocFound         = "no document found"
 )
 
 // run a query and return the results as plain text.
@@ -185,7 +185,7 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 		return mongoextjson.Unmarshal(config[3:], &collections)
 
 	default:
-		return errors.New(invalidConfig)
+		return errors.New(errInvalidConfig)
 	}
 }
 
@@ -292,7 +292,7 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
-		return "", "", nil, errors.New(invalidQuery)
+		return "", "", nil, errors.New(errInvalidQuery)
 	}
 
 	collectionName = string(p[1])
@@ -302,7 +302,7 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
 
 	if start == -1 || end == -1 {
-		return "", "", nil, errors.New(invalidQuery)
+		return "", "", nil, errors.New(errInvalidQuery)
 	}
 
 	method = string(queryBytes[:start])

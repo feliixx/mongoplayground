@@ -7,6 +7,8 @@ import (
 	"github.com/dgraph-io/badger"
 )
 
+const errNoMatchingPlayground = "this playground doesn't exist"
+
 // view a saved playground page identified by its ID
 func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -15,12 +17,12 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.logger.Printf("fail to load page with id %s : %v", id, err)
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("this playground doesn't exist"))
+		w.Write([]byte(errNoMatchingPlayground))
 		return
 	}
 	err = templates.Execute(w, p)
 	if err != nil {
-		s.logger.Printf("fail to execute template with page %s: %v", p.String(), err)
+		s.logger.Printf("fail to execute template for playground %s: %v", id, err)
 		return
 	}
 }

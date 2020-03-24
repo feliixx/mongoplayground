@@ -43,7 +43,7 @@ type page struct {
 func newPage(modeName, config, query string) (*page, error) {
 
 	if (len(config) + len(query)) > maxByteSize {
-		return nil, errors.New(playgroundToBig)
+		return nil, errors.New(errPlaygroundToBig)
 	}
 	mode := bsonMode
 	if modeName == mgodatagenLabel {
@@ -126,12 +126,4 @@ func detailBsonMode(config []byte) byte {
 		return bsonMultipleCollection
 	}
 	return unknown
-}
-
-func (p *page) String() string {
-	mode := bsonLabel
-	if p.Mode != bsonMode {
-		mode = mgodatagenLabel
-	}
-	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
 }

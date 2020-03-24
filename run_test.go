@@ -272,7 +272,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{}]`},
 				"query":  {`find()`},
 			},
-			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
+			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 			createdDB: 0,
 		},
 		{
@@ -282,7 +282,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`{"k": 1}, {"k": 2}`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    fmt.Sprintf("error in configuration:\n  %v", invalidConfig),
+			result:    fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
 			createdDB: 0,
 		},
 		{
@@ -432,7 +432,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {""},
 				"query":  {"db.c.find()"},
 			},
-			result:    fmt.Sprintf("error in configuration:\n  %v", invalidConfig),
+			result:    fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
 			createdDB: 0,
 		},
 		{
@@ -442,7 +442,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {templateConfig},
 				"query":  {""},
 			},
-			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
+			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 			createdDB: 1,
 		},
 		{
@@ -472,7 +472,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {templateConfig},
 				"query":  {`[{"key.path.test":{"$match":10}}])`},
 			},
-			result:    fmt.Sprintf("error in query:\n  %v", invalidQuery),
+			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 			createdDB: 0,
 		},
 		{
@@ -482,7 +482,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {string(make([]byte, maxByteSize))},
 				"query":  {"db.collection.find()"},
 			},
-			result:    playgroundToBig,
+			result:    errPlaygroundToBig,
 			createdDB: 0,
 		},
 	}
