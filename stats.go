@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
