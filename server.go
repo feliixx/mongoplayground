@@ -12,6 +12,7 @@ import (
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -65,8 +66,6 @@ func newServer(logger *log.Logger) (*server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
 	}
-	// info, _ := session.
-	version := []byte("info.Version")
 
 	db, err := badger.Open(badger.DefaultOptions(badgerDir))
 	if err != nil {
@@ -79,7 +78,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		storage:        db,
 		activeDB:       map[string]dbMetaInfo{},
 		logger:         logger,
-		mongodbVersion: version,
+		mongodbVersion: getMongodVersion(session),
 	}
 
 	err = s.compressStaticResources()
@@ -112,6 +111,20 @@ func newServer(logger *log.Logger) (*server, error) {
 	s.mux.Handle(metricsEndpoint, promhttp.Handler())
 
 	return s, nil
+}
+
+func getMongodVersion(client *mongo.Client) []byte {
+
+	result := client.Database("admin").RunCommand(nil, bson.M{"buildInfo": 1})
+
+	var buildInfo struct {
+		Version []byte
+	}
+	err := result.Decode(&buildInfo)
+	if err != nil {
+		return []byte("unknown")
+	}
+	return buildInfo.Version
 }
 
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
