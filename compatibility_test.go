@@ -22,7 +22,7 @@ func TestGenerateresultFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("fail to open backup file: %v", err)
 	}
-	testServer.storage.Load(backup)
+	testServer.storage.Load(backup, 0)
 
 	out, err := os.Create("backups/new_result.txt")
 	if err != nil {
@@ -39,32 +39,31 @@ func TestGenerateresultFile(t *testing.T) {
 			item := it.Item()
 
 			key := item.Key()
-			value, err := item.Value()
-			if err != nil {
-				return err
-			}
-
 			if string(key) != "6wGof2r4ZWH" {
 
-				p := &page{}
-				p.decode(value)
+				item.Value(func(val []byte) error {
 
-				result, err := testServer.run(p)
-				if err == nil {
+					p := &page{}
+					p.decode(val)
 
-					fmt.Println(string(key))
+					result, err := testServer.run(p)
+					if err == nil {
 
-					out.Write(key)
-					out.WriteString(":")
-					out.Write(result)
-					out.WriteString("\n")
+						fmt.Println(string(key))
 
-					err = testServer.session.Database(p.dbHash()).Drop(nil)
-					if err != nil {
-						fmt.Printf("fail to drop db: %v", err)
+						out.Write(key)
+						out.WriteString(":")
+						out.Write(result)
+						out.WriteString("\n")
+
+						err = testServer.session.Database(p.dbHash()).Drop(nil)
+						if err != nil {
+							fmt.Printf("fail to drop db: %v", err)
+						}
+						delete(testServer.activeDB, p.dbHash())
 					}
-					delete(testServer.activeDB, p.dbHash())
-				}
+					return nil
+				})
 			}
 		}
 		return nil

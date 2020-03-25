@@ -68,10 +68,7 @@ func newServer(logger *log.Logger) (*server, error) {
 	// info, _ := session.
 	version := []byte("info.Version")
 
-	opts := badger.DefaultOptions
-	opts.Dir = badgerDir
-	opts.ValueDir = badgerDir
-	db, err := badger.Open(opts)
+	db, err := badger.Open(badger.DefaultOptions(badgerDir))
 	if err != nil {
 		return nil, err
 	}

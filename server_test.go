@@ -193,11 +193,10 @@ func (s *server) clearDatabases(t *testing.T) {
 			t.Error(err)
 		}
 	}
-	deleteTxn.Commit(func(err error) {
-		if err != nil {
-			fmt.Printf("fail to delete: %v\n", err)
-		}
-	})
+	err = deleteTxn.Commit()
+	if err != nil {
+		t.Errorf("fail to commit delete trnascation: %v", err)
+	}
 }
 
 func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {

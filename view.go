@@ -36,12 +36,10 @@ func (s *server) loadPage(id []byte) (*page, error) {
 		if err != nil {
 			return err
 		}
-		val, err := item.Value()
-		if err != nil {
-			return err
-		}
-		p.decode(val)
-		return nil
+		return item.Value(func(val []byte) error {
+			p.decode(val)
+			return nil
+		})
 	})
 	return p, err
 }
