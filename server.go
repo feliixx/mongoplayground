@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -10,14 +11,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dgraph-io/badger"
-	"github.com/globalsign/mgo"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var (
-	templates = template.Must(template.ParseFiles("playground.html"))
-)
+var templates = template.Must(template.ParseFiles("playground.html"))
 
 const (
 	staticDir = "static"
@@ -44,7 +45,7 @@ type dbMetaInfo struct {
 
 type server struct {
 	mux     *http.ServeMux
-	session *mgo.Session
+	session *mongo.Client
 	storage *badger.DB
 	logger  *log.Logger
 
@@ -58,17 +59,16 @@ type server struct {
 
 func newServer(logger *log.Logger) (*server, error) {
 
-	session, err := mgo.Dial("mongodb://")
+	session, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return nil, fmt.Errorf("fail to create mongodb client: %v", err)
+	}
+	err = session.Connect(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
 	}
-	info, _ := session.BuildInfo()
-	version := []byte(info.Version)
 
-	opts := badger.DefaultOptions
-	opts.Dir = badgerDir
-	opts.ValueDir = badgerDir
-	db, err := badger.Open(opts)
+	db, err := badger.Open(badger.DefaultOptions(badgerDir))
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		storage:        db,
 		activeDB:       map[string]dbMetaInfo{},
 		logger:         logger,
-		mongodbVersion: version,
+		mongodbVersion: getMongodVersion(session),
 	}
 
 	err = s.compressStaticResources()
@@ -114,6 +114,20 @@ func newServer(logger *log.Logger) (*server, error) {
 	return s, nil
 }
 
+func getMongodVersion(client *mongo.Client) []byte {
+
+	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
+
+	var buildInfo struct {
+		Version []byte
+	}
+	err := result.Decode(&buildInfo)
+	if err != nil {
+		return []byte("unknown")
+	}
+	return buildInfo.Version
+}
+
 func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
@@ -139,15 +153,12 @@ func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
 // remove database not used since the previous cleanup in MongoDB
 func (s *server) removeExpiredDB() {
 
-	session := s.session.Copy()
-	defer session.Close()
-
 	now := time.Now()
 
 	s.mutex.Lock()
 	for name, infos := range s.activeDB {
 		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
-			err := session.DB(name).DropDatabase()
+			err := s.session.Database(name).Drop(context.Background())
 			if err != nil {
 				s.logger.Printf("fail to drop database %v: %v", name, err)
 			}

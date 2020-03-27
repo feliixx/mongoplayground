@@ -4,8 +4,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
+
+const errNoMatchingPlayground = "this playground doesn't exist"
 
 // view a saved playground page identified by its ID
 func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
@@ -15,12 +17,12 @@ func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		s.logger.Printf("fail to load page with id %s : %v", id, err)
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("this playground doesn't exist"))
+		w.Write([]byte(errNoMatchingPlayground))
 		return
 	}
 	err = templates.Execute(w, p)
 	if err != nil {
-		s.logger.Printf("fail to execute template with page %s: %v", p.String(), err)
+		s.logger.Printf("fail to execute template for playground %s: %v", id, err)
 		return
 	}
 }
@@ -34,12 +36,10 @@ func (s *server) loadPage(id []byte) (*page, error) {
 		if err != nil {
 			return err
 		}
-		val, err := item.Value()
-		if err != nil {
-			return err
-		}
-		p.decode(val)
-		return nil
+		return item.Value(func(val []byte) error {
+			p.decode(val)
+			return nil
+		})
 	})
 	return p, err
 }

@@ -1,14 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
 
-const backupPath = "backup/backup.bak"
+const backupPath = "backups/backup.bak"
 
 func TestGenerateresultFile(t *testing.T) {
 
@@ -22,9 +23,10 @@ func TestGenerateresultFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("fail to open backup file: %v", err)
 	}
-	testServer.storage.Load(backup)
 
-	out, err := os.Create("backup/new_result.txt")
+	testServer.storage.Load(backup, 0)
+
+	out, err := os.Create("backups/new_result.txt")
 	if err != nil {
 		t.Errorf("fail to create result file: %v", err)
 	}
@@ -39,27 +41,36 @@ func TestGenerateresultFile(t *testing.T) {
 			item := it.Item()
 
 			key := item.Key()
-			value, err := item.Value()
-			if err != nil {
-				return err
-			}
+			if string(key) != "6wGof2r4ZWH" {
 
-			p := &page{}
-			p.decode(value)
+				item.Value(func(val []byte) error {
 
-			result, err := testServer.run(p)
-			if err != nil {
-				fmt.Printf("error for playground %s:\n\t%v", key, err)
+					p := &page{}
+					p.decode(val)
+
+					result, err := testServer.run(p)
+					if err == nil {
+
+						fmt.Println(string(key))
+
+						out.Write(key)
+						out.WriteString(":")
+						out.Write(result)
+						out.WriteString("\n")
+
+						err = testServer.session.Database(p.dbHash()).Drop(context.Background())
+						if err != nil {
+							fmt.Printf("fail to drop db: %v", err)
+						}
+						delete(testServer.activeDB, p.dbHash())
+					}
+					return nil
+				})
 			}
-			out.Write(key)
-			out.WriteString(":")
-			out.Write(result)
-			out.WriteString("\n")
 		}
 		return nil
 	})
 	if err != nil {
-		t.Errorf("fail to get results: %v", err)
+		t.Errorf("fail to get pages: %v", err)
 	}
-
 }

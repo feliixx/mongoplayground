@@ -9,7 +9,7 @@ import (
 
 func TestView(t *testing.T) {
 
-	testServer.clearDatabases(t)
+	defer testServer.clearDatabases(t)
 
 	viewTests := []struct {
 		name         string

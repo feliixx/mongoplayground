@@ -8,7 +8,7 @@ import (
 
 func TestSave(t *testing.T) {
 
-	testServer.clearDatabases(t)
+	defer testServer.clearDatabases(t)
 
 	saveTests := []struct {
 		name      string
@@ -46,6 +46,18 @@ func TestSave(t *testing.T) {
 			result:    "p/4cOeA7NGLru",
 			newRecord: true,
 		},
+		{
+			name:      "bson mutliple db",
+			params:    url.Values{"mode": {"bson"}, "config": {`db={"c1":[{k:1}],"c2":[]}`}, "query": {templateQuery}},
+			result:    "p/AHWNKW4GK50",
+			newRecord: true,
+		},
+		{
+			name:      "bson unknown",
+			params:    url.Values{"mode": {"bson"}, "config": {`unknown`}, "query": {templateQuery}},
+			result:    "p/qXPeSYPpatw",
+			newRecord: true,
+		},
 	}
 
 	t.Run("parallel save", func(t *testing.T) {
@@ -73,6 +85,25 @@ func TestSave(t *testing.T) {
 			nbBadgerRecords++
 		}
 	}
-
 	testStorageContent(t, nbMongoDatabases, nbBadgerRecords)
+
+	err := testServer.computeSavedPlaygroundStats()
+	if err != nil {
+		t.Errorf("fail to get stats from saved playgrounds")
+	}
+}
+
+func TestErrorOnSavePlaygroundTooBig(t *testing.T) {
+
+	params := url.Values{
+		"mode":   {"mgodatagen"},
+		"config": {string(make([]byte, maxByteSize))},
+		"query":  {"db.collection.find()"},
+	}
+
+	buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, params)
+	if want, got := errPlaygroundToBig, buf.String(); want != got {
+		t.Errorf("expected %s, but got %s", want, got)
+	}
+
 }

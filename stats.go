@@ -3,7 +3,7 @@ package main
 import (
 	"time"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -52,15 +52,14 @@ func (s *server) computeSavedPlaygroundStats() error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 
-		p := &page{}
 		for it.Rewind(); it.Valid(); it.Next() {
 			item := it.Item()
-			value, err := item.Value()
-			if err != nil {
-				return err
-			}
-			p.decode(value)
-			savedPlayground.WithLabelValues(p.label()).Inc()
+			item.Value(func(val []byte) error {
+				p := &page{}
+				p.decode(val)
+				savedPlayground.WithLabelValues(p.label()).Inc()
+				return nil
+			})
 		}
 		return nil
 	})

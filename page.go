@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
+	"errors"
 	"fmt"
 )
 
@@ -23,6 +24,10 @@ const (
 	bsonSingleCollectionLabel   = "bson_single_collection"
 	bsonMultipleCollectionLabel = "bson_multiple_collection"
 	unknownLabel                = "unknown"
+
+	// max size of a playground. This value is the minimum we can
+	// set to avoid breaking already saved playground
+	maxByteSize = 350 * 1000
 )
 
 type page struct {
@@ -35,8 +40,11 @@ type page struct {
 	MongoVersion []byte
 }
 
-func newPage(modeName, config, query string) *page {
+func newPage(modeName, config, query string) (*page, error) {
 
+	if (len(config) + len(query)) > maxByteSize {
+		return nil, errors.New(errPlaygroundToBig)
+	}
 	mode := bsonMode
 	if modeName == mgodatagenLabel {
 		mode = mgodatagenMode
@@ -45,7 +53,7 @@ func newPage(modeName, config, query string) *page {
 		Mode:   mode,
 		Config: []byte(config),
 		Query:  []byte(query),
-	}
+	}, nil
 }
 
 // generate an unique id for this page
@@ -118,12 +126,4 @@ func detailBsonMode(config []byte) byte {
 		return bsonMultipleCollection
 	}
 	return unknown
-}
-
-func (p *page) String() string {
-	mode := bsonLabel
-	if p.Mode != bsonMode {
-		mode = mgodatagenLabel
-	}
-	return fmt.Sprintf("mode: %s\nconfig: %s\nquery: %s\n", mode, p.Config, p.Query)
 }
