@@ -8,3 +8,4 @@ storage
 debug 
 tests/*.js
 backups
+.idea
