@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -45,7 +46,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	testServer = s
-	defer s.session.Disconnect(nil)
+	defer s.session.Disconnect(context.Background())
 	defer s.storage.Close()
 
 	retCode := m.Run()
@@ -102,7 +103,7 @@ func TestRemoveOldDB(t *testing.T) {
 	}
 
 	DBHash := p.dbHash()
-	dbInfo, _ := testServer.activeDB[DBHash]
+	dbInfo := testServer.activeDB[DBHash]
 	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
 	testServer.activeDB[DBHash] = dbInfo
 
@@ -122,7 +123,7 @@ func TestRemoveOldDB(t *testing.T) {
 		t.Errorf("DB %s should not be present in activeDB", DBHash)
 	}
 
-	dbNames, err := testServer.session.ListDatabaseNames(nil, bson.D{})
+	dbNames, err := testServer.session.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -150,13 +151,13 @@ func TestBackup(t *testing.T) {
 }
 
 func (s *server) clearDatabases(t *testing.T) {
-	dbNames, err := s.session.ListDatabaseNames(nil, bson.D{})
+	dbNames, err := s.session.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
 
 	for _, name := range filterDBNames(dbNames) {
-		err = s.session.Database(name).Drop(nil)
+		err = s.session.Database(name).Drop(context.Background())
 		if err != nil {
 			fmt.Printf("fail to drop db: %v", err)
 		}
@@ -200,7 +201,7 @@ func (s *server) clearDatabases(t *testing.T) {
 }
 
 func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
-	dbNames, err := testServer.session.ListDatabaseNames(nil, bson.D{})
+	dbNames, err := testServer.session.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -197,7 +198,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 		return emptyDatabase, fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
 	}
 	// clean any potentially remaining data
-	db.Drop(nil)
+	db.Drop(context.Background())
 
 	// order the collections by name, so the order of creation is
 	// garenteed to be always the same
@@ -232,7 +233,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 		}
 
 		opts := options.InsertMany().SetOrdered(true)
-		_, err = db.Collection(name).InsertMany(nil, toInsert, opts)
+		_, err = db.Collection(name).InsertMany(context.Background(), toInsert, opts)
 		if err != nil {
 			// In some case, a collection can be partially created even if some write failed
 			//
@@ -245,7 +246,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 			// is not put in server.activeDB, so it can't be deleted from server.removeExpiredDB
 			//
 			// to avoid this kind of leaks, drop the db immediately if there is an error
-			db.Drop(nil)
+			db.Drop(context.Background())
 			return emptyDatabase, err
 		}
 		base += len(docs)
@@ -326,9 +327,9 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 		for len(stages) < 2 {
 			stages = append(stages, bson.M{})
 		}
-		cursor, err = collection.Find(nil, stages[0], options.Find().SetProjection(stages[1]))
+		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]))
 	case "aggregate":
-		cursor, err = collection.Aggregate(nil, stages)
+		cursor, err = collection.Aggregate(context.Background(), stages)
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
@@ -336,7 +337,7 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 		return nil, fmt.Errorf("query failed: %v", err)
 	}
 
-	if err = cursor.All(nil, &docs); err != nil {
+	if err = cursor.All(context.Background(), &docs); err != nil {
 		return nil, fmt.Errorf("fail to get result from cursor: %v", err)
 	}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -22,6 +23,7 @@ func TestGenerateresultFile(t *testing.T) {
 	if err != nil {
 		t.Errorf("fail to open backup file: %v", err)
 	}
+
 	testServer.storage.Load(backup, 0)
 
 	out, err := os.Create("backups/new_result.txt")
@@ -56,7 +58,7 @@ func TestGenerateresultFile(t *testing.T) {
 						out.Write(result)
 						out.WriteString("\n")
 
-						err = testServer.session.Database(p.dbHash()).Drop(nil)
+						err = testServer.session.Database(p.dbHash()).Drop(context.Background())
 						if err != nil {
 							fmt.Printf("fail to drop db: %v", err)
 						}

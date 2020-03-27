@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -62,7 +63,7 @@ func newServer(logger *log.Logger) (*server, error) {
 	if err != nil {
 		return nil, fmt.Errorf("fail to create mongodb client: %v", err)
 	}
-	err = session.Connect(nil)
+	err = session.Connect(context.Background())
 	if err != nil {
 		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
 	}
@@ -115,7 +116,7 @@ func newServer(logger *log.Logger) (*server, error) {
 
 func getMongodVersion(client *mongo.Client) []byte {
 
-	result := client.Database("admin").RunCommand(nil, bson.M{"buildInfo": 1})
+	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
 
 	var buildInfo struct {
 		Version []byte
@@ -157,7 +158,7 @@ func (s *server) removeExpiredDB() {
 	s.mutex.Lock()
 	for name, infos := range s.activeDB {
 		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
-			err := s.session.Database(name).Drop(nil)
+			err := s.session.Database(name).Drop(context.Background())
 			if err != nil {
 				s.logger.Printf("fail to drop database %v: %v", name, err)
 			}
