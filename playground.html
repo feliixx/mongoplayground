@@ -134,7 +134,7 @@
                     
                     hasChanged = false
                     var response = r.responseText
-                    if (response.length == 11) {
+                    if (response.startsWith("http")) {
                         redirect(response, true)
                     } else {
                         resultEditor.setValue(response, -1)
