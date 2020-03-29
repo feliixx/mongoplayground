@@ -3,7 +3,7 @@ name: Run tests
 on: [push]
 
 env: 
-  MONGO_VERSION: 4.2.3
+  MONGO_VERSION: 4.2.5
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
     - name: Start mongod server and run test
       run: |
         export PATH=$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin:$PATH
-        mongod --dbpath $PWD/db --logpath /dev/null --fork  
+        mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
         scripts/test.sh 
     
     - name: Export coverage result 
