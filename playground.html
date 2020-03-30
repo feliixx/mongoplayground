@@ -32,7 +32,8 @@
                 "showLineNumbers": false,
                 "showGutter": false,
                 "useWorker": false,
-                "highlightActiveLine": false
+                "highlightActiveLine": false,
+                "wrap": true
             })
 
             configEditor.getSession().on('change', changeFunc)
@@ -60,7 +61,7 @@
                     event.preventDefault()
                     run()
                 }
-                if ((event.ctrlKey || event.metaKey) && event.key == "s") {
+                if ((event.ctrlKey || event.metaKey) && event.key === "s") {
                     event.preventDefault()
                     formatAll()
                 }
@@ -112,9 +113,10 @@
                     if (r.status === 200) {
                         var response = r.responseText
                         if (response.startsWith("[")) {
-                            response = indent(response)
+                            showResult(response)
+                        } else {
+                            showError(response)
                         }
-                        resultEditor.setValue(response, -1)
                     }
                 }
                 r.send(encodePlayground())
@@ -137,7 +139,7 @@
                     if (response.startsWith("http")) {
                         redirect(response, true)
                     } else {
-                        resultEditor.setValue(response, -1)
+                        showError(response)
                     }
                 }
             }
@@ -160,16 +162,16 @@
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), getCurrentMode())
             if (formattedConfig === "invalid") {
-                resultEditor.setValue("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'", -1)
+                showError("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'")
                 return false
             }
             if (hasChanged) {
                 configEditor.setValue(indent(formattedConfig), -1)
             }
 
-            var formattedQuery = formatQuery(queryEditor.getValue().trim(), getCurrentMode())
+            var formattedQuery = formatQuery(queryEditor.getValue().trim())
             if (formattedQuery === "invalid") {
-                resultEditor.setValue("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)", -1)
+                showError("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)")
                 return false
             }
             if (hasChanged) {
@@ -182,19 +184,39 @@
 
             showDoc(false)
 
-            var errors = document.querySelectorAll("#config > .ace_gutter > .ace_layer > .ace_error")
-            if (errors.length > 0) {
-                resultEditor.setValue("error(s) found in configuration", -1)
+            if (document.querySelectorAll("#config > .ace_gutter > .ace_layer > .ace_error").length > 0) {
+                showAceError("configuration", configEditor)
                 return false
             }
 
-            errors = document.querySelectorAll("#query > .ace_gutter > .ace_layer > .ace_error")
-            if (errors.length > 0) {
-                resultEditor.setValue("error(s) found in query", -1)
+            if (document.querySelectorAll("#query > .ace_gutter > .ace_layer > .ace_error").length > 0) {
+                showAceError("query", queryEditor)
                 return false
             }
             return formatAll()
         }
+
+        function showAceError(name, editor) {
+
+            var errors = editor.getSession().getAnnotations().filter(error => error.type === "error")
+            var msg = "Error" + (errors.length > 1 ? "s ": " ") +  "found in " + name + ":\n\n"
+
+            for (i = 0; i < errors.length; i++) {
+                msg += "Line " + errors[i].row + ", column " + errors[i].column + " : " + errors[i].text + "\n"
+            }
+            showError(msg)
+        }
+
+        function showError(errMsg) {
+            document.getElementById("result").classList.add("text-red")
+            resultEditor.setValue(errMsg, -1)
+        }
+
+        function showResult(result) {
+            document.getElementById("result").classList.remove("text-red")
+            resultEditor.setValue(indent(result), -1)
+        }
+
     </script>
 </head>
 
