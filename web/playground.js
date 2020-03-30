@@ -145,7 +145,7 @@ function formatConfig(content, mode) {
     return content
 }
 
-function formatQuery(content, mode) {
+function formatQuery(content) {
     var result = content
     if (content.endsWith(";")) {
         result = content.slice(0, -1)
