@@ -11,7 +11,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.8/mode-javascript.js" type="text/javascript"></script>
     <script type="text/javascript">
         var configEditor, queryEditor, resultEditor
-        var hasChanged = false
+        var hasChangedSinceLAstRun = false
+        var hasChangedSinceLAstSave = false
 
         window.onload = function () {
             var configDiv = document.getElementById("config")
@@ -63,13 +64,17 @@
                 }
                 if ((event.ctrlKey || event.metaKey) && event.key === "s") {
                     event.preventDefault()
-                    formatAll()
+                    formatAll(true)
                 }
             })
         }
 
         function changeFunc() {
-            hasChanged = true
+            if (hasChangedSinceLAstRun && hasChangedSinceLAstSave) {
+                return
+            }
+            hasChangedSinceLAstRun = true
+            hasChangedSinceLAstSave = true
             redirect("/", false)
         }
 
@@ -97,13 +102,13 @@
             document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
             document.getElementById("query").parentNode.style.display = doShow ? "none" : "inline"
             document.getElementById("result").parentNode.style.display = doShow ? "none" : "inline"
-            if (!doShow && hasChanged) {
+            if (!doShow && hasChangedSinceLAstSave) {
                 redirect("/", false)
             }
         }
 
         function run() {
-            if (isCorrect()) {
+            if (formatAll(false)) {
                 
                 var r = new XMLHttpRequest()
                 r.open("POST", "/run")
@@ -111,6 +116,8 @@
                 r.onreadystatechange = function () {
                     if (r.readyState !== 4) { return }
                     if (r.status === 200) {
+
+                        hasChangedSinceLAstRun = false
                         var response = r.responseText
                         if (response.startsWith("[")) {
                             showResult(response)
@@ -125,7 +132,7 @@
 
         function save() {
 
-            isCorrect()
+            formatAll(hasChangedSinceLAstRun)
 
             var r = new XMLHttpRequest()
             r.open("POST", "/save")
@@ -134,7 +141,7 @@
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
                     
-                    hasChanged = false
+                    hasChangedSinceLAstSave = false
                     var response = r.responseText
                     if (response.startsWith("http")) {
                         redirect(response, true)
@@ -156,31 +163,11 @@
                 + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
         }
 
-        function formatAll() {
+        function formatAll(clearResult) {
 
-            resultEditor.setValue("", -1)
-
-            var formattedConfig = formatConfig(configEditor.getValue().trim(), getCurrentMode())
-            if (formattedConfig === "invalid") {
-                showError("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'")
-                return false
+            if (clearResult) {
+                resultEditor.setValue("", -1)
             }
-            if (hasChanged) {
-                configEditor.setValue(indent(formattedConfig), -1)
-            }
-
-            var formattedQuery = formatQuery(queryEditor.getValue().trim())
-            if (formattedQuery === "invalid") {
-                showError("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)")
-                return false
-            }
-            if (hasChanged) {
-                queryEditor.setValue(indent(formattedQuery), -1)
-            }
-            return true
-        }
-
-        function isCorrect() {
 
             showDoc(false)
 
@@ -193,7 +180,25 @@
                 showAceError("query", queryEditor)
                 return false
             }
-            return formatAll()
+
+            var formattedConfig = formatConfig(configEditor.getValue().trim(), getCurrentMode())
+            if (formattedConfig === "invalid") {
+                showError("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'")
+                return false
+            }
+            if (hasChangedSinceLAstRun) {
+                configEditor.setValue(indent(formattedConfig), -1)
+            }
+
+            var formattedQuery = formatQuery(queryEditor.getValue().trim())
+            if (formattedQuery === "invalid") {
+                showError("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)")
+                return false
+            }
+            if (hasChangedSinceLAstRun) {
+                queryEditor.setValue(indent(formattedQuery), -1)
+            }
+            return true
         }
 
         function showAceError(name, editor) {
@@ -225,7 +230,7 @@
         <div class="title">Mongo Playground</div>
         <div class="controls">
             <input type="button" value="run" onclick="run()" title="ctrl + enter">
-            <input type="button" value="format" onclick="isCorrect()" title="ctrl + s">
+            <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
             <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
             <input id="link" type="text">
             <label class="bold">Template:</label>
