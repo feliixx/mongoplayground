@@ -182,7 +182,7 @@ be inferior or equal to the number of documents you want to generate.
 For example, if you want unique strings of length 3, there is `64 * 64 * 64 = 262144` possible
 strings
 
-They will look like
+They will look likecd ~/go/s
 
 ```
 "aaa",
@@ -416,6 +416,8 @@ array have to be of the same type
       <object>
       ...
     ]
+    "randomOrder": <bool>     // optional. If set to true, objects will be picked 
+                              // from the array in random order.
 }
 ```
 
@@ -702,11 +704,6 @@ db.collection.find({
   }
 })
 ```
-
-### Number decimal
-
-Currently, `NumberDecimal()` notation is not supported in bson mode.
-
 
 ## Report an issue and contribute
 
