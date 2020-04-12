@@ -20,7 +20,7 @@ func TestRunCreateDB(t *testing.T) {
 		{
 			name:      "incorrect config",
 			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
-			result:    "error in configuration:\n  Error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
+			result:    "error in configuration:\n  error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 			createdDB: 0,
 		},
 		{
@@ -232,7 +232,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}
 			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-			result:    "error in configuration:\n  fail to create collection coll2: fail to create DocumentGenerator:\n\tcause: for field k, invalid type ",
+			result:    "error in configuration:\n  fail to create collection coll2: invalid generator for field 'k'\n  cause: invalid type ''",
 			createdDB: 0,
 		},
 		{
@@ -546,18 +546,18 @@ func TestConsistentError(t *testing.T) {
 
 	defer testServer.clearDatabases(t)
 
-	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{"k":1}]`}, "query": {templateQuery}}
+	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}}
 	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
-	errorMsg := "error in configuration:\n  Error in configuration file: \n\t'collection' and 'database' fields can't be empty"
+	errorMsg := "error in configuration:\n  error in configuration file: \n\t'collection' and 'database' fields can't be empty"
 
 	if want, got := errorMsg, buf.String(); want != got {
-		t.Errorf("expected %s but got %s", want, got)
+		t.Errorf("expected\n'%s'\n but got\n'%s'", want, got)
 	}
 
 	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 
 	if want, got := errorMsg, buf.String(); want != got {
-		t.Errorf("expected %s but got %s", want, got)
+		t.Errorf("expected\n'%s'\n but got\n'%s'", want, got)
 	}
 }
