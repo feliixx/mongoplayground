@@ -3,7 +3,7 @@
 
 # Mongo Playground
 
-Mongo playground: a simple sandbox to test and share MongoDB queries. Try it online : [**mongoplayground**](https://mongoplayground.net/)
+Mongo playground: a simple sandbox to test and share MongoDB queries. Try it online : [**https://mongoplayground.net**](https://mongoplayground.net/)
 
 
 ## Limitations
@@ -14,7 +14,6 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
   - a database can't contain more than **10 collections**
   - a collection can't contain more than **100 documents**
-  - all collections are capped to a size of **100*1024 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
 
   ### Queries
 
