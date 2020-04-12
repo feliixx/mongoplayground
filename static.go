@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	templateConfig = `[
+	templateConfigOld = `[
   {
     "collection": "collection",
     "count": 10,
@@ -23,7 +23,8 @@ const (
 	}
   }
 ]`
-	templateQuery = "db.collection.find()"
+	templateConfigNew = `[{"key":1},{"key":2}]`
+	templateQuery     = "db.collection.find()"
 )
 
 // serve static ressources (css/js/html)
@@ -64,7 +65,7 @@ func (s *server) compressStaticResources() error {
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
 	zw.Name, zw.ModTime = homeEndpoint, time.Now()
 
-	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
+	p, _ := newPage(bsonLabel, templateConfigNew, templateQuery)
 	p.MongoVersion = s.mongodbVersion
 	if err := templates.Execute(zw, p); err != nil {
 		return err

@@ -109,7 +109,7 @@
 
         function run() {
             if (formatAll(false)) {
-                
+
                 var r = new XMLHttpRequest()
                 r.open("POST", "/run")
                 r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
@@ -120,7 +120,9 @@
                         hasChangedSinceLAstRun = false
                         var response = r.responseText
                         if (response.startsWith("[")) {
-                            showResult(response)
+                            showResult(response, true)
+                        } else if (response === "no document found") {
+                            showResult(response, false)
                         } else {
                             showError(response)
                         }
@@ -140,7 +142,7 @@
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
-                    
+
                     hasChangedSinceLAstSave = false
                     var response = r.responseText
                     if (response.startsWith("http")) {
@@ -183,7 +185,7 @@
 
             var formattedConfig = formatConfig(configEditor.getValue().trim(), getCurrentMode())
             if (formattedConfig === "invalid") {
-                showError("invalid configuration:\n  must be an array of documents like '[ {_id: 1} ]'\n\n    or\n\n    must match 'db = { collection: [ {_id: 1}, ... ] }'")
+                showError("invalid configuration:\n\nmust be an array of documents like '[ {_id: 1}, {_id: 2} ]'\n\nor\n\nmust match 'db = { collection: [ {_id: 1}, {_id: 2} ] }'")
                 return false
             }
             if (hasChangedSinceLAstRun) {
@@ -192,7 +194,7 @@
 
             var formattedQuery = formatQuery(queryEditor.getValue().trim())
             if (formattedQuery === "invalid") {
-                showError("invalid query: \n  must match db.coll.find(...) or db.coll.aggregate(...)")
+                showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...)")
                 return false
             }
             if (hasChangedSinceLAstRun) {
@@ -203,12 +205,11 @@
 
         function showAceError(name, editor) {
 
-            var errors = editor.getSession().getAnnotations().filter(error => error.type === "error")
-            var msg = "Error" + (errors.length > 1 ? "s ": " ") +  "found in " + name + ":\n\n"
+            var msg = "Invalid " + name + ":\n\n"
+            editor.getSession().getAnnotations()
+                .filter(error => error.type === "error")
+                .forEach( error => msg += "Line " + error.row + " : " + error.text + "\n")
 
-            for (i = 0; i < errors.length; i++) {
-                msg += "Line " + errors[i].row + " : " + errors[i].text + "\n"
-            }
             showError(msg)
         }
 
@@ -217,59 +218,62 @@
             resultEditor.setValue(errMsg, -1)
         }
 
-        function showResult(result) {
+        function showResult(result, prettyfy) {
             document.getElementById("result").classList.remove("text_red")
-            resultEditor.setValue(indent(result), -1)
+            if (prettyfy) {
+                result = indent(result)
+            }
+            resultEditor.setValue(result, -1)
         }
 
     </script>
 </head>
 
 <body>
-    <div class="toolbar">
-        <div class="title">Mongo Playground</div>
-        <div class="controls">
-            <input type="button" value="run" onclick="run()" title="ctrl + enter">
-            <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
-            <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
-            <input id="link" type="text">
-            <label class="bold">Template:</label>
-            <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
-                <option value=0>bson single collection</option>
-                <option value=1>bson multiple collections</option>
-                <option value=2>mgodatagen</option>
-            </select>
-            <label class="bold">Mode:</label>
-            <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
-            <label for="bson">bson</label>
-            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
-                {{end}} />
-            <label for="mgodatagen">mgodatagen</label>
-            <input type="button" value="docs" onclick="showDoc(true)">
-        </div>
+<div class="toolbar">
+    <div class="title">Mongo Playground</div>
+    <div class="controls">
+        <input type="button" value="run" onclick="run()" title="ctrl + enter">
+        <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
+        <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
+        <input id="link" type="text">
+        <label class="bold">Template:</label>
+        <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
+            <option value=0>bson single collection</option>
+            <option value=1>bson multiple collections</option>
+            <option value=2>mgodatagen</option>
+        </select>
+        <label class="bold">Mode:</label>
+        <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
+        <label for="bson">bson</label>
+        <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
+        {{end}} />
+        <label for="mgodatagen">mgodatagen</label>
+        <input type="button" value="docs" onclick="showDoc(true)">
     </div>
-    <div class="content">
-        <div>
-            <h3>Configuration</h3>
-            <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
-        </div>
-        <div>
-            <h3>Query</h3>
-            <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
-        </div>
-        <div>
-            <h3>Result</h3>
-            <div id="result" class="text_red"></div>
-        </div>
-        <div id="docDiv" class="markdown-body"></div>
+</div>
+<div class="content">
+    <div>
+        <h3>Configuration</h3>
+        <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
     </div>
-    <div class="footer">
-        <p>
-            MongoDB version {{ printf "%s" .MongoVersion }} -
-            <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
-            Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
-        </p>
+    <div>
+        <h3>Query</h3>
+        <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
     </div>
+    <div>
+        <h3>Result</h3>
+        <div id="result" class="text_red"></div>
+    </div>
+    <div id="docDiv" class="markdown-body"></div>
+</div>
+<div class="footer">
+    <p>
+        MongoDB version {{ printf "%s" .MongoVersion }} -
+        <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
+        Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
+    </p>
+</div>
 </body>
 
 </html>

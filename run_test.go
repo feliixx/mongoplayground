@@ -25,7 +25,7 @@ func TestRunCreateDB(t *testing.T) {
 		},
 		{
 			name:      "non existing collection",
-			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {"db.c.find()"}},
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {"db.c.find()"}},
 			result:    `collection "c" doesn't exist`,
 			createdDB: 1,
 		},
@@ -439,7 +439,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: `empty query`,
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {templateConfig},
+				"config": {templateConfigOld},
 				"query":  {""},
 			},
 			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
@@ -469,7 +469,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: `invalid query with 3 '.'`,
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {templateConfig},
+				"config": {templateConfigOld},
 				"query":  {`[{"key.path.test":{"$match":10}}])`},
 			},
 			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
