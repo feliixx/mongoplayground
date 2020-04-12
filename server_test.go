@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
+	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
 	testServer     *server
 )
 
@@ -91,7 +91,7 @@ func TestRemoveOldDB(t *testing.T) {
 
 	defer testServer.clearDatabases(t)
 
-	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfig}, "query": {templateQuery}}
+	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
 	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
 	if want, got := templateResult, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
