@@ -11,9 +11,9 @@ import (
 
 	"github.com/feliixx/mgodatagen/datagen"
 	"github.com/feliixx/mgodatagen/datagen/generators"
-
 	"github.com/feliixx/mongoextjson"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/bsontype"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -148,7 +148,7 @@ func createContentFromMgodatagen(collections map[string][]bson.M, config []byte)
 	}
 
 	mapRef := map[int][][]byte{}
-	mapRefType := map[int]byte{}
+	mapRefType := map[int]bsontype.Type{}
 
 	for _, c := range collConfigs {
 
