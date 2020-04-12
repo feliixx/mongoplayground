@@ -114,6 +114,7 @@ List of main `<generator>` types:
 
 List of custom `<generator>` types:
 
+- [faker](#user-content-faker)
 - [position](#user-content-position)
 - [constant](#user-content-constant)
 - [autoincrement](#user-content-autoincrement)
@@ -122,40 +123,6 @@ List of custom `<generator>` types:
 - [countAggregator](#user-content-countaggregator)
 - [valueAggregator](#user-content-valueaggregator)
 - [boundAggregator](#user-content-boundaggregator)
-
-List of [Faker](https://github.com/manveru/faker) `<generator>` types:
-
-- [CellPhoneNumber](#user-content-faker)
-- [City](#user-content-faker)
-- [CityPrefix](#user-content-faker)
-- [CitySuffix](#user-content-faker)
-- [CompanyBs](#user-content-faker)
-- [CompanyCatchPhrase](#user-content-faker)
-- [CompanyName](#user-content-faker)
-- [CompanySuffix](#user-content-faker)
-- [Country](#user-content-faker)
-- [DomainName](#user-content-faker)
-- [DomainSuffix](#user-content-faker)
-- [DomainWord](#user-content-faker)
-- [Email](#user-content-faker)
-- [FirstName](#user-content-faker)
-- [FreeEmail](#user-content-faker)
-- [JobTitle](#user-content-faker)
-- [LastName](#user-content-faker)
-- [Name](#user-content-faker)
-- [NamePrefix](#user-content-faker)
-- [NameSuffix](#user-content-faker)
-- [PhoneNumber](#user-content-faker)
-- [PostCode](#user-content-faker)
-- [SafeEmail](#user-content-faker)
-- [SecondaryAddress](#user-content-faker)
-- [State](#user-content-faker)
-- [StateAbbr](#user-content-faker)
-- [StreetAddress](#user-content-faker)
-- [StreetName](#user-content-faker)
-- [StreetSuffix](#user-content-faker)
-- [URL](#user-content-faker)
-- [UserName](#user-content-faker)
 
 ### String
 
@@ -629,44 +596,120 @@ Generate 'real' data using [Faker library](https://github.com/manveru/faker)
     "type": "faker",             // required
     "nullPercentage": <int>,     // optional
     "maxDistinctValue": <int>,   // optional
-    "method": <string>           // faker method to use, for example: City / Email...
+    "method": <string>           // faker method to use,
+                                 // for example: City / Email...
 }
 ```
 
 List of faker methods:
 
 ```
-"CellPhoneNumber"
-"City"
-"CityPrefix"
-"CitySuffix"
-"CompanyBs"
-"CompanyCatchPhrase"
-"CompanyName"
-"CompanySuffix"
-"Country"
-"DomainName"
-"DomainSuffix"
-"DomainWord"
-"Email"
 "FirstName"
-"FreeEmail"
-"JobTitle"
 "LastName"
 "Name"
 "NamePrefix"
 "NameSuffix"
-"PhoneNumber"
-"PostCode"
-"SafeEmail"
-"SecondaryAddress"
-"State"
-"StateAbbr"
-"StreetAddress"
-"StreetName"
-"StreetSuffix"
+"Gender"
+"Phone"
+"PhoneFormatted"
+"Username"
+"Email"
+
+"BS"
+"BuzzWord"
+"Company"
+"CompanySuffix"
+"JobDescriptor"
+"JobLevel"
+"JobTitle"
+"Language"
+"LanguageAbbreviation"
+
+"CreditCardCvv"
+"CreditCardExp"
+"CreditCardType"
+"CurrencyLong"
+"CurrencyShort"
+
+"DomainName"
+"DomainSuffix"
+"HTTPMethod"
+"IPv4Address"
+"IPv6Address"
+"MacAddress"
+"MimeType"
+"SSN"
 "URL"
-"UserName"
+"UserAgent"
+"SafariUserAgent"
+"OperaUserAgent"
+"ChromeUserAgent"
+"Extension"
+"FirefoxUserAgent"
+
+"TimeZone"
+"TimeZoneAbv"
+"TimeZoneFull"
+"Month"
+"WeekDay"
+
+"Word"
+"Question"
+"Quote"
+"Letter"
+"ProgrammingLanguage"
+"ProgrammingLanguageBest"
+"HexColor"
+"Color"
+"HipsterWord"
+"SafeColor"
+
+"Street"
+"StreetName"
+"StreetNumber"
+"StreetPrefix"
+"StreetSuffix"
+"City"
+"State"
+"StateAbr"
+"Zip"
+"Country"
+"CountryAbr"
+
+"Emoji"
+"EmojiAlias"
+"EmojiCategory"
+"EmojiDescription"
+"EmojiTag"
+
+"HackerAbbreviation"
+"HackerAdjective"
+"HackerIngverb"
+"HackerNoun"
+"HackerPhrase"
+"HackerVerb"
+
+"CarMaker"
+"CarModel"
+"TransmissionGearType"
+"FuelType"
+"VehicleType"
+
+"Animal"
+"AnimalType"
+"Cat"
+"Dog"
+"FarmAnimal"
+"PetName"
+
+"BeerAlcohol"
+"BeerBlg"
+"BeerHop"
+"BeerIbu"
+"BeerMalt"
+"BeerName"
+"BeerStyle"
+"BeerYeast"
 ```
 
 # Limitations
@@ -677,7 +720,6 @@ This playground has several limitations:
 
  - a database can't contain more than **10 collections**
  - a collection can't contain more than **100 documents**
- - all collections are capped to a size of **1024*100 bytes**, see [mongodb capped collections](https://docs.mongodb.com/manual/core/capped-collections/) for details 
 
 ### Queries
 

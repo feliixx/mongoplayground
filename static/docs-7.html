@@ -102,6 +102,7 @@ for a collection to create.</p>
 </ul>
 <p>List of custom <code>&lt;generator&gt;</code> types:</p>
 <ul>
+<li><a href="#user-content-faker">faker</a></li>
 <li><a href="#user-content-position">position</a></li>
 <li><a href="#user-content-constant">constant</a></li>
 <li><a href="#user-content-autoincrement">autoincrement</a></li>
@@ -110,40 +111,6 @@ for a collection to create.</p>
 <li><a href="#user-content-countaggregator">countAggregator</a></li>
 <li><a href="#user-content-valueaggregator">valueAggregator</a></li>
 <li><a href="#user-content-boundaggregator">boundAggregator</a></li>
-</ul>
-<p>List of <a href="https://github.com/manveru/faker">Faker</a> <code>&lt;generator&gt;</code> types:</p>
-<ul>
-<li><a href="#user-content-faker">CellPhoneNumber</a></li>
-<li><a href="#user-content-faker">City</a></li>
-<li><a href="#user-content-faker">CityPrefix</a></li>
-<li><a href="#user-content-faker">CitySuffix</a></li>
-<li><a href="#user-content-faker">CompanyBs</a></li>
-<li><a href="#user-content-faker">CompanyCatchPhrase</a></li>
-<li><a href="#user-content-faker">CompanyName</a></li>
-<li><a href="#user-content-faker">CompanySuffix</a></li>
-<li><a href="#user-content-faker">Country</a></li>
-<li><a href="#user-content-faker">DomainName</a></li>
-<li><a href="#user-content-faker">DomainSuffix</a></li>
-<li><a href="#user-content-faker">DomainWord</a></li>
-<li><a href="#user-content-faker">Email</a></li>
-<li><a href="#user-content-faker">FirstName</a></li>
-<li><a href="#user-content-faker">FreeEmail</a></li>
-<li><a href="#user-content-faker">JobTitle</a></li>
-<li><a href="#user-content-faker">LastName</a></li>
-<li><a href="#user-content-faker">Name</a></li>
-<li><a href="#user-content-faker">NamePrefix</a></li>
-<li><a href="#user-content-faker">NameSuffix</a></li>
-<li><a href="#user-content-faker">PhoneNumber</a></li>
-<li><a href="#user-content-faker">PostCode</a></li>
-<li><a href="#user-content-faker">SafeEmail</a></li>
-<li><a href="#user-content-faker">SecondaryAddress</a></li>
-<li><a href="#user-content-faker">State</a></li>
-<li><a href="#user-content-faker">StateAbbr</a></li>
-<li><a href="#user-content-faker">StreetAddress</a></li>
-<li><a href="#user-content-faker">StreetName</a></li>
-<li><a href="#user-content-faker">StreetSuffix</a></li>
-<li><a href="#user-content-faker">URL</a></li>
-<li><a href="#user-content-faker">UserName</a></li>
 </ul>
 <h3>
 <a id="user-content-string" class="anchor" href="#string" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>String</h3>
@@ -165,7 +132,7 @@ There is <code>64^x</code> possible unique string for strings of length <code>x<
 be inferior or equal to the number of documents you want to generate.
 For example, if you want unique strings of length 3, there is <code>64 * 64 * 64 = 262144</code> possible
 strings</p>
-<p>They will look like</p>
+<p>They will look likecd ~/go/s</p>
 <pre><code>"aaa",
 "aab",
 "aac",
@@ -331,6 +298,8 @@ array have to be of the same type</p>
       <span class="pl-k">&lt;</span>object<span class="pl-k">&gt;</span>
       <span class="pl-k">...</span>
     ]
+    <span class="pl-s"><span class="pl-pds">"</span>randomOrder<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>bool<span class="pl-k">&gt;</span>     <span class="pl-c"><span class="pl-c">//</span> optional. If set to true, objects will be picked </span>
+                              <span class="pl-c"><span class="pl-c">//</span> from the array in random order.</span>
 }</pre></div>
 <h3>
 <a id="user-content-uuid" class="anchor" href="#uuid" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>UUID</h3>
@@ -479,40 +448,116 @@ the document in the query, prefix it with "$$"</p>
     <span class="pl-s"><span class="pl-pds">"</span>type<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>faker<span class="pl-pds">"</span></span>,             <span class="pl-c"><span class="pl-c">//</span> required</span>
     <span class="pl-s"><span class="pl-pds">"</span>nullPercentage<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,     <span class="pl-c"><span class="pl-c">//</span> optional</span>
     <span class="pl-s"><span class="pl-pds">"</span>maxDistinctValue<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,   <span class="pl-c"><span class="pl-c">//</span> optional</span>
-    <span class="pl-s"><span class="pl-pds">"</span>method<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>           <span class="pl-c"><span class="pl-c">//</span> faker method to use, for example: City / Email...</span>
+    <span class="pl-s"><span class="pl-pds">"</span>method<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>           <span class="pl-c"><span class="pl-c">//</span> faker method to use,</span>
+                                 <span class="pl-c"><span class="pl-c">//</span> for example: City / Email...</span>
 }</pre></div>
 <p>List of faker methods:</p>
-<pre><code>"CellPhoneNumber"
-"City"
-"CityPrefix"
-"CitySuffix"
-"CompanyBs"
-"CompanyCatchPhrase"
-"CompanyName"
-"CompanySuffix"
-"Country"
-"DomainName"
-"DomainSuffix"
-"DomainWord"
-"Email"
-"FirstName"
-"FreeEmail"
-"JobTitle"
+<pre><code>"FirstName"
 "LastName"
 "Name"
 "NamePrefix"
 "NameSuffix"
-"PhoneNumber"
-"PostCode"
-"SafeEmail"
-"SecondaryAddress"
-"State"
-"StateAbbr"
-"StreetAddress"
-"StreetName"
-"StreetSuffix"
+"Gender"
+"Phone"
+"PhoneFormatted"
+"Username"
+"Email"
+
+"BS"
+"BuzzWord"
+"Company"
+"CompanySuffix"
+"JobDescriptor"
+"JobLevel"
+"JobTitle"
+"Language"
+"LanguageAbbreviation"
+
+"CreditCardCvv"
+"CreditCardExp"
+"CreditCardType"
+"CurrencyLong"
+"CurrencyShort"
+
+"DomainName"
+"DomainSuffix"
+"HTTPMethod"
+"IPv4Address"
+"IPv6Address"
+"MacAddress"
+"MimeType"
+"SSN"
 "URL"
-"UserName"
+"UserAgent"
+"SafariUserAgent"
+"OperaUserAgent"
+"ChromeUserAgent"
+"Extension"
+"FirefoxUserAgent"
+
+"TimeZone"
+"TimeZoneAbv"
+"TimeZoneFull"
+"Month"
+"WeekDay"
+
+"Word"
+"Question"
+"Quote"
+"Letter"
+"ProgrammingLanguage"
+"ProgrammingLanguageBest"
+"HexColor"
+"Color"
+"HipsterWord"
+"SafeColor"
+
+"Street"
+"StreetName"
+"StreetNumber"
+"StreetPrefix"
+"StreetSuffix"
+"City"
+"State"
+"StateAbr"
+"Zip"
+"Country"
+"CountryAbr"
+
+"Emoji"
+"EmojiAlias"
+"EmojiCategory"
+"EmojiDescription"
+"EmojiTag"
+
+"HackerAbbreviation"
+"HackerAdjective"
+"HackerIngverb"
+"HackerNoun"
+"HackerPhrase"
+"HackerVerb"
+
+"CarMaker"
+"CarModel"
+"TransmissionGearType"
+"FuelType"
+"VehicleType"
+
+"Animal"
+"AnimalType"
+"Cat"
+"Dog"
+"FarmAnimal"
+"PetName"
+
+"BeerAlcohol"
+"BeerBlg"
+"BeerHop"
+"BeerIbu"
+"BeerMalt"
+"BeerName"
+"BeerStyle"
+"BeerYeast"
 </code></pre>
 <h1>
 <a id="user-content-limitations" class="anchor" href="#limitations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Limitations</h1>
@@ -524,7 +569,6 @@ the document in the query, prefix it with "$$"</p>
 </li>
 <li>a collection can't contain more than <strong>100 documents</strong>
 </li>
-<li>all collections are capped to a size of <strong>1024*100 bytes</strong>, see <a href="https://docs.mongodb.com/manual/core/capped-collections/" rel="nofollow">mongodb capped collections</a> for details</li>
 </ul>
 <h3>
 <a id="user-content-queries" class="anchor" href="#queries" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Queries</h3>
@@ -542,9 +586,6 @@ the document in the query, prefix it with "$$"</p>
     <span class="pl-s"><span class="pl-pds">"</span>$regex<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>pattern<span class="pl-pds">"</span></span>
   }
 })</pre></div>
-<h3>
-<a id="user-content-number-decimal" class="anchor" href="#number-decimal" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Number decimal</h3>
-<p>Currently, <code>NumberDecimal()</code> notation is not supported in bson mode.</p>
 <h2>
 <a id="user-content-report-an-issue-and-contribute" class="anchor" href="#report-an-issue-and-contribute" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Report an issue and contribute</h2>
 <p>You can report issues here: <a href="https://github.com/feliixx/mongoplayground/issues">mongoplayground/issues</a></p>
