@@ -20,21 +20,20 @@ jobs:
 
     - name: Vet and lint code
       run: |
-        go get -u -v golang.org/x/lint/golint 
-        /home/runner/go/bin/golint ./... 
+        go get -u -v golang.org/x/lint/golint
+        /home/runner/go/bin/golint -set_exit_status ./...
         go vet ./...
 
-    - name: Download MongoDB
+    - name: Download MongoDB and setup standalone db
       run: |
         wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
         tar xzvf mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
+        echo "::add-path::$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin"
         mkdir $PWD/db
-
-    - name: Start mongod server and run test
-      run: |
-        export PATH=$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin:$PATH
         mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
-        scripts/test.sh 
+
+    - name: Run test
+      run: scripts/test.sh
     
     - name: Export coverage result 
       run: bash <(curl -s https://codecov.io/bash)
