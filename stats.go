@@ -1,19 +1,16 @@
 package main
 
 import (
-	"time"
-
 	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
 var (
-	requestDurations = prometheus.NewSummaryVec(
-		prometheus.SummaryOpts{
-			Name:       "request_durations_seconds",
-			Help:       "Request latency distributions",
-			MaxAge:     1 * time.Hour, // compute quantiles on last hour
-			Objectives: map[float64]float64{0.5: 0.05, 0.75: 0.01, 0.95: 0.001},
+	requestDurations = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "request_durations_seconds",
+			Help:    "Histogram of latencies for HTTP request",
+			Buckets: []float64{0.001, 0.01, 0.1, 0.25, 0.5, 1, 2.5, 10, 60},
 		},
 		[]string{"handler"},
 	)
