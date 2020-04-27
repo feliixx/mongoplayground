@@ -215,6 +215,7 @@
 
         function showError(errMsg) {
             document.getElementById("result").classList.add("text_red")
+            resultEditor.setOption("wrap", true)
             resultEditor.setValue(errMsg, -1)
         }
 
@@ -223,6 +224,7 @@
             if (prettyfy) {
                 result = indent(result)
             }
+            resultEditor.setOption("wrap", false)
             resultEditor.setValue(result, -1)
         }
 
