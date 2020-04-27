@@ -24,6 +24,8 @@ const (
 	maxCollNb = 10
 	// max number of documents in a collection
 	maxDoc = 100
+	// max time a query can run before being aborted by the server
+	maxQueryTime = 1 * time.Minute
 	// errInvalidConfig error message when the configuration doesn't match expected format
 	errInvalidConfig = `expecting an array of documents like 
 
@@ -327,9 +329,9 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 		for len(stages) < 2 {
 			stages = append(stages, bson.M{})
 		}
-		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]))
+		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]).SetMaxTime(maxQueryTime))
 	case "aggregate":
-		cursor, err = collection.Aggregate(context.Background(), stages)
+		cursor, err = collection.Aggregate(context.Background(), stages, options.Aggregate().SetMaxTime(maxQueryTime))
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
