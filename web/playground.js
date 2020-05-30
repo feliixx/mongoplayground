@@ -1,12 +1,16 @@
 function compact(src) {
-    return format(src, false)
+    return format(src, false, true)
+}
+
+function compactAndRemoveComment(src) {
+    return format(src, false, false)
 }
 
 function indent(src) {
-    return format(src, true)
+    return format(src, true, true)
 }
 
-function format(src, indent) {
+function format(src, indent, keepComment) {
     var result = ""
     var needIndent = false
     var inParenthesis = false
@@ -103,16 +107,121 @@ function format(src, indent) {
                 }
                 break
             case "/":
-                result += c
-                i++
-                c = src.charAt(i)
-                while (c !== "/" && i < src.length) {
+
+                if (src.length >= i + 1 && src.charAt(i + 1) == "/") {
+
+                    // single ligne comment
+                    if (!keepComment) {
+                        i += 2
+                        while (c != "\n" && i < src.length) {
+                            i++
+                            c = src.charAt(i)
+                        }
+                        continue
+                    }
+                    result += "/**"
+                    i+=2
+                    c = src.charAt(i)
+
+                    while (c != "\n" && i < src.length) {
+                        result += c
+                        i++
+                        c = src.charAt(i)
+                    }
+                    result += "*/"
+                    if (indent) {
+                        result += newline(depth)
+                    }
+                } else if (src.length >= i + 2 && src.charAt(i + 1) == "*" && src.charAt(i + 2) == "*") {
+                    // multi ligne comment
+
+                    start = i + 3
+                    i = src.indexOf("*/", start)
+
+                    if (!keepComment) {
+                        i+=2
+                        c = src.charAt(i)
+                        continue
+                    }
+
+                    if (i == -1) {
+                        i = start
+                        continue
+                    }
+                    comment = src.substring(start, i)
+
+                    result += "/**"
+
+                    if (!indent) {
+                        result += comment.replace(/[\s]+\*/gm, "*").trimRight()
+                    } else {
+                        comment = comment.replace(/[\s]+\*/gm, "*").trimRight()
+                        comment = comment.replace(/\*/gm, newline(depth) + "*")
+
+                        if (comment.indexOf("*") > 0) {
+                            comment += newline(depth)
+                        }
+                        result += comment
+                    }
+
+                    result += "*/"
+
+                    i++
+                    c = src.charAt(i)
+                    if (indent) {
+                        result += newline(depth)
+                    }
+                } else if (src.length >= i + 1 && src.charAt(i + 1) == "*") {
+
+                    start = i + 2
+                    i = src.indexOf("*/", start)
+
+                    if (!keepComment) {
+                        i+=2
+                        c = src.charAt(i)
+                        continue
+                    }
+                    if (i == -1) {
+                        i = start
+                        continue
+                    }
+                    comment = src.substring(start, i)
+
+                    result += "/**"
+
+                    if (!indent) {
+                        result += comment.replace(/[\s]*\n[\s]+/gm, "* ").trimRight()
+                    } else {
+                        comment = comment.replace(/[\s]*\n[\s]+/gm, "* ").trimRight()
+                        comment = comment.replace(/\*/gm, newline(depth) + "*")
+
+                        if (comment.indexOf("*") > 0) {
+                            comment += newline(depth)
+                        }
+                        result += comment
+                    }
+
+                    result += "*/"
+
+                    i++
+                    c = src.charAt(i)
+                    if (indent) {
+                        result += newline(depth)
+                    }
+
+
+                } else {
                     result += c
                     i++
                     c = src.charAt(i)
-                }
-                if (i != src.length) {
-                    result += "/"
+                    while (c !== "/" && i < src.length) {
+                        result += c
+                        i++
+                        c = src.charAt(i)
+                    }
+                    if (i != src.length) {
+                        result += "/"
+                    }
                 }
                 break
             default:
@@ -132,9 +241,11 @@ function newline(depth) {
 }
 
 function formatConfig(content, mode) {
-    if (!content.startsWith("[") || !content.endsWith("]")) {
+
+    var contentWithoutComment = compactAndRemoveComment(content)
+    if (!contentWithoutComment.startsWith("[") || !contentWithoutComment.endsWith("]")) {
         if (mode === "bson") {
-            var correctConfigMultipleCollections = /^\s*db\s*=\s*\{[\s\S]*\}$/.test(content)
+            var correctConfigMultipleCollections = /^\s*db\s*=\s*\{[\s\S]*\}$/.test(contentWithoutComment)
             if (!correctConfigMultipleCollections) {
                 return "invalid"
             }
@@ -150,13 +261,15 @@ function formatQuery(content) {
     if (content.endsWith(";")) {
         result = content.slice(0, -1)
     }
-    var correctQuery = /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/.test(result)
+    var queryWithoutComment = compactAndRemoveComment(result)
+
+    var correctQuery = /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/.test(queryWithoutComment)
     if (!correctQuery) {
         return "invalid"
     }
 
-    var start = result.indexOf("(") +1
-    query = result.substring(start, result.length-1)
+    var start = queryWithoutComment.indexOf("(") + 1
+    query = queryWithoutComment.substring(start, queryWithoutComment.length - 1)
     if (query !== "" && !query.endsWith("}") && !query.endsWith("]")) {
         return "invalid"
     }

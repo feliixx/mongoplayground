@@ -128,7 +128,7 @@
                         }
                     }
                 }
-                r.send(encodePlayground())
+                r.send(encodePlayground(false))
             }
         }
 
@@ -152,17 +152,23 @@
                     }
                 }
             }
-            r.send(encodePlayground())
+            r.send(encodePlayground(true))
         }
 
         function getCurrentMode() {
             return document.querySelector('input[name="mode"]:checked').value
         }
 
-        function encodePlayground() {
-            return "mode=" + getCurrentMode()
-                + "&config=" + encodeURIComponent(compact(configEditor.getValue()))
+        function encodePlayground(keepComment) {
+            var result = "mode=" + getCurrentMode()
+            if (keepComment) {
+                result += "&config=" + encodeURIComponent(compact(configEditor.getValue()))
                 + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
+            } else {
+                result += "&config=" + encodeURIComponent(compactAndRemoveComment(configEditor.getValue()))
+                + "&query=" + encodeURIComponent(compactAndRemoveComment(queryEditor.getValue()))
+            }
+            return result
         }
 
         function formatAll(clearResult) {

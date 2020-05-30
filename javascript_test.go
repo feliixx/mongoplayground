@@ -185,6 +185,116 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
   ]
 }`,
 		},
+		{
+			name: "single line comment",
+			input: `
+			db  =   {
+				// first coll to create
+				coll1: [
+					{k:NumberInt(1234)}
+			   ]
+		   }`,
+			compact: `db={/** first coll to create*/coll1:[{k:NumberInt(1234)}]}`,
+			indent: `db={
+  /** first coll to create*/
+  coll1: [
+    {
+      k: NumberInt(1234)
+    }
+  ]
+}`,
+		},
+		{
+			name: "mutli line comment",
+			input: `
+			db  =   {
+				/** the coll one
+				*
+				* that end here
+				*/
+				coll1: [
+					{k:NumberInt(1234)}
+			   ]
+		   }`,
+			compact: `db={/** the coll one** that end here*/coll1:[{k:NumberInt(1234)}]}`,
+			indent: `db={
+  /** the coll one
+  *
+  * that end here
+  */
+  coll1: [
+    {
+      k: NumberInt(1234)
+    }
+  ]
+}`,
+		},
+		{
+			name:    "unfinished comment",
+			input:   `[{"k":/*}]`,
+			compact: `[{"k":}]`,
+			indent: `[
+  {
+    "k": 
+  }
+]`,
+		},
+		{
+			name: "mixed single and multiple line",
+			input: `
+			db.collection.find({
+				// the key
+				k: 1
+			})/**   comment
+			*
+			*/`,
+			compact: `db.collection.find({/** the key*/k:1})/**   comment**/`,
+			indent: `db.collection.find({
+  /** the key*/
+  k: 1
+})/**   comment
+*
+*/
+`,
+		},
+		{
+			name: "multiline comment single star",
+			input: `
+			db.collection.find({
+				/*
+				the key
+				*/
+				k: 1
+			})`,
+			compact: `db.collection.find({/*** the key**/k:1})`,
+			indent: `db.collection.find({
+  /**
+  * the key
+  *
+  */
+  k: 1
+})`,
+		},
+		{
+			name: "multiline comment single star",
+			input: `
+			db.collection.find({
+				/*some comment
+	   on multiple line 
+	                   with weird indentation 
+				*/
+				k: 1
+			})`,
+			compact: `db.collection.find({/**some comment* on multiple line* with weird indentation**/k:1})`,
+			indent: `db.collection.find({
+  /**some comment
+  * on multiple line
+  * with weird indentation
+  *
+  */
+  k: 1
+})`,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -251,6 +361,112 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 	runJsTest(t, buffer, "tests/testIndent.js")
 }
 
+func TestCompactAndRemoveComment(t *testing.T) {
+
+	t.Parallel()
+
+	removeCommentTests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name: "single line",
+			input: `[{
+				// some comment 
+	
+				// and other
+				"key": 1
+			}]`,
+			expected: `[{"key":1}]`,
+		},
+		{
+			name: "multi line",
+			input: `[{
+				"key": 1
+			/**   comment 
+			*
+			*/}]`,
+			expected: `[{"key":1}]`,
+		},
+		{
+			name: "start of doc",
+			input: `
+			/**   comment 
+			*
+			*/db.collection.find({})`,
+			expected: `db.collection.find({})`,
+		},
+		{
+			name: "end of query",
+			input: `
+			db.collection.find({})/**   comment 
+			*
+			*/`,
+			expected: `db.collection.find({})`,
+		},
+		{
+			name: "mixed single and multiple line",
+			input: `
+			db.collection.find({
+				// the key
+				k: 1
+			})/**   comment 
+			*
+			*/`,
+			expected: `db.collection.find({k:1})`,
+		},
+		{
+			name: "multiple line single star",
+			input: `
+			db.collection.find({
+				/*
+				 the key */
+
+				k: 1
+			})/*   comment 
+			
+			*/`,
+			expected: `db.collection.find({k:1})`,
+		},
+	}
+
+	buffer := loadPlaygroundJs(t)
+
+	testFormat := `
+	{
+		"name": %s,
+		"input": %s, 
+		"expected": %s
+	}
+	`
+
+	buffer.Write([]byte("var tests = ["))
+	for _, tt := range removeCommentTests {
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.expected))
+		buffer.WriteByte(',')
+	}
+	buffer.Write([]byte(`
+	]
+	
+	`))
+
+	buffer.Write([]byte(`
+	for (let i in tests) {
+		let tt = tests[i]
+
+		let want = tt.expected
+		let got = compactAndRemoveComment(tt.input) 
+		if (want !== got) {
+			print("test " + tt.name + " compact and remove comment failed, expected: \n" + want +  "\nbut got: \n" + got)
+		}
+	}	
+	`))
+
+	runJsTest(t, buffer, "tests/testCompactAndRemoveComment.js")
+
+}
+
 func TestFormatConfig(t *testing.T) {
 
 	t.Parallel()
@@ -277,6 +493,18 @@ func TestFormatConfig(t *testing.T) {
 			name:                 `multiple collections bson mode`,
 			input:                `db={"collection1":[{"k":1}]}`,
 			formattedModeBSON:    `db={"collection1":[{"k":1}]}`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `multiple collections bson mode starting with comment`,
+			input:                `/** all db*/db={"collection1":[{"k":1}]}`,
+			formattedModeBSON:    `/** all db*/db={"collection1":[{"k":1}]}`,
+			formattedModeDatagen: `invalid`,
+		},
+		{
+			name:                 `multiple collections bson mode ending with comment`,
+			input:                `db={"collection1":[{"k":1}]}/** end*/`,
+			formattedModeBSON:    `db={"collection1":[{"k":1}]}/** end*/`,
 			formattedModeDatagen: `invalid`,
 		},
 	}
@@ -327,16 +555,14 @@ func TestFormatQuery(t *testing.T) {
 	t.Parallel()
 
 	formatTests := []struct {
-		name                 string
-		input                string
-		formattedModeBSON    string
-		formattedModeDatagen string
+		name     string
+		input    string
+		expected string
 	}{
 		{
-			name:                 `trailing comma`,
-			input:                `db.collection.find();`,
-			formattedModeBSON:    `db.collection.find()`,
-			formattedModeDatagen: `db.collection.find()`,
+			name:     `trailing comma`,
+			input:    `db.collection.find();`,
+			expected: `db.collection.find()`,
 		},
 		{
 			name: `correct aggregation query`,
@@ -350,17 +576,7 @@ func TestFormatQuery(t *testing.T) {
 					}
 				}
 			])`,
-			formattedModeBSON: `db.collection.aggregate([
-				{
-					"$match": {
-						_id: ObjectId("5a934e000102030405000000"), 
-						k: {
-							"$gt": 0.2323
-						}
-					}
-				}
-			])`,
-			formattedModeDatagen: `db.collection.aggregate([
+			expected: `db.collection.aggregate([
 				{
 					"$match": {
 						_id: ObjectId("5a934e000102030405000000"), 
@@ -372,58 +588,74 @@ func TestFormatQuery(t *testing.T) {
 			])`,
 		},
 		{
-			name:                 `wrong format`,
-			input:                `dbcollection.find()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `wrong format`,
+			input:    `dbcollection.find()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `invalid function`,
-			input:                `db.collection.findOne()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `invalid function`,
+			input:    `db.collection.findOne()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `wrong format`,
-			input:                `dbcollection.find()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `wrong format`,
+			input:    `dbcollection.find()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `wrong format`,
-			input:                `db["collection"].find()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `wrong format`,
+			input:    `db["collection"].find()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `wrong format`,
-			input:                `db.getCollection("coll").find()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `wrong format`,
+			input:    `db.getCollection("coll").find()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `dot in query`,
-			input:                `db.collection.find({k: 1.123})`,
-			formattedModeBSON:    `db.collection.find({k: 1.123})`,
-			formattedModeDatagen: `db.collection.find({k: 1.123})`,
+			name:     `dot in query`,
+			input:    `db.collection.find({k: 1.123})`,
+			expected: `db.collection.find({k: 1.123})`,
 		},
 		{
-			name:                 `chained empty method`,
-			input:                `db.collection.find().toArray()`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `chained empty method`,
+			input:    `db.collection.find().toArray()`,
+			expected: `invalid`,
 		},
 		{
-			name:                 `single letter collection name`,
-			input:                `db.k.find()`,
-			formattedModeBSON:    `db.k.find()`,
-			formattedModeDatagen: `db.k.find()`,
+			name:     `single letter collection name`,
+			input:    `db.k.find()`,
+			expected: `db.k.find()`,
 		},
 		{
-			name:                 `chained non-empty method`,
-			input:                `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:     `chained non-empty method`,
+			input:    `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
+			expected: `invalid`,
+		},
+		{
+			name: `query starting with single line comment`,
+			input: `// the query
+// that we want to debug
+db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}])`,
+			expected: `// the query
+// that we want to debug
+db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}])`,
+		},
+		{
+			name:     `query starting with multi line comment`,
+			input:    `/**  aggregation */db.collection.aggregate([{"$match": { "_id": 1}}])`,
+			expected: `/**  aggregation */db.collection.aggregate([{"$match": { "_id": 1}}])`,
+		},
+		{
+			name: `query ending with multi line comment`,
+			input: `db.collection.aggregate([{"$match": { "_id": 1}}])/** tests
+*
+* ok
+*/`,
+			expected: `db.collection.aggregate([{"$match": { "_id": 1}}])/** tests
+*
+* ok
+*/`,
 		},
 	}
 
@@ -433,14 +665,13 @@ func TestFormatQuery(t *testing.T) {
 	{
 		"name": %s,
 		"input": %s, 
-		"formattedModeBSON": %s, 
-		"formattedModeDatagen": %s 
+		"expected": %s, 
 	}
 	`
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeBSON), strconv.Quote(tt.formattedModeDatagen))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.expected))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -452,14 +683,10 @@ func TestFormatQuery(t *testing.T) {
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let got = formatQuery(tt.input, "bson") 
-		if (got !== tt.formattedModeBSON) {
-			print("test " + tt.name + " format mode bson failed, expected: \n" + tt.formattedModeBSON +  "\nbut got: \n" + got)
-		}
-
-		got = formatQuery(tt.input, "mgodatagen") 
-		if (got !== tt.formattedModeDatagen) {
-			print("test " + tt.name + " format mode mgodatagen failed, expected: \n" + tt.formattedModeDatagen +  "\nbut got: \n" + got)
+		let want = tt.expected
+		let got = formatQuery(tt.input) 
+		if (want != got) {
+			print("test " + tt.name + " format mode bson failed, expected: \n" + want +  "\nbut got: \n" + got)
 		}
 	}	
 	`))
