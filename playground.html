@@ -5,14 +5,20 @@
     <title>Mongo playground</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
-    <link href="/static/playground-min-7.css" rel="stylesheet" type="text/css">
-    <script src="/static/playground-min-7.js" type="text/javascript"></script>
+    <link href="/static/playground-min-8.css" rel="stylesheet" type="text/css">
+    <script src="/static/playground-min-8.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.7/ace.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.7/mode-javascript.js" type="text/javascript"></script>
     <script type="text/javascript">
+
         var configEditor, queryEditor, resultEditor
-        var hasChangedSinceLAstRun = false
-        var hasChangedSinceLAstSave = false
+
+        var hasChangedSinceLastRun = false
+        var hasChangedSinceLastSave = false
+
+        var minWidth = 60
+        var isConfigHandlerDragging = false
+        var isQueryHandlerDragging = false
 
         window.onload = function () {
             var configDiv = document.getElementById("config")
@@ -42,6 +48,7 @@
 
             loadDocs()
             addKeyDownListener()
+            addDivResizeListener()
         }
 
         function loadDocs() {
@@ -69,12 +76,42 @@
             })
         }
 
+        function addDivResizeListener() {
+
+            document.addEventListener('mousedown', function (e) {
+                if (e.target.id === "configResizeHandler") {
+                    isConfigHandlerDragging = true
+                }
+                if (e.target.id === "queryResizeHandler") {
+                    isQueryHandlerDragging = true
+                }
+            })
+
+            document.addEventListener('mouseup', function (e) {
+                isConfigHandlerDragging = false
+                isQueryHandlerDragging = false
+            })
+
+            document.addEventListener('mousemove', function (e) {
+                if (isConfigHandlerDragging) {
+                    var box = document.getElementById("configDiv")
+                } else if (isQueryHandlerDragging) {
+                    var box = document.getElementById("queryDiv")
+                } else {
+                    return false
+                }
+                var pointerRelativeXpos = e.clientX - box.offsetLeft
+                box.style.width = (Math.max(minWidth, pointerRelativeXpos + 2 )) + 'px'
+                box.style.flexGrow = 0
+            })
+        }
+
         function changeFunc() {
-            if (hasChangedSinceLAstRun && hasChangedSinceLAstSave) {
+            if (hasChangedSinceLastRun && hasChangedSinceLastSave) {
                 return
             }
-            hasChangedSinceLAstRun = true
-            hasChangedSinceLAstSave = true
+            hasChangedSinceLastRun = true
+            hasChangedSinceLastSave = true
             redirect("/", false)
         }
 
@@ -100,9 +137,9 @@
                 doShow = false
             }
             document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
-            document.getElementById("query").parentNode.style.display = doShow ? "none" : "inline"
-            document.getElementById("result").parentNode.style.display = doShow ? "none" : "inline"
-            if (!doShow && hasChangedSinceLAstSave) {
+            document.getElementById("queryDiv").style.display = doShow ? "none" : "inline"
+            document.getElementById("resultDiv").style.display = doShow ? "none" : "inline"
+            if (!doShow && hasChangedSinceLastSave) {
                 redirect("/", false)
             }
         }
@@ -117,7 +154,7 @@
                     if (r.readyState !== 4) { return }
                     if (r.status === 200) {
 
-                        hasChangedSinceLAstRun = false
+                        hasChangedSinceLastRun = false
                         var response = r.responseText
                         if (response.startsWith("[")) {
                             showResult(response, true)
@@ -134,7 +171,7 @@
 
         function save() {
 
-            formatAll(hasChangedSinceLAstRun)
+            formatAll(hasChangedSinceLastRun)
 
             var r = new XMLHttpRequest()
             r.open("POST", "/save")
@@ -143,7 +180,7 @@
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
 
-                    hasChangedSinceLAstSave = false
+                    hasChangedSinceLastSave = false
                     var response = r.responseText
                     if (response.startsWith("http")) {
                         redirect(response, true)
@@ -163,10 +200,10 @@
             var result = "mode=" + getCurrentMode()
             if (keepComment) {
                 result += "&config=" + encodeURIComponent(compact(configEditor.getValue()))
-                + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
+                    + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
             } else {
                 result += "&config=" + encodeURIComponent(compactAndRemoveComment(configEditor.getValue()))
-                + "&query=" + encodeURIComponent(compactAndRemoveComment(queryEditor.getValue()))
+                    + "&query=" + encodeURIComponent(compactAndRemoveComment(queryEditor.getValue()))
             }
             return result
         }
@@ -194,7 +231,7 @@
                 showError("invalid configuration:\n\nmust be an array of documents like '[ {_id: 1}, {_id: 2} ]'\n\nor\n\nmust match 'db = { collection: [ {_id: 1}, {_id: 2} ] }'")
                 return false
             }
-            if (hasChangedSinceLAstRun) {
+            if (hasChangedSinceLastRun) {
                 configEditor.setValue(indent(formattedConfig), -1)
             }
 
@@ -203,7 +240,7 @@
                 showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...)")
                 return false
             }
-            if (hasChangedSinceLAstRun) {
+            if (hasChangedSinceLastRun) {
                 queryEditor.setValue(indent(formattedQuery), -1)
             }
             return true
@@ -214,7 +251,7 @@
             var msg = "Invalid " + name + ":\n\n"
             editor.getSession().getAnnotations()
                 .filter(error => error.type === "error")
-                .forEach( error => msg += "Line " + error.row + " : " + error.text + "\n")
+                .forEach(error => msg += "Line " + error.row + " : " + error.text + "\n")
 
             showError(msg)
         }
@@ -238,50 +275,56 @@
 </head>
 
 <body>
-<div class="toolbar">
-    <div class="title">Mongo Playground</div>
-    <div class="controls">
-        <input type="button" value="run" onclick="run()" title="ctrl + enter">
-        <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
-        <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
-        <input id="link" type="text">
-        <label class="bold">Template:</label>
-        <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
-            <option value=0>bson single collection</option>
-            <option value=1>bson multiple collections</option>
-            <option value=2>mgodatagen</option>
-        </select>
-        <label class="bold">Mode:</label>
-        <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
-        <label for="bson">bson</label>
-        <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
-        {{end}} />
-        <label for="mgodatagen">mgodatagen</label>
-        <input type="button" value="docs" onclick="showDoc(true)">
+    <div class="toolbar">
+        <div class="title">Mongo Playground</div>
+        <div class="controls">
+            <input type="button" value="run" onclick="run()" title="ctrl + enter">
+            <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
+            <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
+            <input id="link" type="text">
+            <label class="bold">Template:</label>
+            <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
+                <option value=0>bson single collection</option>
+                <option value=1>bson multiple collections</option>
+                <option value=2>mgodatagen</option>
+            </select>
+            <label class="bold">Mode:</label>
+            <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
+            <label for="bson">bson</label>
+            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
+                {{end}} />
+            <label for="mgodatagen">mgodatagen</label>
+            <input type="button" value="docs" onclick="showDoc(true)">
+        </div>
     </div>
-</div>
-<div class="content">
-    <div>
-        <h3>Configuration</h3>
-        <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
+    <div class="content">
+        <div id="configDiv">
+            <h3>Configuration</h3>
+            <div class="resizable_editor">
+                <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
+                <div id="configResizeHandler" class="handler"></div>
+            </div>
+        </div>
+        <div id="queryDiv">
+            <h3>Query</h3>
+            <div class="resizable_editor">
+                <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
+                <div id="queryResizeHandler" class="handler"></div>
+            </div>
+        </div>
+        <div id="resultDiv">
+            <h3>Result</h3>
+            <div id="result" class="text_red"></div>
+        </div>
+        <div id="docDiv" class="markdown-body"></div>
     </div>
-    <div>
-        <h3>Query</h3>
-        <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
+    <div class="footer">
+        <p>
+            MongoDB version {{ printf "%s" .MongoVersion }} -
+            <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
+            Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
+        </p>
     </div>
-    <div>
-        <h3>Result</h3>
-        <div id="result" class="text_red"></div>
-    </div>
-    <div id="docDiv" class="markdown-body"></div>
-</div>
-<div class="footer">
-    <p>
-        MongoDB version {{ printf "%s" .MongoVersion }} -
-        <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
-        Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
-    </p>
-</div>
 </body>
 
 </html>
