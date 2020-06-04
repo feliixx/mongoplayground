@@ -149,7 +149,7 @@ be inferior or equal to the number of documents you want to generate.
 For example, if you want unique strings of length 3, there is `64 * 64 * 64 = 262144` possible
 strings
 
-They will look likecd ~/go/s
+They will look like
 
 ```
 "aaa",
