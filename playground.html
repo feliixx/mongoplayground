@@ -42,6 +42,7 @@
                 "highlightActiveLine": false,
                 "wrap": true
             })
+            resultEditor.renderer.$cursorLayer.element.style.display = "none"
 
             configEditor.getSession().on('change', changeFunc)
             queryEditor.getSession().on('change', changeFunc)
@@ -128,7 +129,7 @@
         ]
 
         function setTemplate(index) {
-            configEditor.setValue(indent(templates[index]), -1)
+            configEditor.setValue(indent(templates[index]), 1)
         }
 
         function showDoc(doShow) {
