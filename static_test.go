@@ -36,6 +36,12 @@ func TestStaticHandlers(t *testing.T) {
 			responseCode: 200,
 		},
 		{
+			name:         "favicon",
+			url:          "/static/favicon.png",
+			contentType:  "image/png",
+			responseCode: 200,
+		},
+		{
 			name:         "non existing file",
 			url:          "/static/unknown.txt",
 			contentType:  "",

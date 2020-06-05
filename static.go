@@ -54,6 +54,9 @@ func contentTypeFromName(name string) string {
 	if strings.HasSuffix(name, ".js") {
 		return "application/javascript; charset=utf-8"
 	}
+	if strings.HasSuffix(name, ".png") {
+		return "image/png"
+	}
 	return "text/html; charset=utf-8"
 }
 
