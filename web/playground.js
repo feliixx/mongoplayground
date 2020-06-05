@@ -1,3 +1,7 @@
+function indent(src) {
+    return format(src, true, true)
+}
+
 function compact(src) {
     return format(src, false, true)
 }
@@ -6,23 +10,24 @@ function compactAndRemoveComment(src) {
     return format(src, false, false)
 }
 
-function indent(src) {
-    return format(src, true, true)
-}
-
 function format(src, indent, keepComment) {
+
+    if (src.endsWith(";")) {
+        src = src.slice(0, -1)
+    }
+
     var result = ""
     var needIndent = false
     var inParenthesis = false
     var depth = 0
     var i = 0
-    var c = src.charAt(i)
+
     if (src.startsWith("db.")) {
         i = src.indexOf("(") + 1
         result += src.substring(0, i)
     }
     while (i < src.length) {
-        c = src.charAt(i)
+        var c = src.charAt(i)
         if (c === " " || c === "\n" || c === "\t") {
             i++
             continue
@@ -108,9 +113,9 @@ function format(src, indent, keepComment) {
                 break
             case "/":
 
+                // single ligne comment, starting with '//' 
                 if (src.length >= i + 1 && src.charAt(i + 1) == "/") {
 
-                    // single ligne comment
                     if (!keepComment) {
                         i += 2
                         while (c != "\n" && i < src.length) {
@@ -119,6 +124,8 @@ function format(src, indent, keepComment) {
                         }
                         continue
                     }
+
+                    // rewrite every line with /**...*/ 
                     result += "/**"
                     i+=2
                     c = src.charAt(i)
@@ -132,26 +139,35 @@ function format(src, indent, keepComment) {
                     if (indent) {
                         result += newline(depth)
                     }
+                // multi ligne comment type javadoc: /**...*/
                 } else if (src.length >= i + 2 && src.charAt(i + 1) == "*" && src.charAt(i + 2) == "*") {
-                    // multi ligne comment
 
                     start = i + 3
                     i = src.indexOf("*/", start)
 
                     if (!keepComment) {
-                        i+=2
-                        c = src.charAt(i)
+                        if (i == -1) {
+                            i = start
+                            if (src.charAt(i) == "/") {
+                                i++
+                            }
+                        } else {
+                            i+=2
+                        }
                         continue
                     }
 
                     if (i == -1) {
                         i = start
+                        if (src.charAt(i) == "/") {
+                            i++
+                        }
                         continue
                     }
                     comment = src.substring(start, i)
 
                     result += "/**"
-
+                    // each '*' in the body of the comment means newline
                     if (!indent) {
                         result += comment.replace(/[\s]+\*/gm, "*").trimRight()
                     } else {
@@ -167,18 +183,21 @@ function format(src, indent, keepComment) {
                     result += "*/"
 
                     i++
-                    c = src.charAt(i)
                     if (indent) {
                         result += newline(depth)
                     }
+                // multiligne comment classic: /*...*/
                 } else if (src.length >= i + 1 && src.charAt(i + 1) == "*") {
 
                     start = i + 2
                     i = src.indexOf("*/", start)
 
                     if (!keepComment) {
-                        i+=2
-                        c = src.charAt(i)
+                        if (i == -1) {
+                            i = start
+                        } else {
+                            i+=2
+                        }
                         continue
                     }
                     if (i == -1) {
@@ -187,6 +206,8 @@ function format(src, indent, keepComment) {
                     }
                     comment = src.substring(start, i)
 
+                    // rewrite the whole as /**...*/, and add a '*' at the start
+                    // of every new line
                     result += "/**"
 
                     if (!indent) {
@@ -204,12 +225,9 @@ function format(src, indent, keepComment) {
                     result += "*/"
 
                     i++
-                    c = src.charAt(i)
                     if (indent) {
                         result += newline(depth)
                     }
-
-
                 } else {
                     result += c
                     i++
@@ -240,38 +258,37 @@ function newline(depth) {
     return line
 }
 
-function formatConfig(content, mode) {
+function isConfigValid(content, mode) {
 
-    var contentWithoutComment = compactAndRemoveComment(content)
-    if (!contentWithoutComment.startsWith("[") || !contentWithoutComment.endsWith("]")) {
+    var configWithoutComment = compactAndRemoveComment(content)
+
+    // mgodatagen and bson single collection have an array as config
+    if (!configWithoutComment.startsWith("[") || !configWithoutComment.endsWith("]")) {
         if (mode === "bson") {
-            var correctConfigMultipleCollections = /^\s*db\s*=\s*\{[\s\S]*\}$/.test(contentWithoutComment)
-            if (!correctConfigMultipleCollections) {
-                return "invalid"
-            }
+            // check wether it match the multiple collection config, ie `db = {...}`
+            return /^\s*db\s*=\s*\{[\s\S]*\}$/.test(configWithoutComment)
         } else {
-            return "invalid"
+            return false
         }
     }
-    return content
+    return true
 }
 
-function formatQuery(content) {
-    var result = content
+function isQueryValid(content) {
     if (content.endsWith(";")) {
-        result = content.slice(0, -1)
+        content = content.slice(0, -1)
     }
-    var queryWithoutComment = compactAndRemoveComment(result)
+    var queryWithoutComment = compactAndRemoveComment(content)
 
     var correctQuery = /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/.test(queryWithoutComment)
     if (!correctQuery) {
-        return "invalid"
+        return false
     }
 
     var start = queryWithoutComment.indexOf("(") + 1
     query = queryWithoutComment.substring(start, queryWithoutComment.length - 1)
     if (query !== "" && !query.endsWith("}") && !query.endsWith("]")) {
-        return "invalid"
+        return false
     }
-    return result
+    return true
 }

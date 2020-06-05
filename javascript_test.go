@@ -295,6 +295,30 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
   k: 1
 })`,
 		},
+		{
+			name:    "mix single star multiple star",
+			input:   `[{"k":1}]/**/`,
+			compact: `[{"k":1}]`,
+			indent: `[
+  {
+    "k": 1
+  }
+]`,
+		},
+		{
+			name:    "query with trailing comma",
+			input:   `db.collection.find();`,
+			compact: `db.collection.find()`,
+			indent:  `db.collection.find()`,
+		},
+		{
+			name: "comment with no line return",
+			input: `db.collection.find()
+			// comment with no line return`,
+			compact: `db.collection.find()/** comment with no line return*/`,
+			indent: `db.collection.find()/** comment with no line return*/
+`,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -472,40 +496,40 @@ func TestFormatConfig(t *testing.T) {
 	t.Parallel()
 
 	formatTests := []struct {
-		name                 string
-		input                string
-		formattedModeBSON    string
-		formattedModeDatagen string
+		name             string
+		input            string
+		validModeBSON    bool
+		validModeDatagen bool
 	}{
 		{
-			name:                 `valid config`,
-			input:                `[{"k":1}]`,
-			formattedModeBSON:    `[{"k":1}]`,
-			formattedModeDatagen: `[{"k":1}]`,
+			name:             `valid config`,
+			input:            `[{"k":1}]`,
+			validModeBSON:    true,
+			validModeDatagen: true,
 		},
 		{
-			name:                 `invalid config`,
-			input:                `[{"k":1}`,
-			formattedModeBSON:    `invalid`,
-			formattedModeDatagen: `invalid`,
+			name:             `invalid config`,
+			input:            `[{"k":1}`,
+			validModeBSON:    false,
+			validModeDatagen: false,
 		},
 		{
-			name:                 `multiple collections bson mode`,
-			input:                `db={"collection1":[{"k":1}]}`,
-			formattedModeBSON:    `db={"collection1":[{"k":1}]}`,
-			formattedModeDatagen: `invalid`,
+			name:             `multiple collections bson mode`,
+			input:            `db={"collection1":[{"k":1}]}`,
+			validModeBSON:    true,
+			validModeDatagen: false,
 		},
 		{
-			name:                 `multiple collections bson mode starting with comment`,
-			input:                `/** all db*/db={"collection1":[{"k":1}]}`,
-			formattedModeBSON:    `/** all db*/db={"collection1":[{"k":1}]}`,
-			formattedModeDatagen: `invalid`,
+			name:             `multiple collections bson mode starting with comment`,
+			input:            `/** all db*/db={"collection1":[{"k":1}]}`,
+			validModeBSON:    true,
+			validModeDatagen: false,
 		},
 		{
-			name:                 `multiple collections bson mode ending with comment`,
-			input:                `db={"collection1":[{"k":1}]}/** end*/`,
-			formattedModeBSON:    `db={"collection1":[{"k":1}]}/** end*/`,
-			formattedModeDatagen: `invalid`,
+			name:             `multiple collections bson mode ending with comment`,
+			input:            `db={"collection1":[{"k":1}]}/** end*/`,
+			validModeBSON:    true,
+			validModeDatagen: false,
 		},
 	}
 
@@ -515,14 +539,14 @@ func TestFormatConfig(t *testing.T) {
 	{
 		"name": %s,
 		"input": %s, 
-		"formattedModeBSON": %s, 
-		"formattedModeDatagen": %s 
+		"validModeBSON": %v, 
+		"validModeDatagen": %v
 	}
 	`
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.formattedModeBSON), strconv.Quote(tt.formattedModeDatagen))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), tt.validModeBSON, tt.validModeDatagen)
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -534,14 +558,14 @@ func TestFormatConfig(t *testing.T) {
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let got = formatConfig(tt.input, "bson") 
-		if (got !== tt.formattedModeBSON) {
-			print("test " + tt.name + " format mode bson failed, expected: \n" + tt.formattedModeBSON +  "\nbut got: \n" + got)
+		let got = isConfigValid(tt.input, "bson") 
+		if (got !== tt.validModeBSON) {
+			print("test " + tt.name + " format mode bson failed, expected: " + tt.validModeBSON +  " but got: " + got)
 		}
 
-		got = formatConfig(tt.input, "mgodatagen") 
-		if (got !== tt.formattedModeDatagen) {
-			print("test " + tt.name + " format mode mgodatagen failed, expected: \n" + tt.formattedModeDatagen +  "\nbut got: \n" + got)
+		got = isConfigValid(tt.input, "mgodatagen") 
+		if (got !== tt.validModeDatagen) {
+			print("test " + tt.name + " format mode mgodatagen failed, expected: " + tt.validModeDatagen +  " but got: " + got)
 		}
 	}	
 	`))
@@ -555,14 +579,14 @@ func TestFormatQuery(t *testing.T) {
 	t.Parallel()
 
 	formatTests := []struct {
-		name     string
-		input    string
-		expected string
+		name  string
+		input string
+		valid bool
 	}{
 		{
-			name:     `trailing comma`,
-			input:    `db.collection.find();`,
-			expected: `db.collection.find()`,
+			name:  `trailing comma`,
+			input: `db.collection.find();`,
+			valid: true,
 		},
 		{
 			name: `correct aggregation query`,
@@ -576,75 +600,64 @@ func TestFormatQuery(t *testing.T) {
 					}
 				}
 			])`,
-			expected: `db.collection.aggregate([
-				{
-					"$match": {
-						_id: ObjectId("5a934e000102030405000000"), 
-						k: {
-							"$gt": 0.2323
-						}
-					}
-				}
-			])`,
+			valid: true,
 		},
 		{
-			name:     `wrong format`,
-			input:    `dbcollection.find()`,
-			expected: `invalid`,
+			name:  `wrong format`,
+			input: `dbcollection.find()`,
+			valid: false,
 		},
 		{
-			name:     `invalid function`,
-			input:    `db.collection.findOne()`,
-			expected: `invalid`,
+			name:  `invalid function`,
+			input: `db.collection.findOne()`,
+			valid: false,
 		},
 		{
-			name:     `wrong format`,
-			input:    `dbcollection.find()`,
-			expected: `invalid`,
+			name:  `wrong format`,
+			input: `dbcollection.find()`,
+			valid: false,
 		},
 		{
-			name:     `wrong format`,
-			input:    `db["collection"].find()`,
-			expected: `invalid`,
+			name:  `wrong format`,
+			input: `db["collection"].find()`,
+			valid: false,
 		},
 		{
-			name:     `wrong format`,
-			input:    `db.getCollection("coll").find()`,
-			expected: `invalid`,
+			name:  `wrong format`,
+			input: `db.getCollection("coll").find()`,
+			valid: false,
 		},
 		{
-			name:     `dot in query`,
-			input:    `db.collection.find({k: 1.123})`,
-			expected: `db.collection.find({k: 1.123})`,
+			name:  `dot in query`,
+			input: `db.collection.find({k: 1.123})`,
+			valid: true,
 		},
 		{
-			name:     `chained empty method`,
-			input:    `db.collection.find().toArray()`,
-			expected: `invalid`,
+			name:  `chained empty method`,
+			input: `db.collection.find().toArray()`,
+			valid: false,
 		},
 		{
-			name:     `single letter collection name`,
-			input:    `db.k.find()`,
-			expected: `db.k.find()`,
+			name:  `single letter collection name`,
+			input: `db.k.find()`,
+			valid: true,
 		},
 		{
-			name:     `chained non-empty method`,
-			input:    `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
-			expected: `invalid`,
+			name:  `chained non-empty method`,
+			input: `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
+			valid: false,
 		},
 		{
 			name: `query starting with single line comment`,
 			input: `// the query
 // that we want to debug
 db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}])`,
-			expected: `// the query
-// that we want to debug
-db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}])`,
+			valid: true,
 		},
 		{
-			name:     `query starting with multi line comment`,
-			input:    `/**  aggregation */db.collection.aggregate([{"$match": { "_id": 1}}])`,
-			expected: `/**  aggregation */db.collection.aggregate([{"$match": { "_id": 1}}])`,
+			name:  `query starting with multi line comment`,
+			input: `/**  aggregation */db.collection.aggregate([{"$match": { "_id": 1}}])`,
+			valid: true,
 		},
 		{
 			name: `query ending with multi line comment`,
@@ -652,10 +665,12 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 *
 * ok
 */`,
-			expected: `db.collection.aggregate([{"$match": { "_id": 1}}])/** tests
-*
-* ok
-*/`,
+			valid: true,
+		},
+		{
+			name:  `empty comment`,
+			input: `db.collection.find(/**/)`,
+			valid: true,
 		},
 	}
 
@@ -665,13 +680,13 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 	{
 		"name": %s,
 		"input": %s, 
-		"expected": %s, 
+		"expected": %v, 
 	}
 	`
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.expected))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), tt.valid)
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -684,9 +699,9 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		let tt = tests[i]
 
 		let want = tt.expected
-		let got = formatQuery(tt.input) 
+		let got = isQueryValid(tt.input) 
 		if (want != got) {
-			print("test " + tt.name + " format mode bson failed, expected: \n" + want +  "\nbut got: \n" + got)
+			print("test " + tt.name + " format mode bson failed, expected: " + want +  " but got: " + got)
 		}
 	}	
 	`))
