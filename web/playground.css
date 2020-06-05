@@ -95,8 +95,12 @@ body {
     height: 100%;
 }
 
+.content>div:first-child {
+    flex: 0 1 auto;
+    width: 33%;
+}
+
 .content>div:last-child {
-    box-sizing: border-box;
     flex: min-content;
     margin-top: 1%;
     margin-left:50px;
@@ -166,6 +170,10 @@ body {
 
 .ace_comment {
     color: #9299a2 !important;
+}
+
+.ace_variable {
+    color: black !important;
 }
 
 .text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line>span {
