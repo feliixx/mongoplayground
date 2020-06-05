@@ -8,6 +8,6 @@ if [ $1 == "all" ]; then
 fi
 
 
-  purifycss web/playground.css web/github.css static/docs-$nb.html playground.html --whitelist ["ace_gutter","ace_layer","ace_warning", "ace_info", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error", "text_red", "ignore_warnings"] --min --info -r --out "static/playground-min-$nb.css"  
+  #purifycss web/playground.css web/github.css static/docs-$nb.html playground.html --whitelist ["ace_gutter","ace_layer","ace_warning", "ace_info", "ace_string", "ace_numeric", "ace_function", "ace_editor", "ace_error", "text_red", "ignore_warnings"] --min --info -r --out "static/playground-min-$nb.css"  
 
-  uglifyjs  web/playground.js --compress  --verbose --mangle --output  static/playground-min-$nb.js
+  uglifyjs  web/playground.js --compress --warn --verbose --mangle --output  static/playground-min-$nb.js

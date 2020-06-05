@@ -231,22 +231,20 @@
                 return false
             }
 
-            var formattedConfig = formatConfig(configEditor.getValue().trim(), getCurrentMode())
-            if (formattedConfig === "invalid") {
+            if (!isConfigValid(configEditor.getValue().trim(), getCurrentMode())) {
                 showError("invalid configuration:\n\nmust be an array of documents like '[ {_id: 1}, {_id: 2} ]'\n\nor\n\nmust match 'db = { collection: [ {_id: 1}, {_id: 2} ] }'")
                 return false
             }
             if (hasChangedSinceLastRun) {
-                configEditor.setValue(indent(formattedConfig), -1)
+                configEditor.setValue(indent(configEditor.getValue().trim()), -1)
             }
 
-            var formattedQuery = formatQuery(queryEditor.getValue().trim())
-            if (formattedQuery === "invalid") {
+            if (!isQueryValid(queryEditor.getValue().trim())) {
                 showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...)")
                 return false
             }
             if (hasChangedSinceLastRun) {
-                queryEditor.setValue(indent(formattedQuery), -1)
+                queryEditor.setValue(indent(queryEditor.getValue().trim()), -1)
             }
             return true
         }
@@ -267,9 +265,9 @@
             resultEditor.setValue(errMsg, -1)
         }
 
-        function showResult(result, prettyfy) {
+        function showResult(result, doIndent) {
             document.getElementById("result").classList.remove("text_red")
-            if (prettyfy) {
+            if (doIndent) {
                 result = indent(result)
             }
             resultEditor.setOption("wrap", false)
