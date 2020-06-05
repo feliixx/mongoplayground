@@ -46,14 +46,13 @@
             configEditor.getSession().on('change', changeFunc)
             queryEditor.getSession().on('change', changeFunc)
 
-            loadDocs()
             addKeyDownListener()
             addDivResizeListener()
         }
 
         function loadDocs() {
             var r = new XMLHttpRequest()
-            r.open("GET", "/static/docs-7.html", true)
+            r.open("GET", "/static/docs-8.html", true)
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
@@ -133,6 +132,11 @@
         }
 
         function showDoc(doShow) {
+
+            if (!document.getElementById("docDiv").hasChildNodes()) {
+                loadDocs()
+            }
+
             if (doShow && document.getElementById("docDiv").style.display === "inline") {
                 doShow = false
             }
