@@ -51,18 +51,6 @@
             addDivResizeListener()
         }
 
-        function loadDocs() {
-            var r = new XMLHttpRequest()
-            r.open("GET", "/static/docs-8.html", true)
-            r.onreadystatechange = function () {
-                if (r.readyState !== 4) { return }
-                if (r.status === 200) {
-                    document.getElementById("docDiv").innerHTML = r.responseText
-                }
-            }
-            r.send(null)
-        }
-
         function addKeyDownListener() {
             document.addEventListener('keydown', function (event) {
                 if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
@@ -94,9 +82,9 @@
 
             document.addEventListener('mousemove', function (e) {
                 if (isConfigHandlerDragging) {
-                    var box = document.getElementById("configDiv")
+                    var box = document.getElementById("configPanel")
                 } else if (isQueryHandlerDragging) {
-                    var box = document.getElementById("queryDiv")
+                    var box = document.getElementById("queryPanel")
                 } else {
                     return false
                 }
@@ -134,19 +122,31 @@
 
         function showDoc(doShow) {
 
-            if (!document.getElementById("docDiv").hasChildNodes()) {
+            if (!document.getElementById("docPanel").hasChildNodes()) {
                 loadDocs()
             }
 
-            if (doShow && document.getElementById("docDiv").style.display === "inline") {
+            if (doShow && document.getElementById("docPanel").style.display === "inline") {
                 doShow = false
             }
-            document.getElementById("docDiv").style.display = doShow ? "inline" : "none"
-            document.getElementById("queryDiv").style.display = doShow ? "none" : "inline"
-            document.getElementById("resultDiv").style.display = doShow ? "none" : "inline"
+            document.getElementById("docPanel").style.display = doShow ? "inline" : "none"
+            document.getElementById("queryPanel").style.display = doShow ? "none" : "inline"
+            document.getElementById("resultPanel").style.display = doShow ? "none" : "inline"
             if (!doShow && hasChangedSinceLastSave) {
                 redirect("/", false)
             }
+        }
+
+        function loadDocs() {
+            var r = new XMLHttpRequest()
+            r.open("GET", "/static/docs-8.html", true)
+            r.onreadystatechange = function () {
+                if (r.readyState !== 4) { return }
+                if (r.status === 200) {
+                    document.getElementById("docPanel").innerHTML = r.responseText
+                }
+            }
+            r.send(null)
         }
 
         function run() {
@@ -303,25 +303,25 @@
         </div>
     </div>
     <div class="content">
-        <div id="configDiv">
+        <div id="configPanel">
             <h3>Configuration</h3>
             <div class="resizable_editor">
                 <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
                 <div id="configResizeHandler" class="handler"></div>
             </div>
         </div>
-        <div id="queryDiv">
+        <div id="queryPanel">
             <h3>Query</h3>
             <div class="resizable_editor">
                 <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
                 <div id="queryResizeHandler" class="handler"></div>
             </div>
         </div>
-        <div id="resultDiv">
+        <div id="resultPanel">
             <h3>Result</h3>
             <div id="result" class="text_red"></div>
         </div>
-        <div id="docDiv" class="markdown-body"></div>
+        <div id="docPanel" class="markdown-body"></div>
     </div>
     <div class="footer">
         <p>
