@@ -7,7 +7,7 @@ body {
 .toolbar {
     width: 100%;
     height: 50px;
-    background-color: rgb(51, 51, 51);
+    background-color: #333333;
 }
 
 .toolbar>.title {
@@ -44,7 +44,7 @@ body {
     appearance: none;
     border: 1px solid gray;
     border-radius: 4px;
-    background-color: rgb(236, 236, 236);
+    background-color: #ececec;
     font-size: 1em;
     height: 30px;
     width: 200px;
@@ -58,7 +58,7 @@ body {
     appearance: none;
     border: 1px solid gray;
     border-radius: 4px;
-    background-color: rgb(236, 236, 236);
+    background-color:#ececec;
     font-size: 1em;
     height: 24px;
     width: 335px;
@@ -67,10 +67,10 @@ body {
 
 .toolbar>.controls>input[type="button"] {
     height: 30px;
-    border: 1px solid rgb(55, 94, 171);
+    border: 1px solid #375eab;
     font-size: 1em;
-    background: rgb(55, 94, 171);
-    color: rgb(255, 255, 255);
+    background: #375eab;
+    color: #ffffff;
     border-radius: 5px;
 }
 
@@ -131,20 +131,19 @@ body {
     display: block;
     height: 100%;
     width: 5px;
-    background: rgb(158, 158, 158);
+    background: #e5e7e8;
 }
 
 .footer {
-    background-color: rgb(255, 255, 255);
     text-align: center;
-    color: rgb(100, 98, 98);
+    color: #646262;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
 /* override some specific ace class for syntax coloration*/
 
 .ace_editor {
-    background-color: rgb(246, 248, 250) !important;
+    background-color: #f6f8fa !important;
     height: 93% !important;
     width: 100%;
 }
@@ -166,7 +165,7 @@ body {
 }
 
 .ace_comment {
-    color: #46494d !important;
+    color: #9299a2 !important;
 }
 
 .text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line>span {
