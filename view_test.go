@@ -39,6 +39,18 @@ func TestView(t *testing.T) {
 			url:          "p/unknownURL",
 			responseCode: http.StatusNotFound,
 		},
+		{
+			name:         "url with extra param",
+			params:       templateParams,
+			url:          templateURL + "&usg",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "url with invalid id length",
+			params:       templateParams,
+			url:          "p/short",
+			responseCode: http.StatusNotFound,
+		},
 	}
 
 	// start by saving all needed playground

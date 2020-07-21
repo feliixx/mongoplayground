@@ -28,6 +28,8 @@ const (
 	// max size of a playground. This value is the minimum we can
 	// set to avoid breaking already saved playground
 	maxByteSize = 350 * 1000
+	// length of the id of a page. Do not change this value
+	pageIDLength = 11
 )
 
 type page struct {
@@ -65,7 +67,7 @@ func (p *page) ID() []byte {
 	sum := e.Sum(nil)
 	b := make([]byte, base64.URLEncoding.EncodedLen(len(sum)))
 	base64.URLEncoding.Encode(b, sum)
-	return b[:11]
+	return b[:pageIDLength]
 }
 
 // generate an unique hash to identify the database used by the p page. Two pages with
