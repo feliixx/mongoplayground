@@ -1,9 +1,9 @@
 name: Run tests
 
-on: [push]
+on: push
 
 env: 
-  MONGO_VERSION: 4.2.7
+  MONGO_VERSION: 4.4.0
 
 jobs:
   build:
