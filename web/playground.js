@@ -443,12 +443,12 @@ var basicBsonSnippet = [
   },
   {
     caption: "$regularExpression",
-    value: "$regularExpression: {\n pattern: \"pattern\",\n options: \"options\"\n}",
+    value: "$regularExpression: {\n \"pattern\": \"pattern\",\n \"options\": \"options\"\n}",
     meta: "bson keyword"
   }, 
   {
     caption: "$timestamp",
-    value: "$timestamp: {t: 0, i: 1}",
+    value: "$timestamp: {\"t\": 0, \"i\": 1}",
     meta: "bson keyword"
   }, 
   {
@@ -481,7 +481,7 @@ var querySnippet = [
   },
   {
     caption: "$let",
-    value: "$let: {\n vars: { var: \"expression\" },\n in: \"expression\"\n}",
+    value: "$let: {\n \"vars\": { \"var\": \"expression\" },\n \"in\": \"expression\"\n}",
     meta: "variable operator"
   },
   {
@@ -561,22 +561,22 @@ var querySnippet = [
   },
   {
     caption: "$geoIntersects",
-    value: "$geoIntersects: {\n $geometry: {\n  type: \"GeoJSON type\",\n  coordinates: [  ]\n }\n}",
+    value: "$geoIntersects: {\n \"$geometry\": {\n  \"type\": \"GeoJSON type\",\n  \"coordinates\": [  ]\n }\n}",
     meta: "geospatial operator"
   },
   {
     caption: "$geoWithin",
-    value: "$geoWithin: {\n $geometry: {\n  type: \"Polygon\",\n  coordinates: [  ]\n }\n}",
+    value: "$geoWithin: {\n \"$geometry\": {\n  \"type\": \"Polygon\",\n  \"coordinates\": [  ]\n }\n}",
     meta: "geospatial operator"
   },
   {
     caption: "$near",
-    value: "$near: {\n $geometry: {\n  type: \"Point\",\n  coordinates: [ \"long\", \"lat\" ]\n }, $maxDistance: 10, $minDistance: 1\n}",
+    value: "$near: {\n \"$geometry\": {\n  \"type\": \"Point\",\n  \"coordinates\": [ \"long\", \"lat\" ]\n }, \"$maxDistance\": 10, \"$minDistance\": 1\n}",
     meta: "geospatial operator"
   },
   {
     caption: "$nearSphere",
-    value: "$nearSphere: {\n $geometry: {\n  type: \"Point\",\n  coordinates: [ \"long\", \"lat\" ]\n }, $maxDistance: 10, $minDistance: 1\n}",
+    value: "$nearSphere: {\n \"$geometry\": {\n  \"type\": \"Point\",\n  \"coordinates\": [ \"long\", \"lat\" ]\n }, \"$maxDistance\": 10, \"$minDistance\": 1\n}",
     meta: "geospatial operator"
   },
   {
@@ -596,7 +596,7 @@ var querySnippet = [
   },
   {
     caption: "$geometry",
-    value: "$geometry: {\n type: \"Polygon\",\n coordinates: [ ]\n}",
+    value: "$geometry: {\n \"type\": \"Polygon\",\n \"coordinates\": [ ]\n}",
     meta: "geospatial operator"
   },
   {
@@ -664,7 +664,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$accumulator",
-    value: "$accumulator: {\ninit: \"code\",\ninitArgs: \"array expression\",\naccumulate: \"code\",\naccumulateArgs: \"array expression\",\nmerge: \"code\",\nfinalize: \"code\",\nlang: \"string\"\n}",
+    value: "$accumulator: {\n \"init\": \"code\",\n \"initArgs\": \"array expression\",\n \"accumulate\": \"code\",\n \"accumulateArgs\": \"array expression\",\n \"merge\": \"code\",\n \"finalize\": \"code\",\n \"lang\": \"string\"\n}",
     meta: "accumulation operator"
   },
   {
@@ -759,12 +759,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$bucket",
-    value: "$bucket: {\ngroupBy: \"expression\",\nboundaries: [ \"lowerbound1\", \"lowerbound2\" ],\ndefault: \"literal\",\noutput: {\n output1: \"$accumulator expression\",\n outputN: \"$accumulator expression\" \n }\n}",
+    value: "$bucket: {\n \"groupBy\": \"expression\",\n \"boundaries\": [ \"lowerbound1\", \"lowerbound2\" ],\n \"default\": \"literal\",\n \"output\": {\n  \"output1\": \"$accumulator expression\",\n  \"outputN\": \"$accumulator expression\" \n }\n}",
     meta: "aggregation stage"
   },
   {
     caption: "$bucketAuto",
-    value: "$bucketAuto: {\ngroupBy: \"expression\",\nbuckets: \"number\",\noutput: {\n output1: \"$accumulator expression\"},\ngranularity: \"string\"\n}",
+    value: "$bucketAuto: {\n \"groupBy\": \"expression\",\n \"buckets\": \"number\",\n \"output\": {\n \"output1\": \"$accumulator expression\"},\n \"granularity\": \"string\"\n}",
     meta: "aggregation stage"
   },
   {
@@ -789,12 +789,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$cond",
-    value: "$cond: { if: \"boolean-expression\", then: \"true-case\", else: \"false-case\" }",
+    value: "$cond: {\n \"if\": \"boolean-expression\",\n \"then\": \"true-case\",\n \"else\": \"false-case\" }",
     meta: "conditional operator"
   },
   {
     caption: "$convert",
-    value: "$convert:\n{\ninput: \"expression\",\nto: \"type expression\",\nonError: \"expression\",\nonNull: \"expression\"\n}",
+    value: "$convert:\n{\n \"input\": \"expression\",\n \"to\": \"type expression\",\n \"onError\": \"expression\",\n \"onNull\": \"expression\"\n}",
     meta: "type operator"
   },
   {
@@ -809,22 +809,22 @@ var aggregationSnippet = [
   },
   {
     caption: "$dateFromParts",
-    value: "$dateFromParts : {\nyear: \"year\", month: \"month\", day: \"day\",\nhour: \"hour\", minute: \"minute\", second: \"second\",\nmillisecond: \"ms\", timezone: \"tzExpression\"\n}",
+    value: "$dateFromParts : {\n \"year\": \"year\", \"month\": \"month\", \"day\": \"day\",\n \"hour\": \"hour\", \"minute\": \"minute\", \"second\": \"second\",\n \"millisecond\": \"ms\", \"timezone\": \"tzExpression\"\n}",
     meta: "date operator"
   },
   {
     caption: "$dateFromString",
-    value: "$dateFromString: {\ndateString: \"dateStringExpression\",\nformat: \"formatStringExpression\",\ntimezone: \"tzExpression\",\nonError: \"onErrorExpression\",\nonNull: \"onNullExpression\"\n}",
+    value: "$dateFromString: {\n \"dateString\": \"dateStringExpression\",\n \"format\": \"formatStringExpression\",\n \"timezone\": \"tzExpression\",\n \"onError\": \"onErrorExpression\",\n \"onNull\": \"onNullExpression\"\n}",
     meta: "string operator"
   },
   {
     caption: "$dateToParts",
-    value: "$dateToParts: {\ndate : \"dateExpression\",\ntimezone : \"timezone\",\niso8601 : \"boolean\"\n}",
+    value: "$dateToParts: {\n \"date\" : \"dateExpression\",\n \"timezone\" : \"timezone\",\n \"iso8601\" : \"boolean\"\n}",
     meta: "date operator"
   },
   {
     caption: "$dateToString",
-    value: "$dateToString: {\ndate: \"dateExpression\",\nformat: \"formatString\",\ntimezone: \"tzExpression\",\nonNull: \"expression\"\n}",
+    value: "$dateToString: {\n \"date\": \"dateExpression\",\n \"format\": \"formatString\",\n \"timezone\": \"tzExpression\",\n \"onNull\": \"expression\"\n}",
     meta: "string operator"
   },
   {
@@ -869,12 +869,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$facet",
-    value: "$facet:\n{\n\"outputField1\": [ \"stage1\", \"stage2\" ]\n}",
+    value: "$facet:\n{\n \"outputField1\": [ \"stage1\", \"stage2\" ]\n}",
     meta: "aggregation stage"
   },
   {
     caption: "$filter",
-    value: "$filter: { input: \"array\", as: \"string\", cond: \"expression\" }",
+    value: "$filter: { \"input\": \"array\", \"as\": \"string\", \"cond\": \"expression\" }",
     meta: "array operator"
   },
   {
@@ -889,7 +889,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$function",
-    value: "$function: {\nbody: \"code\",\nargs: \"array expression\",\nlang: \"js\"\n}",
+    value: "$function: {\n \"body\": \"code\",\n \"args\": \"array expression\",\n \"lang\": \"js\"\n}",
     meta: "aggregation operator"
   },
   {
@@ -899,12 +899,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$graphLookup",
-    value: "$graphLookup: {\nfrom: \"collection\",\nstartWith: \"expression\",\nconnectFromField: \"string\",\nconnectToField: \"string\",\nas: \"string\",\nmaxDepth: \"number\",\ndepthField: \"string\",\nrestrictSearchWithMatch: \"document\"\n}",
+    value: "$graphLookup: {\n \"from\": \"collection\",\n \"startWith\": \"expression\",\n \"connectFromField\": \"string\",\n \"connectToField\": \"string\",\n \"as\": \"string\",\n \"maxDepth\": \"number\",\n \"depthField\": \"string\",\n \"restrictSearchWithMatch\": \"document\"\n}",
     meta: "aggregation stage"
   },
   {
     caption: "$group",
-    value: "$group:\n{\n_id: \"group by expression\", \n\"field1\": \"accumulator1\" : \"expression1\" }",
+    value: "$group:\n{\n \"_id\": \"group by expression\", \n \"field1\": \"accumulator1\" : \"expression1\" }",
     meta: "aggregation stage"
   },
   {
@@ -999,7 +999,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$lookup",
-    value: "$lookup:\n{\nfrom: \"collection to join\",\n localField: \"field from the input documents\",\n foreignField: \"field from the documents of the from collection\",\n as: \"output array field\"\n }",
+    value: "$lookup:\n{\n \"from\": \"collection to join\",\n \"localField\": \"field from the input documents\",\n \"foreignField\": \"field from the documents of the from collection\",\n \"as\": \"output array field\"\n }",
     meta: "aggregation stage"
   },
   {
@@ -1014,12 +1014,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$ltrim",
-    value: "$ltrim: { input: \"string\",  chars: \"string\" }",
+    value: "$ltrim: { \"input\": \"string\",  \"chars\": \"string\" }",
     meta: "string operator"
   },
   {
     caption: "$map",
-    value: "$map: { input: \"expression\", as: \"string\", in: \"expression\" }",
+    value: "$map: { \"input\": \"expression\", \"as\": \"string\", \"in\": \"expression\" }",
     meta: "array operator"
   },
   {
@@ -1034,7 +1034,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$merge",
-    value: "$merge: {\ninto: \"collection\",\non: \"identifier field\", \nlet: \"variables\",\nwhenMatched: \"replace|keepExisting|merge|fail|pipeline\",\nwhenNotMatched: \"insert|discard|fail\"                     // Optional\n}",
+    value: "$merge: {\n \"into\": \"collection\",\n \"on\": \"identifier field\", \n \"let\": \"variables\",\n \"whenMatched\": \"replace|keepExisting|merge|fail|pipeline\",\n \"whenNotMatched\": \"insert|discard|fail\"                     // Optional\n}",
     meta: "aggregation stage"
   },
   {
@@ -1094,7 +1094,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$out",
-    value: "$out: { db: \"\"output-db\"\", coll: \"\"output-collection\"\" }",
+    value: "$out: { \"db\": \"output-db\", \"coll\": \"output-collection\" }",
     meta: "aggregation stage"
   },
   {
@@ -1129,37 +1129,37 @@ var aggregationSnippet = [
   },
   {
     caption: "$reduce",
-    value: "$reduce: {\ninput: \"array\",\ninitialValue: \"expression\",\nin: \"expression\"\n}",
+    value: "$reduce: {\n \"input\": \"array\",\n \"initialValue\": \"expression\",\n \"in\": \"expression\"\n}",
     meta: "array operator"
   },
   {
     caption: "$regexFind",
-    value: "$regexFind: { input: \"expression\", regex: \"expression\", options: \"expression\" }",
+    value: "$regexFind: { \"input\": \"expression\", \"regex\": \"expression\", \"options\": \"expression\" }",
     meta: "string operator"
   },
   {
     caption: "$regexFindAll",
-    value: "$regexFindAll: { input: \"expression\" , regex: \"expression\", options: \"expression\" }",
+    value: "$regexFindAll: { \"input\": \"expression\", \"regex\": \"expression\", \"options\": \"expression\" }",
     meta: "string operator"
   },
   {
     caption: "$regexMatch",
-    value: "$regexMatch: { input: \"expression\" , regex: \"expression\", options: \"expression\" }",
+    value: "$regexMatch: { \"input\": \"expression\" , \"regex\": \"expression\", \"options\": \"expression\" }",
     meta: "string operator"
   },
   {
     caption: "$replaceAll",
-    value: "$replaceAll: { input: \"expression\", find: \"expression\", replacement: \"expression\" }",
+    value: "$replaceAll: { \"input\": \"expression\", \"find\": \"expression\", \"replacement\": \"expression\" }",
     meta: "string operator"
   },
   {
     caption: "$replaceOne",
-    value: "$replaceOne: { input: \"expression\", find: \"expression\", replacement: \"expression\" }",
+    value: "$replaceOne: { \"input\": \"expression\", \"find\": \"expression\", \"replacement\": \"expression\" }",
     meta: "string operator"
   },
   {
     caption: "$replaceRoot",
-    value: "$replaceRoot: { newRoot: \"replacementDocument\" }",
+    value: "$replaceRoot: { \"newRoot\": \"replacementDocument\" }",
     meta: "aggregation stage"
   },
   {
@@ -1179,12 +1179,12 @@ var aggregationSnippet = [
   },
   {
     caption: "$rtrim",
-    value: "$rtrim: { input: \"string\", chars: \"string\" }",
+    value: "$rtrim: { \"input\": \"string\", chars: \"string\" }",
     meta: "string operator"
   },
   {
     caption: "$sample",
-    value: "$sample: { size: \"positive integer\" }",
+    value: "$sample: { \"size\": \"positive integer\" }",
     meta: "aggregation stage"
   },
   {
@@ -1314,7 +1314,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$switch",
-    value: "$switch: {\nbranches: [\n { case: \"expression\", then: \"expression\" } \n]\n}",
+    value: "$switch: {\n \"branches\": [\n { \"case\": \"expression\", \"then\": \"expression\" } \n]\n}",
     meta: "conditional operator"
   },
   {
@@ -1374,7 +1374,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$trim",
-    value: "$trim: { input: \"string\",  chars: \"string\" }",
+    value: "$trim: { \"input\": \"string\",  \"chars\": \"string\" }",
     meta: "string operator"
   },
   {
@@ -1389,7 +1389,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$unionWith",
-    value: "$unionWith: { coll: \"\"collection\"\", pipeline: [ \"stage1\" ] }",
+    value: "$unionWith: { \"coll\": \"collection\", \"pipeline\": [ \"stage1\" ] }",
     meta: "aggregation stage"
   },
   {
@@ -1419,6 +1419,6 @@ var aggregationSnippet = [
   },
   {
     caption: "$zip",
-    value: "$zip: {\ninputs: [ \"array expression1\" ],\nuseLongestLength: \"boolean\",\ndefaults:  \"array expression\"\n}",
+    value: "$zip: {\n \"inputs\": [ \"array expression1\" ],\n \"useLongestLength\": \"boolean\",\n \"defaults\":  \"array expression\"\n}",
     meta: "array operator"
   }]

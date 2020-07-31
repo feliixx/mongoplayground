@@ -184,6 +184,10 @@ body {
     background-image: none !important;
 }
 
+.ace_autocomplete {
+    height: 200px !important;
+}
+
 @media only screen and (max-width: 999px) {
     body {
         overflow: visible;
