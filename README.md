@@ -47,4 +47,4 @@ This playground is heavily inspired from [The Go Playground](https://play.golang
 
 Editors are created with [ace](https://ace.c9.io/), and the documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
 
-Favicon was created on [favicon.io](https://favicon.io/) from an emoji provided by (twemoji)[https://github.com/twitter/twemoji]
+Favicon was created on [favicon.io](https://favicon.io/) from an emoji provided by [twemoji](https://github.com/twitter/twemoji)
