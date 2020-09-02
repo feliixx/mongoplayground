@@ -101,7 +101,7 @@ body {
 }
 
 .content>div:last-child {
-    flex: min-content;
+    flex: 2 1 67%;
     margin-top: 1%;
     margin-left:50px;
     height: 98% !important;
