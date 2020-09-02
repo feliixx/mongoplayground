@@ -35,7 +35,7 @@ func TestRunCreateDB(t *testing.T) {
 	}{
 		{
 			name:      "incorrect config",
-			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"h"}},
+			params:    url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"db.c.find()"}},
 			result:    "error in configuration:\n  error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 			createdDB: 0,
 		},
@@ -66,8 +66,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {templateQuery}},
+				}]`},
+				"query": {templateQuery}},
 			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
 			createdDB: 1,
 		},
@@ -87,8 +87,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
+				}]`},
+				"query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
 			result:    `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
 			createdDB: 0,
 		},
@@ -107,9 +107,9 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0, "k": 0}}])`}},
-			result:    `[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]`,
+				}]`},
+				"query": {`db.collection.aggregate([{"$group": {"_id": 0, "nbDoc": {"$sum":1}}}])`}},
+			result:    `[{"_id":0,"nbDoc":100}]`,
 			createdDB: 1,
 		},
 		{
@@ -127,8 +127,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
+				}]`},
+				"query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
 			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 		},
@@ -147,8 +147,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {`db.collection.aggregate([{"$project": "_id"}])`}},
+				}]`},
+				"query": {`db.collection.aggregate([{"$project": "_id"}])`}},
 			result:    "query failed: (Location15969) $project specification must be an object",
 			createdDB: 0,
 		},
@@ -167,8 +167,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxLength": 5
 						}
 					}
-				}
-			]`}, "query": {`db.collection.find({"$set": 12})`}},
+				}]`},
+				"query": {`db.collection.find({"$set": 12})`}},
 			result:    "query failed: (BadValue) unknown top level operator: $set",
 			createdDB: 1,
 		},
@@ -179,16 +179,16 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[
 				{
 					"collection": "collection",
-					"count": 10,
+					"count": 1,
 					"content": {
 						"k": {
 							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
+							"minLength": 11,
+							"maxLength": 12
 						}
 					}
-				}
-			]`}, "query": {`db.collection.find({"k": "tJ")`}},
+				}]`},
+				"query": {`db.collection.find({"k": "tJ")`}},
 			result:    "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 			createdDB: 0,
 		},
@@ -217,8 +217,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxInt": 5
 						}
 					}
-				}
-			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+				}]`},
+				"query": {`db.coll2.find({"k": {"$gt": 3}})`}},
 			result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
 			createdDB: 1,
 		},
@@ -246,8 +246,8 @@ func TestRunCreateDB(t *testing.T) {
 							"maxInt": 5
 						}
 					}
-				}
-			]`}, "query": {`db.coll2.find({"k": {"$gt": 3}})`}},
+				}]`},
+				"query": {`db.coll2.find({"k": {"$gt": 3}})`}},
 			result:    "error in configuration:\n  fail to create collection coll2: invalid generator for field 'k'\n  cause: invalid type ''",
 			createdDB: 0,
 		},
@@ -275,11 +275,11 @@ func TestRunCreateDB(t *testing.T) {
 			name: "invalid method",
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`[{}]`},
+				"config": {`[{"_id":356636}]`},
 				"query":  {`db.collection.findOne()`},
 			},
 			result:    "query failed: invalid method: findOne",
-			createdDB: 0,
+			createdDB: 1,
 		},
 		{
 			name: "invalid query syntax",
@@ -335,7 +335,7 @@ func TestRunCreateDB(t *testing.T) {
 			name: `bson old syntax create only collection "collection"`,
 			params: url.Values{
 				"mode":   {"bson"},
-				"config": {`[{"k": 1}, {"k": 2}]`},
+				"config": {`[{"k": 1.1111}, {"k": 2.2323}]`},
 				"query":  {`db.otherCollection.find()`},
 			},
 			result:    `collection "otherCollection" doesn't exist`,
@@ -429,7 +429,7 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {`db.collection.find({k: /pattern/})`},
 			},
 			result:    "error in query:\n  fail to parse content of query: invalid character '/' looking for beginning of value",
-			createdDB: 1,
+			createdDB: 0,
 		},
 		{
 			name: `query with projection`,
@@ -459,7 +459,7 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {""},
 			},
 			result:    fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
-			createdDB: 1,
+			createdDB: 0,
 		},
 		{
 			name: `too many collections`,
@@ -500,6 +500,76 @@ func TestRunCreateDB(t *testing.T) {
 			},
 			result:    errPlaygroundToBig,
 			createdDB: 0,
+		},
+		{
+			name: `basic update one`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"k":3},{"_id":2,"k":3}]`},
+				"query":  {`db.collection.update({"k":3}, {"$set": {"k":0}}, {"multi": false})`},
+			},
+			result:    `[{"_id":1,"k":0},{"_id":2,"k":3}]`,
+			createdDB: 1,
+		},
+		{
+			name: `basic update many`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"n":5},{"_id":2,"n":2}]`},
+				"query":  {`db.collection.update({}, {"$inc": {"n":10}}, {"multi": true})`},
+			},
+			result:    `[{"_id":1,"n":15},{"_id":2,"n":12}]`,
+			createdDB: 1,
+		},
+		{
+			name: `update without option`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"name":"ke"},{"_id":2,"name":"lme"}]`},
+				"query":  {`db.collection.update({}, {"$rename": {"name":"new"}})`},
+			},
+			result:    `[{"_id":1,"new":"ke"},{"_id":2,"name":"lme"}]`,
+			createdDB: 1,
+		},
+		{
+			name: `update with upsert`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"field":2.334}]`},
+				"query":  {`db.collection.update({"field":2}, {"$set": {"_id":2}}, {"upsert": true})`},
+			},
+			result:    `[{"_id":ObjectId("5a934e000102030405000000"),"field":2.334},{"_id":2,"field":2}]`,
+			createdDB: 1,
+		},
+		{
+			name: `update with arrayFilter`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,102]},{"_id":3,"grades":[95,110,100]}]`},
+				"query":  {`db.collection.update({grades:{$gte:100}},{$set:{"grades.$[element]":100}}, {"multi": true, arrayFilters: [{"element": { $gte: 100 }}]})`},
+			},
+			result:    `[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,100]},{"_id":3,"grades":[95,100,100]}]`,
+			createdDB: 1,
+		},
+		{
+			name: `empty update`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"g":95},{"_id":2,"g":98}]`},
+				"query":  {`db.collection.update()`},
+			},
+			result:    `fail to run update: update document must have at least one element`,
+			createdDB: 1,
+		},
+		{
+			name: `upsert with empty db`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[]`},
+				"query":  {`db.collection.update({},{"$set":{"_id":"new"}},{"upsert":true})`},
+			},
+			result:    `[{"_id":"new"}]`,
+			createdDB: 1, // this should create a db even if config is emtpy, because of the upsert
 		},
 	}
 

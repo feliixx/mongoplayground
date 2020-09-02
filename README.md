@@ -17,7 +17,7 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
   ### Queries
 
-  Currently, the playground can run only `find()` and `aggregate()` queries 
+  Currently, the playground can run only `find()`, `aggregate()` and `update()` queries 
 
   ### shell regex
 

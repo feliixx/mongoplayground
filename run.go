@@ -61,9 +61,13 @@ db = {
 		{_id: 1, v: 1}
 	]
 }`
-	errInvalidQuery    = "query must match db.coll.find(...) or db.coll.aggregate(...)"
+	errInvalidQuery    = "query must match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()"
 	errPlaygroundToBig = "playground is too big"
 	noDocFound         = "no document found"
+
+	findMethod      = "find"
+	aggregateMethod = "aggregate"
+	updateMethod    = "update"
 )
 
 // run a query and return the results as plain text.
@@ -94,32 +98,37 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) run(p *page) ([]byte, error) {
 
-	db := s.session.Database(p.dbHash())
-
-	dbInfos, err := s.createDatabase(db, p.Mode, p.Config)
-	if err != nil {
-		return nil, fmt.Errorf("error in configuration:\n  %v", err)
-	}
 	collectionName, method, stages, err := parseQuery(p.Query)
 	if err != nil {
 		return nil, fmt.Errorf("error in query:\n  %v", err)
 	}
+
+	db := s.session.Database(p.dbHash())
+
+	// if this is an 'update' query, always re-create the database,
+	// run the update and return the result of a 'find' query on the
+	// same collection
+	dbInfos, err := s.createDatabase(db, p.Mode, p.Config, method == updateMethod)
+	if err != nil {
+		return nil, fmt.Errorf("error in configuration:\n  %v", err)
+	}
+
 	// mongodb returns an empy array ( [] ) if we try to run a query on a collection
 	// that doesn't exist. Check that the collection exist before running the query,
 	// to return a clear error message in that case
-	if !exist(collectionName, dbInfos) {
+	if !dbInfos.hasCollection(collectionName) {
 		return nil, fmt.Errorf(`collection "%s" doesn't exist`, collectionName)
 	}
 	return runQuery(db.Collection(collectionName), method, stages)
 }
 
-func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte) (dbInfo dbMetaInfo, err error) {
+func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
 
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 
 	dbInfo, exists := s.activeDB[db.Name()]
-	if !exists {
+	if !exists || forceCreate {
 
 		collections := map[string][]bson.M{}
 
@@ -133,23 +142,22 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte) (d
 			return dbInfo, err
 		}
 
-		dbInfo = dbMetaInfo{
-			collections: make([]string, 0, len(collections)),
-		}
-		for name := range collections {
-			dbInfo.collections = append(dbInfo.collections, name)
-		}
-
-		emptyDatabase, err := fillDatabase(db, collections)
+		dbInfo, err = fillDatabase(db, collections)
 		if err != nil {
 			return dbInfo, err
 		}
+
 		// if the database is empty, ie all collections contains no document,
 		// we do not add the database to the activeDB map and just return
 		// directly
-		if emptyDatabase {
+		//
+		// unless it's an update, because if 'upsert' is set to true, a new
+		// document will be inserted ( if it's an update, forceCreate is true)
+		if dbInfo.emptyDatabase && !forceCreate {
 			return dbInfo, nil
 		}
+		// only increment the active database counter if the database is not empty
+		activeDatabases.Inc()
 	}
 
 	dbInfo.lastUsed = time.Now().Unix()
@@ -208,32 +216,33 @@ func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
 	}
 }
 
-func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDatabase bool, err error) {
-
-	emptyDatabase = true
+func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo dbMetaInfo, err error) {
 
 	if len(collections) > maxCollNb {
-		return emptyDatabase, fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
+		return dbInfo, fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
 	}
 	// clean any potentially remaining data
 	db.Drop(context.Background())
 
+	dbInfo = dbMetaInfo{
+		collections:   make(sort.StringSlice, 0, len(collections)),
+		emptyDatabase: true,
+	}
 	// order the collections by name, so the order of creation is
 	// garenteed to be always the same
-	collectionNames := make(sort.StringSlice, 0, len(collections))
 	for name := range collections {
-		collectionNames = append(collectionNames, name)
+		dbInfo.collections = append(dbInfo.collections, name)
 	}
-	collectionNames.Sort()
+	dbInfo.collections.Sort()
 
 	base := 0
-	for _, name := range collectionNames {
+	for _, name := range dbInfo.collections {
 
 		docs := collections[name]
 		if len(docs) == 0 {
 			continue
 		}
-		emptyDatabase = false
+		dbInfo.emptyDatabase = false
 
 		if len(docs) > maxDoc {
 			docs = docs[:maxDoc]
@@ -251,7 +260,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 		}
 
 		opts := options.InsertMany().SetOrdered(true)
-		_, err = db.Collection(name).InsertMany(context.Background(), toInsert, opts)
+		_, err := db.Collection(name).InsertMany(context.Background(), toInsert, opts)
 		if err != nil {
 			// In some case, a collection can be partially created even if some write failed
 			//
@@ -265,15 +274,11 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (emptyDat
 			//
 			// to avoid this kind of leaks, drop the db immediately if there is an error
 			db.Drop(context.Background())
-			return emptyDatabase, err
+			return dbInfo, err
 		}
 		base += len(docs)
 	}
-	if !emptyDatabase {
-		activeDatabases.Inc()
-	}
-
-	return emptyDatabase, nil
+	return dbInfo, nil
 }
 
 func seededObjectID(n int32) primitive.ObjectID {
@@ -334,37 +339,6 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 	return collectionName, method, stages, nil
 }
 
-func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]byte, error) {
-
-	var docs []bson.M
-	var err error
-	var cursor *mongo.Cursor
-
-	switch method {
-	case "find":
-		for len(stages) < 2 {
-			stages = append(stages, bson.M{})
-		}
-		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]).SetMaxTime(maxQueryTime))
-	case "aggregate":
-		cursor, err = collection.Aggregate(context.Background(), stages, options.Aggregate().SetMaxTime(maxQueryTime))
-	default:
-		err = fmt.Errorf("invalid method: %s", method)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("query failed: %v", err)
-	}
-
-	if err = cursor.All(context.Background(), &docs); err != nil {
-		return nil, fmt.Errorf("fail to get result from cursor: %v", err)
-	}
-
-	if len(docs) == 0 {
-		return []byte(noDocFound), nil
-	}
-	return mongoextjson.Marshal(docs)
-}
-
 func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 
 	if len(queryBytes) == 0 {
@@ -387,11 +361,65 @@ func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 	return stages, err
 }
 
-func exist(collectionName string, dbInfos dbMetaInfo) bool {
-	for _, name := range dbInfos.collections {
-		if name == collectionName {
-			return true
+func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]byte, error) {
+
+	var docs []bson.M
+	var err error
+	var cursor *mongo.Cursor
+
+	switch method {
+	case aggregateMethod:
+		cursor, err = collection.Aggregate(context.Background(), stages, options.Aggregate().SetMaxTime(maxQueryTime))
+	case findMethod:
+		for len(stages) < 2 {
+			stages = append(stages, bson.M{})
 		}
+		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]).SetMaxTime(maxQueryTime))
+	case updateMethod:
+		for len(stages) < 3 {
+			stages = append(stages, bson.M{})
+		}
+
+		multi, opts := parseUpdateOpts(stages[2])
+		if multi {
+			_, err = collection.UpdateMany(context.Background(), stages[0], stages[1], opts)
+		} else {
+			_, err = collection.UpdateOne(context.Background(), stages[0], stages[1], opts)
+		}
+
+		if err != nil {
+			return nil, fmt.Errorf("fail to run update: %v", err)
+		}
+		cursor, err = collection.Find(context.Background(), bson.M{})
+
+	default:
+		err = fmt.Errorf("invalid method: %s", method)
 	}
-	return false
+	if err != nil {
+		return nil, fmt.Errorf("query failed: %v", err)
+	}
+
+	if err = cursor.All(context.Background(), &docs); err != nil {
+		return nil, fmt.Errorf("fail to get result from cursor: %v", err)
+	}
+
+	if len(docs) == 0 {
+		return []byte(noDocFound), nil
+	}
+	return mongoextjson.Marshal(docs)
+}
+
+func parseUpdateOpts(optsDoc bson.M) (bool, *options.UpdateOptions) {
+
+	multi, _ := optsDoc["multi"].(bool)
+
+	upsert, _ := optsDoc["upsert"].(bool)
+	arrayFilters, _ := optsDoc["arrayFilters"].([]interface{})
+
+	return multi, options.Update().
+		SetUpsert(upsert).
+		SetArrayFilters(options.ArrayFilters{
+			Filters: arrayFilters,
+		})
+
 }

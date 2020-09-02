@@ -23,6 +23,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -53,11 +54,6 @@ const (
 	// interval between two Badger backup
 	backupInterval = 24 * time.Hour
 )
-
-type dbMetaInfo struct {
-	collections []string
-	lastUsed    int64
-}
 
 type server struct {
 	mux     *http.ServeMux
@@ -207,4 +203,19 @@ func (s *server) backup() {
 	if err != nil {
 		s.logger.Printf("backup failed: %v", err)
 	}
+}
+
+type dbMetaInfo struct {
+	collections   sort.StringSlice
+	lastUsed      int64
+	emptyDatabase bool
+}
+
+func (d *dbMetaInfo) hasCollection(collectionName string) bool {
+	for _, name := range d.collections {
+		if name == collectionName {
+			return true
+		}
+	}
+	return false
 }

@@ -119,14 +119,9 @@
             document.getElementById("share").disabled = showLink
         }
 
-        var templates = [
-            '[{"key":1},{"key":2}]',
-            'db={"collection":[{"key":0},{"key":12}],"other":[{"key2":2}]}',
-            '[{"collection": "collection","count": 10,"content": {"key": {"type": "int","minInt": 0,"maxInt": 10}}}]'
-        ]
-
         function setTemplate(index) {
-            configEditor.setValue(indent(templates[index]), 1)
+            configEditor.setValue(indent(templates[index].config), 1)
+            queryEditor.setValue(indent(templates[index].query), 1)
         }
 
         function showDoc(doShow) {
@@ -249,7 +244,7 @@
             }
 
             if (!isQueryValid(queryEditor.getValue().trim())) {
-                showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...)")
+                showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()")
                 return false
             }
             if (hasChangedSinceLastRun) {
@@ -299,6 +294,7 @@
                 <option value=0>bson single collection</option>
                 <option value=1>bson multiple collections</option>
                 <option value=2>mgodatagen</option>
+                <option value=3>update</option>
             </select>
             <label class="bold">Mode:</label>
             <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
