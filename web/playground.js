@@ -280,7 +280,7 @@ function isQueryValid(content) {
   }
   var queryWithoutComment = compactAndRemoveComment(content)
 
-  var correctQuery = /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/.test(queryWithoutComment)
+  var correctQuery = /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/.test(queryWithoutComment)
   if (!correctQuery) {
     return false
   }
@@ -292,6 +292,25 @@ function isQueryValid(content) {
   }
   return true
 }
+
+var templates = [
+  {
+    config: '[{"key":1},{"key":2}]',
+    query: 'db.collection.find()'
+  },
+  {
+    config: 'db={"orders":[{"_id":1,"item":"almonds","price":12,"quantity":2},{"_id":2,"item":"pecans","price":20,"quantity":1},{"_id":3}],"inventory":[{"_id":1,"sku":"almonds","description":"product 1","instock":120},{"_id":2,"sku":"bread","description":"product 2","instock":80},{"_id":3,"sku":"cashews","description":"product 3","instock":60},{"_id":4,"sku":"pecans","description":"product 4","instock":70},{"_id":5,"sku":null,"description":"Incomplete"},{"_id":6}]}',
+    query: 'db.orders.aggregate([{"$lookup":{"from":"inventory","localField":"item","foreignField":"sku","as":"inventory_docs"}}])'
+  },
+  {
+    config: '[{"collection":"collection","count":10,"content":{"key":{"type":"int","minInt":0,"maxInt":10}}}]',
+    query: 'db.collection.find()'
+  },
+  {
+    config: '[{"key":1},{"key":2}]',
+    query: 'db.collection.update({"key":2},{"$set":{"updated":true}},{"multi":false,"upsert":false})'
+  }
+]
 
 
 var configWordCompleter = {
@@ -345,10 +364,11 @@ var queryWordCompleter = {
 
     if (editor.getSession().getLine(0).includes(".find(")) {
       wordsQuery = wordsQuery.concat(querySnippet)
-    } else {
+    } else if (editor.getSession().getLine(0).includes(".aggregate(")){
       wordsQuery = wordsQuery.concat(aggregationSnippet)
+    } else {
+      wordsQuery = wordsQuery.concat(updateSnippet)
     }
-
 
     callback(null, wordsQuery.map(function (snippet) {
       return {
@@ -387,6 +407,11 @@ var methodSnippet = [
   {
     caption: "aggregate()",
     value: "aggregate()",
+    meta: "method"
+  },
+  {
+    caption: "update()",
+    value: "update()",
     meta: "method"
   },
 ]
@@ -1422,3 +1447,102 @@ var aggregationSnippet = [
     value: "$zip: {\n \"inputs\": [ \"array expression1\" ],\n \"useLongestLength\": \"boolean\",\n \"defaults\":  \"array expression\"\n}",
     meta: "array operator"
   }]
+
+
+  var updateSnippet = [
+    {
+      caption: "$currentDate",
+      value: "$currentDate: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$inc",
+      value: "$inc: { \"field\": number }",
+      meta: "update operator"
+    },
+    {
+      caption: "$min",
+      value: "$min: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$max",
+      value: "$max: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$mul",
+      value: "$mul: { \"field\": number }",
+      meta: "update operator"
+    },
+    {
+      caption: "$rename",
+      value: "$rename: { \"field\": \"newName\" }",
+      meta: "update operator"
+    },
+    {
+      caption: "$set",
+      value: "$set: { \"field\": \"value\" }",
+      meta: "update operator"
+    },
+    {
+      caption: "$setOnInsert",
+      value: "$setOnInsert: { \"field\": \"value\" }",
+      meta: "update operator"
+    },
+    {
+      caption: "$unset",
+      value: "$unset: { \"field\": \"\" }",
+      meta: "update operator"
+    },
+    {
+      caption: "$addToSet",
+      value: "$addToSet: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$pop",
+      value: "$pop: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$pull",
+      value: "$pull: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$push",
+      value: "$push: \"expression\"",
+      meta: "update operator"
+    },
+    {
+     caption: "$pullAll",
+     value: "$pullAll: { \"field\": [\"value1\", \"value2\"] }",
+     meta: "update operator"
+    }, 
+    {
+      caption: "$each",
+      value: "$each: [\"value1\", \"value2\"]",
+      meta: "update operator"
+    }, 
+    {
+      caption: "$position",
+      value: "$position: number",
+      meta: "update operator"
+    }, 
+    {
+      caption: "$slice",
+      value: "$slice: number",
+      meta: "update operator"
+    }, 
+    {
+      caption: "$sort",
+      value: "$sort: \"expression\"",
+      meta: "update operator"
+    },
+    {
+      caption: "$bit",
+      value: "$bit: { \"field\": { \"and|or|xor\": number} }",
+      meta: "update operator"
+    }
+  ]

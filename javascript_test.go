@@ -688,6 +688,11 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 			input: `db.collection.find(/**/)`,
 			valid: true,
 		},
+		{
+			name:  `update`,
+			input: `db.collection.update({"k":1},{"$set":{"a":true}})`,
+			valid: true,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -731,7 +736,9 @@ func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
 	if err != nil {
 		t.Error(err)
 	}
-	return bytes.NewBuffer(playgroundjs)
+	buffer := bytes.NewBuffer(playgroundjs)
+	buffer.WriteString("\n")
+	return buffer
 }
 
 func runJsTest(t *testing.T, buffer *bytes.Buffer, filename string) {
