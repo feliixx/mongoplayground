@@ -625,7 +625,28 @@ func TestRunExistingDB(t *testing.T) {
 	}
 
 	testStorageContent(t, 1, 0)
+}
 
+func TestRunUpdateTwice(t *testing.T) {
+
+	defer testServer.clearDatabases(t)
+
+	params := url.Values{"mode": {"bson"}, "config": {`[]`}, "query": {`db.collection.update({},{"$set":{"_id":0}},{"upsert":true})`}}
+
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	if want, got := `[{"_id":0}]`, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+	buf.Reset()
+	// re-run the same run query, activeDatabase counter should not be
+	// incremented because it's the same db, even if we re-create it
+	// every time
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	if want, got := `[{"_id":0}]`, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+
+	testStorageContent(t, 1, 0)
 }
 
 func TestConsistentError(t *testing.T) {
