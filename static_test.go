@@ -35,7 +35,7 @@ func TestStaticHandlers(t *testing.T) {
 	}{
 		{
 			name:         "css",
-			url:          "/static/playground-min-9.css",
+			url:          "/static/playground-min-10.css",
 			contentType:  "text/css; charset=utf-8",
 			responseCode: 200,
 		},
@@ -47,7 +47,7 @@ func TestStaticHandlers(t *testing.T) {
 		},
 		{
 			name:         "documentation",
-			url:          "/static/playground-min-9.js",
+			url:          "/static/playground-min-10.js",
 			contentType:  "application/javascript; charset=utf-8",
 			responseCode: 200,
 		},
