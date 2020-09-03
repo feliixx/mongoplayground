@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger/v2"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -185,6 +186,9 @@ func (s *server) clearDatabases(t *testing.T) {
 		s.activeDB = map[string]dbMetaInfo{}
 	}
 
+	// reset prometheus metrics
+	activeDatabases.Set(0)
+
 	keys := make([][]byte, 0)
 	err = s.storage.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
@@ -226,6 +230,9 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	}
 	if want, got := nbMongoDatabases, len(testServer.activeDB); want != got {
 		t.Errorf("expected %d db in map, but got %d", want, got)
+	}
+	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabases)); want != got {
+		t.Errorf("expected %d active db in prometheus counter, but got %d", want, got)
 	}
 	if want, got := nbBadgerRecords, testServer.countSavedPages(); want != got {
 		t.Errorf("expected %d page saved, but got %d", want, got)

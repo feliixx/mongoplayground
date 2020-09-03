@@ -151,12 +151,18 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, fo
 		// we do not add the database to the activeDB map and just return
 		// directly
 		//
-		// unless it's an update, because if 'upsert' is set to true, a new
-		// document will be inserted ( if it's an update, forceCreate is true)
-		if dbInfo.emptyDatabase && !forceCreate {
+		// if the database is empty, but it's an update (ie 'forceCreate' is true),
+		// it might be an upsert wich would create a database, so in doubt add the
+		// database to the activeDB map
+		//
+		// if the database was already present ( for exemple, if an user run the
+		// exact same update query twice ), but is re-created because 'forceCreate'
+		// is true, it's already in the activeDB map, we return directly to avoid
+		// incrementing the 'activeDatabase' counter. 'lastUsed' access is not updated,
+		// but it doesn't matter because db is re-created every time
+		if (dbInfo.emptyDatabase && !forceCreate) || (exists && forceCreate) {
 			return dbInfo, nil
 		}
-		// only increment the active database counter if the database is not empty
 		activeDatabases.Inc()
 	}
 
@@ -303,12 +309,13 @@ func seededObjectID(n int32) primitive.ObjectID {
 
 // query has to match the following regex:
 //
-//   /^db\..(\w*)\.(find|aggregate)\([\s\S]*\)$/
+//   /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/
 //
 // for example:
 //
 //   db.collection.find({k:1})
 //   db.collection.aggregate([{$project:{_id:0}}])
+//   db.collection.update({k:1},{$set:{n:1}},{upsert:true})
 //
 // input is filtered from front-end side, but this should
 // not panic on pathological/malformatted input
