@@ -143,7 +143,7 @@
 
         function loadDocs() {
             var r = new XMLHttpRequest()
-            r.open("GET", "/static/docs-8.html", true)
+            r.open("GET", "/static/docs-10.html", true)
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
@@ -283,7 +283,7 @@
 
 <body>
     <div class="toolbar">
-        <div class="title">Mongo Playground</div>
+        <div class="title" onclick="location.href='/';">Mongo Playground</div>
         <div class="controls">
             <input type="button" value="run" onclick="run()" title="ctrl + enter">
             <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
@@ -329,8 +329,8 @@
     <div class="footer">
         <p>
             MongoDB version {{ printf "%s" .MongoVersion }} -
-            <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
-            Source code is available on <a href="https://github.com/feliixx/mongoplayground">github</a>
+            <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> - 
+            <a href="/static/about.html">About this playground</a>
         </p>
     </div>
 </body>

@@ -5,8 +5,6 @@
   - [with bson documents](#user-content-from-an-array-of-bson-documents)
   - [with random data](#user-content-from-mgodatagen)
 - [Limitations](#user-content-limitations)
-- [Report an issue / contribute](#user-content-report-an-issue-and-contribute)
-- [Credits](#user-content-credits)
 
 # Shortcuts
 
@@ -746,19 +744,3 @@ db.collection.find({
   }
 })
 ```
-
-## Report an issue and contribute
-
-You can report issues here: [mongoplayground/issues](https://github.com/feliixx/mongoplayground/issues)
-
-The source code is available here: [mongoplayground](https://github.com/feliixx/mongoplayground)
-
-Contributions are welcome! 
-
-# Credits 
-
-This playground is heavily inspired from [The Go Playground](https://play.golang.org)
-
-Editors are created with [ace](https://ace.c9.io/), and the documentation is styled using [github-markdown-css](https://github.com/sindresorhus/github-markdown-css)
-
-Favicon was created on [favicon.io](https://favicon.io/) from an emoji provided by (twemoji)[https://github.com/twitter/twemoji]
