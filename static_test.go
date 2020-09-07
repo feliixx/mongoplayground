@@ -41,7 +41,13 @@ func TestStaticHandlers(t *testing.T) {
 		},
 		{
 			name:         "documentation",
-			url:          "/static/docs-8.html",
+			url:          "/static/docs-10.html",
+			contentType:  "text/html; charset=utf-8",
+			responseCode: 200,
+		},
+		{
+			name:         "documentation",
+			url:          "/static/about.html",
 			contentType:  "text/html; charset=utf-8",
 			responseCode: 200,
 		},
