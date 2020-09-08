@@ -728,7 +728,148 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 	`))
 
 	runJsTest(t, buffer, "tests/testFormatQuery.js")
+}
 
+func TestExtractAvailableCollections(t *testing.T) {
+
+	t.Parallel()
+
+	formatTests := []struct {
+		name                      string
+		input                     string
+		collectionsBsonMode       string
+		collectionsMgodatagenMode string
+	}{
+		{
+			name:                      `basic bson config default collection`,
+			input:                     `[{"k":1}]`,
+			collectionsBsonMode:       "collection",
+			collectionsMgodatagenMode: "collection",
+		},
+		{
+			name: `basic mgodatagen`,
+			input: `[
+  {
+    "collection": "test",
+	"count": 10
+  }
+]`,
+			collectionsBsonMode:       "collection",
+			collectionsMgodatagenMode: "test",
+		},
+		{
+			name: `bson multiple collection`,
+			input: `db={
+  "orders": [
+    {
+      "_id": 3
+    }
+  ],
+  "inventory": [
+    {
+      "_id": 1,
+      "sku": "almonds",
+      "description": "product 1",
+      "instock": 120
+    }
+  ]
+}`,
+			collectionsBsonMode:       "orders,inventory",
+			collectionsMgodatagenMode: "orders,inventory",
+		},
+		{
+			name:                      "empty config",
+			input:                     "",
+			collectionsBsonMode:       "collection",
+			collectionsMgodatagenMode: "collection",
+		},
+		{
+			name: `mgodatagen config without ':'`,
+			input: `[
+  {
+    "collection" "test",
+	"count": 10
+  }
+]`,
+			collectionsBsonMode:       "collection",
+			collectionsMgodatagenMode: "collection",
+		},
+		{
+			name: `bson multiple collection without ':'`,
+			input: `db={
+  "orders"
+    {
+      "_id": 3
+    }
+  ],
+  "inventory": [
+    {
+      "_id": 1,
+      "sku": "almonds",
+      "description": "product 1",
+      "instock": 120
+    }
+  ]
+}`,
+			collectionsBsonMode:       "inventory",
+			collectionsMgodatagenMode: "inventory",
+		},
+		{
+			name: `mgodatagen config ending with ':'`,
+			input: `[
+  {
+    "collection":
+  }
+]`,
+			collectionsBsonMode:       "collection",
+			collectionsMgodatagenMode: "collection",
+		},
+	}
+
+	buffer := loadPlaygroundJs(t)
+
+	testFormat := `
+	{
+		"name": %s,
+		"input": %s, 
+		"expectedModeBson": %v, 
+		"expectedModeMgodatagen": %v, 
+	}
+	`
+
+	buffer.Write([]byte("var tests = ["))
+	for _, tt := range formatTests {
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.collectionsBsonMode), strconv.Quote(tt.collectionsMgodatagenMode))
+		buffer.WriteByte(',')
+	}
+	buffer.Write([]byte(`
+	]
+	
+	`))
+
+	buffer.Write([]byte(`
+	for (let i in tests) {
+		let tt = tests[i]
+
+		updateAvailableCollection(tt.input, "bson")
+
+		let want = tt.expectedModeBson
+		let got = availableCollections.map(c => c.value).join(",") 
+		if (want != got) {
+			print("test " + tt.name + " in bson mode failed, expected: " + want +  " but got: " + got)
+		}
+
+		updateAvailableCollection(tt.input, "mgodatagen")
+
+		want = tt.expectedModeMgodatagen
+		got = availableCollections.map(c => c.value).join(",") 
+		if (want != got) {
+			print("test " + tt.name + " in mgodatagen mode failed, expected: " + want +  " but got: " + got)
+		}
+	}	
+	`))
+
+	runJsTest(t, buffer, "tests/testExtractCollections.js")
 }
 
 func loadPlaygroundJs(t *testing.T) *bytes.Buffer {

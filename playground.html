@@ -240,7 +240,9 @@
                 return false
             }
             if (hasChangedSinceLastRun) {
-                configEditor.setValue(indent(configEditor.getValue().trim()), -1)
+                var formattedConfig = indent(configEditor.getValue().trim())
+                configEditor.setValue(formattedConfig, -1)
+                updateAvailableCollection(formattedConfig, getCurrentMode())
             }
 
             if (!isQueryValid(queryEditor.getValue().trim())) {
