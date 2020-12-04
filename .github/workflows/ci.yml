@@ -3,7 +3,7 @@ name: Run tests
 on: push
 
 env: 
-  MONGO_VERSION: 4.4.0
+  MONGO_VERSION: 4.4.2
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
       run: |
         wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
         tar xzvf mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
-        echo "::add-path::$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin"
+        echo "$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin" >> $GITHUB_PATH
         mkdir $PWD/db
         mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
 
