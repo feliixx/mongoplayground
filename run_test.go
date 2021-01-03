@@ -571,6 +571,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `[{"_id":"new"}]`,
 			createdDB: 1, // this should create a db even if config is emtpy, because of the upsert
 		},
+		{
+			name: `update with pipeline`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"moshe","health":0,"maxHealth":200}]`},
+				"query":  {`db.collection.update({},[{"$set": { "health": "$maxHealth" }}])`},
+			},
+			result:    `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
+			createdDB: 1,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
