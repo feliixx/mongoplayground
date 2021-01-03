@@ -76,7 +76,7 @@ func contentTypeFromName(name string) string {
 	return "text/html; charset=utf-8"
 }
 
-// load static ressources (javascript, css, docs and default page)
+// load static resources (javascript, css, docs and default page)
 // and compress them in order to serve them faster
 func (s *server) compressStaticResources() error {
 

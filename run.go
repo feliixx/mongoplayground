@@ -113,7 +113,7 @@ func (s *server) run(p *page) ([]byte, error) {
 		return nil, fmt.Errorf("error in configuration:\n  %v", err)
 	}
 
-	// mongodb returns an empy array ( [] ) if we try to run a query on a collection
+	// mongodb returns an empty array ( [] ) if we try to run a query on a collection
 	// that doesn't exist. Check that the collection exist before running the query,
 	// to return a clear error message in that case
 	if !dbInfos.hasCollection(collectionName) {
@@ -152,10 +152,10 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, fo
 		// directly
 		//
 		// if the database is empty, but it's an update (ie 'forceCreate' is true),
-		// it might be an upsert wich would create a database, so in doubt add the
+		// it might be an upsert which would create a database, so in doubt add the
 		// database to the activeDB map
 		//
-		// if the database was already present ( for exemple, if an user run the
+		// if the database was already present ( for example, if an user run the
 		// exact same update query twice ), but is re-created because 'forceCreate'
 		// is true, it's already in the activeDB map, we return directly to avoid
 		// incrementing the 'activeDatabase' counter. 'lastUsed' access is not updated,
@@ -235,7 +235,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo d
 		emptyDatabase: true,
 	}
 	// order the collections by name, so the order of creation is
-	// garenteed to be always the same
+	// guaranteed to be always the same
 	for name := range collections {
 		dbInfo.collections = append(dbInfo.collections, name)
 	}
@@ -254,8 +254,8 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo d
 			docs = docs[:maxDoc]
 		}
 		// if no _id is specified, we insert fake objectID that are
-		// garenteed to be the same from one run to another, so the
-		// output of a specific config is garenteed to always be the
+		// guaranteed to be the same from one run to another, so the
+		// output of a specific config is guaranteed to always be the
 		// same, at least in bson mode
 		var toInsert = make([]interface{}, len(docs))
 		for i, doc := range docs {
