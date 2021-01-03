@@ -30,6 +30,7 @@ import (
 	"github.com/feliixx/mongoextjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
+	"go.mongodb.org/mongo-driver/bson/mgocompat"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -131,10 +132,11 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, fo
 	if !exists || forceCreate {
 
 		collections := map[string][]bson.M{}
+		indexes := map[string][]datagen.Index{}
 
 		switch mode {
 		case mgodatagenMode:
-			err = createContentFromMgodatagen(collections, config)
+			err = createContentFromMgodatagen(collections, indexes, config)
 		case bsonMode:
 			err = loadContentFromJSON(collections, config)
 		}
@@ -142,6 +144,15 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, fo
 			return dbInfo, err
 		}
 
+		// clean any potentially remaining data
+		err = db.Drop(context.Background())
+		if err != nil {
+			return dbInfo, err
+		}
+		err = createIndexes(db, indexes)
+		if err != nil {
+			return dbInfo, err
+		}
 		dbInfo, err = fillDatabase(db, collections)
 		if err != nil {
 			return dbInfo, err
@@ -172,7 +183,27 @@ func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, fo
 	return dbInfo, nil
 }
 
-func createContentFromMgodatagen(collections map[string][]bson.M, config []byte) error {
+func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error {
+	// see dtg.runMgoCompatCommand @ github.com/feliixx/mgodatagen/datagen
+	mgoRegistry := mgocompat.NewRespectNilValuesRegistryBuilder().Build()
+	for collName, idx := range indexes {
+		cmd := bson.D{
+			bson.E{Key: "createIndexes", Value: collName},
+			bson.E{Key: "indexes", Value: idx},
+		}
+		_, cmdBytes, err := bson.MarshalValueWithRegistry(mgoRegistry, cmd)
+		if err != nil {
+			return fmt.Errorf("failed to generate mgocompat command\n  cause: %v", err)
+		}
+		res := db.RunCommand(context.Background(), cmdBytes)
+		if res != nil && res.Err() != nil {
+			return res.Err()
+		}
+	}
+	return nil
+}
+
+func createContentFromMgodatagen(collections map[string][]bson.M, indexes map[string][]datagen.Index, config []byte) error {
 
 	collConfigs, err := datagen.ParseConfig(config, true)
 	if err != nil {
@@ -200,6 +231,9 @@ func createContentFromMgodatagen(collections map[string][]bson.M, config []byte)
 			}
 		}
 		collections[c.Name] = docs
+		if len(c.Indexes) > 0 {
+			indexes[c.Name] = c.Indexes
+		}
 	}
 	return nil
 }
@@ -227,8 +261,6 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo d
 	if len(collections) > maxCollNb {
 		return dbInfo, fmt.Errorf("max number of collection in a database is %d, but was %d", maxCollNb, len(collections))
 	}
-	// clean any potentially remaining data
-	db.Drop(context.Background())
 
 	dbInfo = dbMetaInfo{
 		collections:   make(sort.StringSlice, 0, len(collections)),

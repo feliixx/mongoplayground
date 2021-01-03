@@ -1,4 +1,6 @@
 mongoplayground
+mongoplayground.exe
+vendor
 results.bin
 *.txt
 mongoplayground.test
