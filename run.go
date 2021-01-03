@@ -319,7 +319,7 @@ func seededObjectID(n int32) primitive.ObjectID {
 //
 // input is filtered from front-end side, but this should
 // not panic on pathological/malformatted input
-func parseQuery(query []byte) (collectionName, method string, stages []bson.M, err error) {
+func parseQuery(query []byte) (collectionName, method string, stages []interface{}, err error) {
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
@@ -346,10 +346,17 @@ func parseQuery(query []byte) (collectionName, method string, stages []bson.M, e
 	return collectionName, method, stages, nil
 }
 
-func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
+// most of the time, each stage is a bson.M document.
+//
+// however, since mongodb 4.2, the second stage of an update()
+// can be an slice of bson.M
+//
+//   cf https://docs.mongodb.com/manual/tutorial/update-documents-with-aggregation-pipeline/
+//
+func unmarshalStages(queryBytes []byte) (stages []interface{}, err error) {
 
 	if len(queryBytes) == 0 {
-		return make([]bson.M, 2), nil
+		return []interface{}{bson.M{}, bson.M{}}, nil
 	}
 
 	// because projections are allowed, transform
@@ -368,7 +375,7 @@ func unmarshalStages(queryBytes []byte) (stages []bson.M, err error) {
 	return stages, err
 }
 
-func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]byte, error) {
+func runQuery(collection *mongo.Collection, method string, stages []interface{}) ([]byte, error) {
 
 	var docs []bson.M
 	var err error
@@ -416,10 +423,11 @@ func runQuery(collection *mongo.Collection, method string, stages []bson.M) ([]b
 	return mongoextjson.Marshal(docs)
 }
 
-func parseUpdateOpts(optsDoc bson.M) (bool, *options.UpdateOptions) {
+func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
+
+	optsDoc, _ := opts.(map[string]interface{})
 
 	multi, _ := optsDoc["multi"].(bool)
-
 	upsert, _ := optsDoc["upsert"].(bool)
 	arrayFilters, _ := optsDoc["arrayFilters"].([]interface{})
 
