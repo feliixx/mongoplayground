@@ -659,6 +659,27 @@ func TestRunUpdateTwice(t *testing.T) {
 	testStorageContent(t, 1, 0)
 }
 
+func TestRunFindAfterUpdate(t *testing.T) {
+	defer testServer.clearDatabases(t)
+
+	params := url.Values{"mode": {"bson"}, "config": {`[{_id:1}]`}, "query": {`db.collection.update({},{"$set":{"updated":true}})`}}
+
+	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	if want, got := `[{"_id":1,"updated":true}]`, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+	buf.Reset()
+	// change query to be a find(), but keep mode and config the same as for
+	// the previous update(). This should create a distinct db
+	params.Set("query", "db.collection.find()")
+	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	if want, got := `[{"_id":1}]`, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+
+	testStorageContent(t, 2, 0)
+}
+
 func TestConsistentError(t *testing.T) {
 
 	defer testServer.clearDatabases(t)
