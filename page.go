@@ -89,6 +89,30 @@ func (p *page) ID() []byte {
 // generate an unique hash to identify the database used by the p page. Two pages with
 // same config and mode should generate the same dbHash
 func (p *page) dbHash() string {
+
+	// if the query is an update, the base collection will change, wich can
+	// mess up things if a find() is run after an update() with the same config
+	// for example, when running the two folowing playgrounds successively
+	//
+	// {
+	//  "config": {"n": 1},
+	//  "query": "db.collection.update({},{"$set":{"updated":true}})"
+	// }
+	//
+	// {
+	//  "config": {"n": 1},
+	//  "query": "db.collection.find()"
+	// }
+	//
+	// output would be {"n": 1, "updated": true}, witch is incorrect for the
+	// second playground.
+	//
+	// to avoid this, add an extra byte when computing the hashsum, so the two above
+	// playgrounds get different database	
+	if bytes.Contains(p.Query, []byte(".update(")) {
+		return fmt.Sprintf("%x", md5.Sum(append(p.Config, p.Mode, 0)))
+	}
+
 	return fmt.Sprintf("%x", md5.Sum(append(p.Config, p.Mode)))
 }
 
