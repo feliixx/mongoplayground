@@ -252,6 +252,34 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 		},
 		{
+			name: "creating index",
+			params: url.Values{
+				"mode": {"mgodatagen"},
+				"config": {`[
+				{
+					"collection": "collection",
+					"count": 10,
+					"content": {
+						"k": {
+							"type": "string", 
+							"minLength": 1,
+							"maxLength": 5
+						}
+					},
+					"indexes": [
+						{
+					    	"name": "k_1",
+							"key": {
+							"k": 1
+					        }
+						}
+					]
+				}]`},
+				"query": {`db.collection.getIndexes()`}},
+			result:    `[{"key":{"_id":1},"name":"_id_","v":2},{"key":{"k":1},"name":"k_1","v":2}]`,
+			createdDB: 1,
+		},
+		{
 			name: "basic json mode",
 			params: url.Values{
 				"mode":   {"bson"},

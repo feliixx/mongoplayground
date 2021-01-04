@@ -66,9 +66,10 @@ db = {
 	errPlaygroundToBig = "playground is too big"
 	noDocFound         = "no document found"
 
-	findMethod      = "find"
-	aggregateMethod = "aggregate"
-	updateMethod    = "update"
+	findMethod       = "find"
+	aggregateMethod  = "aggregate"
+	updateMethod     = "update"
+	getIndexesMethod = "getIndexes"
 )
 
 // run a query and return the results as plain text.
@@ -437,7 +438,8 @@ func runQuery(collection *mongo.Collection, method string, stages []interface{})
 			return nil, fmt.Errorf("fail to run update: %v", err)
 		}
 		cursor, err = collection.Find(context.Background(), bson.M{})
-
+	case getIndexesMethod:
+		cursor, err = collection.Indexes().List(context.Background())
 	default:
 		err = fmt.Errorf("invalid method: %s", method)
 	}
