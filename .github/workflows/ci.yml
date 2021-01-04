@@ -1,6 +1,6 @@
 name: Run tests
 
-on: push
+on: [ push, pull_request ]
 
 env: 
   MONGO_VERSION: 4.4.2
