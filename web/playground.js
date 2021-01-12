@@ -987,7 +987,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$graphLookup",
-    value: '$graphLookup: {\n "from": "collection",\n "startWith": "expression",\n "connectFromField": "string",\n "connectToField": "string",\n "as": "string",\n "maxDepth": 2,\n "depthField": "string",\n "restrictSearchWithMatch": document"\n}',
+    value: '$graphLookup: {\n "from": "collection",\n "startWith": "expression",\n "connectFromField": "string",\n "connectToField": "string",\n "as": "string",\n "maxDepth": 2,\n "depthField": "string",\n "restrictSearchWithMatch": "document"\n}',
     meta: "aggregation stage"
   },
   {
