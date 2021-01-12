@@ -406,7 +406,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 	}	
 	`))
 
-	runJsTest(t, buffer, "tests/testIndent.js")
+	runJsTest(t, buffer, "testIndent.js")
 }
 
 func TestCompactAndRemoveComment(t *testing.T) {
@@ -525,8 +525,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 	}	
 	`))
 
-	runJsTest(t, buffer, "tests/testCompactAndRemoveComment.js")
-
+	runJsTest(t, buffer, "testCompactAndRemoveComment.js")
 }
 
 func TestValidConfig(t *testing.T) {
@@ -608,8 +607,7 @@ func TestValidConfig(t *testing.T) {
 	}	
 	`))
 
-	runJsTest(t, buffer, "tests/testFormatConfig.js")
-
+	runJsTest(t, buffer, "testFormatConfig.js")
 }
 
 func TestValidQuery(t *testing.T) {
@@ -764,7 +762,7 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 	}	
 	`))
 
-	runJsTest(t, buffer, "tests/testFormatQuery.js")
+	runJsTest(t, buffer, "testFormatQuery.js")
 }
 
 func TestExtractAvailableCollections(t *testing.T) {
@@ -906,11 +904,11 @@ func TestExtractAvailableCollections(t *testing.T) {
 	}	
 	`))
 
-	runJsTest(t, buffer, "tests/testExtractCollections.js")
+	runJsTest(t, buffer, "testExtractCollections.js")
 }
 
 func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
-	playgroundjs, err := ioutil.ReadFile("web/playground.js")
+	playgroundjs, err := ioutil.ReadFile("playground.js")
 	if err != nil {
 		t.Error(err)
 	}
@@ -921,14 +919,14 @@ func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
 
 func runJsTest(t *testing.T, buffer *bytes.Buffer, filename string) {
 
-	testFile, err := os.Create(filename)
+	testFile, err := ioutil.TempFile(os.TempDir(), filename)
 	if err != nil {
 		t.Error(err)
 	}
 	io.Copy(testFile, buffer)
 	testFile.Close()
 	// run the tests using mongodb javascript engine
-	cmd := exec.Command("mongo", "--quiet", filename)
+	cmd := exec.Command("mongo", "--quiet", testFile.Name())
 	var out bytes.Buffer
 	cmd.Stdout = &out
 
