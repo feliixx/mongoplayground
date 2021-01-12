@@ -438,7 +438,7 @@ func runQuery(collection *mongo.Collection, method string, stages []interface{},
 		cmd = bson.D{
 			{Key: aggregateMethod, Value: collection.Name()},
 			{Key: "pipeline", Value: stages},
-			{Key: "cursor", Value: bson.M{}},
+			{Key: "cursor", Value: bson.M{"batchSize": 1000}},
 		}
 
 	case findMethod:
@@ -481,7 +481,9 @@ func runQuery(collection *mongo.Collection, method string, stages []interface{},
 
 	// make sure that all types of queries have a timeout,
 	// even in explain mode
-	cmd = append(cmd, bson.E{Key: "maxTimeMS", Value: maxQueryTime.Milliseconds()})
+	cmd = append(cmd,
+		bson.E{Key: "maxTimeMS", Value: maxQueryTime.Milliseconds()},
+	)
 
 	if explainMode != "" {
 		cmd = bson.D{
