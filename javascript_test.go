@@ -335,6 +335,14 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			indent: `db.collection.find()/** comment with no line return*/
 `,
 		},
+		{
+			name: "aggregate with explain",
+			input: `db.collection.find().explain(
+				
+			)`,
+			compact: `db.collection.find().explain()`,
+			indent:  `db.collection.find().explain()`,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -469,6 +477,20 @@ func TestCompactAndRemoveComment(t *testing.T) {
 			*/`,
 			expected: `db.collection.find({k:1})`,
 		},
+		{
+			name: "explain",
+			input: `
+			db.collection.find().explain( )`,
+			expected: `db.collection.find().explain()`,
+		},
+		{
+			name: "explain before aggregate",
+			input: `
+			db.collection.explain(
+				"queryPlanner"
+			).aggregate([])`,
+			expected: `db.collection.explain("queryPlanner").aggregate([])`,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -507,7 +529,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 
 }
 
-func TestFormatConfig(t *testing.T) {
+func TestValidConfig(t *testing.T) {
 
 	t.Parallel()
 
@@ -590,7 +612,7 @@ func TestFormatConfig(t *testing.T) {
 
 }
 
-func TestFormatQuery(t *testing.T) {
+func TestValidQuery(t *testing.T) {
 
 	t.Parallel()
 
@@ -660,7 +682,7 @@ func TestFormatQuery(t *testing.T) {
 		},
 		{
 			name:  `chained non-empty method`,
-			input: `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).explain("executionTimeMillis")`,
+			input: `db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000")}}]).pretty()`,
 			valid: false,
 		},
 		{
@@ -691,6 +713,21 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		{
 			name:  `update`,
 			input: `db.collection.update({"k":1},{"$set":{"a":true}})`,
+			valid: true,
+		},
+		{
+			name:  `explain`,
+			input: `db.collection.find({"k":1}).explain()`,
+			valid: true,
+		},
+		{
+			name:  `explain with option`,
+			input: `db.collection.find({"k":1}).explain("executionStats")`,
+			valid: true,
+		},
+		{
+			name:  `explain before find`,
+			input: `db.collection.explain("queryPlanner").find({"k":1})`,
 			valid: true,
 		},
 	}

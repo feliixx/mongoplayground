@@ -66,10 +66,9 @@ db = {
 	errPlaygroundToBig = "playground is too big"
 	noDocFound         = "no document found"
 
-	findMethod       = "find"
-	aggregateMethod  = "aggregate"
-	updateMethod     = "update"
-	getIndexesMethod = "getIndexes"
+	findMethod      = "find"
+	aggregateMethod = "aggregate"
+	updateMethod    = "update"
 )
 
 // run a query and return the results as plain text.
@@ -100,7 +99,7 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) run(p *page) ([]byte, error) {
 
-	collectionName, method, stages, err := parseQuery(p.Query)
+	collectionName, method, stages, explainMode, err := parseQuery(p.Query)
 	if err != nil {
 		return nil, fmt.Errorf("error in query:\n  %v", err)
 	}
@@ -121,7 +120,7 @@ func (s *server) run(p *page) ([]byte, error) {
 	if !dbInfos.hasCollection(collectionName) {
 		return nil, fmt.Errorf(`collection "%s" doesn't exist`, collectionName)
 	}
-	return runQuery(db.Collection(collectionName), method, stages)
+	return runQuery(db.Collection(collectionName), method, stages, explainMode)
 }
 
 func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
@@ -352,11 +351,32 @@ func seededObjectID(n int32) primitive.ObjectID {
 //
 // input is filtered from front-end side, but this should
 // not panic on pathological/malformatted input
-func parseQuery(query []byte) (collectionName, method string, stages []interface{}, err error) {
+func parseQuery(query []byte) (collectionName, method string, stages []interface{}, explainMode string, err error) {
+
+	startExplain := bytes.Index(query, []byte(".explain("))
+	if startExplain != -1 {
+		endExplain := bytes.Index(query[startExplain:], []byte(")"))
+		if endExplain != -1 {
+			endExplain += startExplain
+			explainMode = string(query[startExplain+9 : endExplain])
+
+			if endExplain+1 == len(query) {
+				query = query[:startExplain]
+			} else {
+				query = append(query[:startExplain], query[endExplain+1:]...)
+			}
+
+			if explainMode == "" {
+				explainMode = "queryPlanner"
+			} else {
+				explainMode = explainMode[1 : len(explainMode)-1]
+			}
+		}
+	}
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
-		return "", "", nil, errors.New(errInvalidQuery)
+		return "", "", nil, "", errors.New(errInvalidQuery)
 	}
 
 	collectionName = string(p[1])
@@ -366,17 +386,17 @@ func parseQuery(query []byte) (collectionName, method string, stages []interface
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
 
 	if start == -1 || end == -1 {
-		return "", "", nil, errors.New(errInvalidQuery)
+		return "", "", nil, "", errors.New(errInvalidQuery)
 	}
 
 	method = string(queryBytes[:start])
 
 	stages, err = unmarshalStages(queryBytes[start+1 : end])
 	if err != nil {
-		return "", "", nil, fmt.Errorf("fail to parse content of query: %v", err)
+		return "", "", nil, "", fmt.Errorf("fail to parse content of query: %v", err)
 	}
 
-	return collectionName, method, stages, nil
+	return collectionName, method, stages, explainMode, nil
 }
 
 // most of the time, each stage is a bson.M document.
@@ -408,49 +428,90 @@ func unmarshalStages(queryBytes []byte) (stages []interface{}, err error) {
 	return stages, err
 }
 
-func runQuery(collection *mongo.Collection, method string, stages []interface{}) ([]byte, error) {
+func runQuery(collection *mongo.Collection, method string, stages []interface{}, explainMode string) ([]byte, error) {
 
-	var docs []bson.M
-	var err error
-	var cursor *mongo.Cursor
+	var cmd bson.D
 
 	switch method {
 	case aggregateMethod:
-		cursor, err = collection.Aggregate(context.Background(), stages, options.Aggregate().SetMaxTime(maxQueryTime))
+
+		cmd = bson.D{
+			{Key: aggregateMethod, Value: collection.Name()},
+			{Key: "pipeline", Value: stages},
+			{Key: "cursor", Value: bson.M{}},
+		}
+
 	case findMethod:
+
 		for len(stages) < 2 {
 			stages = append(stages, bson.M{})
 		}
-		cursor, err = collection.Find(context.Background(), stages[0], options.Find().SetProjection(stages[1]).SetMaxTime(maxQueryTime))
+
+		cmd = bson.D{
+			{Key: findMethod, Value: collection.Name()},
+			{Key: "filter", Value: stages[0]},
+			{Key: "projection", Value: stages[1]},
+		}
+
 	case updateMethod:
+
 		for len(stages) < 3 {
 			stages = append(stages, bson.M{})
 		}
 
+		var err error
 		multi, opts := parseUpdateOpts(stages[2])
 		if multi {
 			_, err = collection.UpdateMany(context.Background(), stages[0], stages[1], opts)
 		} else {
 			_, err = collection.UpdateOne(context.Background(), stages[0], stages[1], opts)
 		}
-
 		if err != nil {
 			return nil, fmt.Errorf("fail to run update: %v", err)
 		}
-		cursor, err = collection.Find(context.Background(), bson.M{})
-	case getIndexesMethod:
-		cursor, err = collection.Indexes().List(context.Background())
+
+		cmd = bson.D{
+			{Key: findMethod, Value: collection.Name()},
+			{Key: "filter", Value: bson.M{}},
+		}
+
 	default:
-		err = fmt.Errorf("invalid method: %s", method)
-	}
-	if err != nil {
-		return nil, fmt.Errorf("query failed: %v", err)
+		return nil, fmt.Errorf("invalid method: '%s'", method)
 	}
 
-	if err = cursor.All(context.Background(), &docs); err != nil {
+	// make sure that all types of queries have a timeout,
+	// even in explain mode
+	cmd = append(cmd, bson.E{Key: "maxTimeMS", Value: maxQueryTime.Milliseconds()})
+
+	if explainMode != "" {
+		cmd = bson.D{
+			{Key: "explain", Value: cmd},
+			{Key: "verbosity", Value: explainMode},
+		}
+	}
+
+	res := collection.Database().RunCommand(context.Background(), cmd)
+	if res.Err() != nil {
+		return nil, fmt.Errorf("query failed: %v", res.Err())
+	}
+
+	var cursorDoc bson.M
+	if err := res.Decode(&cursorDoc); err != nil {
 		return nil, fmt.Errorf("fail to get result from cursor: %v", err)
 	}
 
+	if explainMode != "" {
+		// not really sensitive, but it's useless as the server version already appears
+		// in the footer of the site, so just remove it
+		delete(cursorDoc, "serverInfo")
+		delete(cursorDoc, "ok")
+
+		return mongoextjson.Marshal(cursorDoc)
+	}
+	// result doc looks like
+	//
+	// {"cursor":{"firstBatch":[{"_id":1},{"_id":2}],"id":NumberLong(0),"ns":"dbName.collection"},"ok":1}
+	docs := cursorDoc["cursor"].(bson.M)["firstBatch"].(bson.A)
 	if len(docs) == 0 {
 		return []byte(noDocFound), nil
 	}

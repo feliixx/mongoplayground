@@ -252,34 +252,6 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 0,
 		},
 		{
-			name: "creating index",
-			params: url.Values{
-				"mode": {"mgodatagen"},
-				"config": {`[
-				{
-					"collection": "collection",
-					"count": 10,
-					"content": {
-						"k": {
-							"type": "string", 
-							"minLength": 1,
-							"maxLength": 5
-						}
-					},
-					"indexes": [
-						{
-					    	"name": "k_1",
-							"key": {
-							"k": 1
-					        }
-						}
-					]
-				}]`},
-				"query": {`db.collection.getIndexes()`}},
-			result:    `[{"key":{"_id":1},"name":"_id_","v":2},{"key":{"k":1},"name":"k_1","v":2}]`,
-			createdDB: 1,
-		},
-		{
 			name: "basic json mode",
 			params: url.Values{
 				"mode":   {"bson"},
@@ -306,7 +278,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":356636}]`},
 				"query":  {`db.collection.findOne()`},
 			},
-			result:    "query failed: invalid method: findOne",
+			result:    "invalid method: 'findOne'",
 			createdDB: 1,
 		},
 		{
@@ -607,6 +579,105 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {`db.collection.update({},[{"$set": { "health": "$maxHealth" }}])`},
 			},
 			result:    `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
+			createdDB: 1,
+		},
+		{
+			name: `explain default`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"greta"}]`},
+				"query":  {`db.collection.find().explain()`},
+			},
+			result:    `{"queryPlanner":{"indexFilterSet":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{},"planCacheKey":"8B3D4AB8","plannerVersion":1,"queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			createdDB: 1,
+		},
+		{
+			name: `explain executionStats`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"tim"}]`},
+				"query":  {`db.collection.find().explain("executionStats")`},
+			},
+			result:    `{"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			createdDB: 1,
+		},
+		{
+			name: `explain executionStats before find`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"tim"}]`},
+				"query":  {`db.collection.explain("executionStats").find()`},
+			},
+			result:    `{"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			createdDB: 0, // same config as above
+		},
+		{
+			name: `explain allPlansExecution before find`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"TP"}]`},
+				"query":  {`db.collection.explain("allPlansExecution").find()`},
+			},
+			result:    `{"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"40dd3ef1cd82a6d68d98fdcd3ddf4242.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			createdDB: 1,
+		},
+		{
+			name: `mgodatagen $text query without index`,
+			params: url.Values{
+				"mode": {"mgodatagen"},
+				"config": {`[
+					{
+					  "collection": "collection",
+					  "count": 10,
+					  "content": {
+						"question": {
+						  "type": "faker",
+						  "method": "MimeType"
+						}
+					  }
+					}
+				  ]`},
+				"query": {`db.collection.find({
+					$text: {
+					  $search: "application -rtf -pkcs"
+					}
+				  })`},
+			},
+			result:    `query failed: (IndexNotFound) text index required for $text query`,
+			createdDB: 1,
+		},
+		{
+			name: `mgodatagen $text query with index`,
+			params: url.Values{
+				"mode": {"mgodatagen"},
+				"config": {`[
+					{
+					  "collection": "collection",
+					  "count": 10,
+					  "content": {
+						"word": {
+						  "type": "string",
+						  "minLength": 3,
+						  "maxLength": 10
+						}
+					  },
+					  "indexes": [
+						{
+						  "name": "word_text",
+						  "key": {
+							"word": "text"
+						  }
+						}
+					  ]
+					}
+				  ]`},
+				"query": {`db.collection.find({
+					$text: {
+					  $search: "RIre"
+					}
+				  })`},
+			},
+			result:    `[{"_id":ObjectId("5a934e000102030405000005"),"word":"RIre"}]`,
 			createdDB: 1,
 		},
 	}

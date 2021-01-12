@@ -53,7 +53,7 @@ func TestStaticHandlers(t *testing.T) {
 		},
 		{
 			name:         "documentation",
-			url:          "/static/playground-min-10.js",
+			url:          "/static/playground-min-11.js",
 			contentType:  "application/javascript; charset=utf-8",
 			responseCode: 200,
 		},

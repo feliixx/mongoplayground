@@ -7,7 +7,7 @@
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
     <link rel="icon" type="image/png" href="/static/favicon.png" />
     <link href="/static/playground-min-10.css" rel="stylesheet" type="text/css">
-    <script src="/static/playground-min-10.js" type="text/javascript"></script>
+    <script src="/static/playground-min-11.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.10/ace.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.10/ext-language_tools.js"
         type="text/javascript"></script>
@@ -122,6 +122,7 @@
         function setTemplate(index) {
             configEditor.setValue(indent(templates[index].config), 1)
             queryEditor.setValue(indent(templates[index].query), 1)
+            document.getElementById(templates[index].mode).checked = true
         }
 
         function showDoc(doShow) {
@@ -165,7 +166,7 @@
 
                         hasChangedSinceLastRun = false
                         var response = r.responseText
-                        if (response.startsWith("[")) {
+                        if (response.startsWith("[") || response.startsWith("{")) {
                             showResult(response, true)
                         } else if (response === "no document found") {
                             showResult(response, false)
@@ -297,11 +298,13 @@
                 <option value=1>bson multiple collections</option>
                 <option value=2>mgodatagen</option>
                 <option value=3>update</option>
+                <option value=4>indexe</option>
+                <option value=5>explain</option>
             </select>
             <label class="bold">Mode:</label>
-            <input type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
+            <input id="bson" type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
             <label for="bson">bson</label>
-            <input type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
+            <input id="mgodatagen" type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
                 {{end}} />
             <label for="mgodatagen">mgodatagen</label>
             <input type="button" value="docs" onclick="showDoc(true)">
