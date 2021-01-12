@@ -94,10 +94,9 @@ function format(src, indent, keepComment) {
         }
         break
       case "n":
-        var tmp = src.substring(i, i + 9)
-        if (tmp === "new Date(") {
-          result += tmp
-          i += tmp.length
+        if (src.length >= i+9 && src.substring(i, i + 9) === "new Date(") {
+          result += "new Date("
+          i += "new Date(".length
           c = src.charAt(i)
           while (c !== ")" && i < src.length) {
             result += c
@@ -112,7 +111,6 @@ function format(src, indent, keepComment) {
         }
         break
       case "/":
-
         // single ligne comment, starting with '//' 
         if (src.length >= i + 1 && src.charAt(i + 1) == "/") {
 
@@ -277,6 +275,23 @@ function isQueryValid(content) {
   if (content.endsWith(";")) {
     content = content.slice(0, -1)
   }
+
+  // explain() is supported, it can be placed before or after the main query
+  // for example, folowing queries are valid: 
+  //
+  // db.c.find().explain()
+  // db.c.explain().find()
+  // db.c.explain("queryPlanner").aggregate([])
+  //
+  var startExplain = content.indexOf(".explain(")
+  if (startExplain != -1) {
+    var endExplain = content.indexOf(")", startExplain)
+    if (endExplain != -1) {
+      var explainPart = content.substring(startExplain, endExplain+1)
+      content  = content.replace(explainPart, "")
+    }
+  }
+
   var queryWithoutComment = compactAndRemoveComment(content)
 
   var correctQuery = /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/.test(queryWithoutComment)
@@ -295,19 +310,33 @@ function isQueryValid(content) {
 var templates = [
   {
     config: '[{"key":1},{"key":2}]',
-    query: 'db.collection.find()'
+    query: 'db.collection.find()',
+    mode: 'bson'
   },
   {
     config: 'db={"orders":[{"_id":1,"item":"almonds","price":12,"quantity":2},{"_id":2,"item":"pecans","price":20,"quantity":1},{"_id":3}],"inventory":[{"_id":1,"sku":"almonds","description":"product 1","instock":120},{"_id":2,"sku":"bread","description":"product 2","instock":80},{"_id":3,"sku":"cashews","description":"product 3","instock":60},{"_id":4,"sku":"pecans","description":"product 4","instock":70},{"_id":5,"sku":null,"description":"Incomplete"},{"_id":6}]}',
-    query: 'db.orders.aggregate([{"$lookup":{"from":"inventory","localField":"item","foreignField":"sku","as":"inventory_docs"}}])'
+    query: 'db.orders.aggregate([{"$lookup":{"from":"inventory","localField":"item","foreignField":"sku","as":"inventory_docs"}}])',
+    mode: 'bson'
   },
   {
     config: '[{"collection":"collection","count":10,"content":{"key":{"type":"int","minInt":0,"maxInt":10}}}]',
-    query: 'db.collection.find()'
+    query: 'db.collection.find()',
+    mode: 'mgodatagen'
   },
   {
     config: '[{"key":1},{"key":2}]',
-    query: 'db.collection.update({"key":2},{"$set":{"updated":true}},{"multi":false,"upsert":false})'
+    query: 'db.collection.update({"key":2},{"$set":{"updated":true}},{"multi":false,"upsert":false})',
+    mode: 'bson'
+  },
+  {
+    config: '[{"collection":"collection","count":10,"content":{"word":{"type":"string","minLength":3,"maxLength":10}},"indexes":[{"name":"word_text","key":{"word":"text"}}]}]',
+    query: 'db.collection.find({"$text":{"$search":"RIre"}})',
+    mode: 'mgodatagen'
+  },
+  {
+    config: '[{"_id":1,"item":"ABC","price":80,"sizes":["S","M","L"]},{"_id":2,"item":"EFG","price":120,"sizes":[]},{"_id":3,"item":"IJK","price":160,"sizes":"M"},{"_id":4,"item":"LMN","price":10},{"_id":5,"item":"XYZ","price":5.75,"sizes":null}]',
+    query: 'db.collection.aggregate([{"$unwind":{"path":"$sizes","preserveNullAndEmptyArrays":true}},{"$group":{"_id":"$sizes","averagePrice":{"$avg":"$price"}}},{"$sort":{"averagePrice":-1}}]).explain("executionStats")',
+    mode: 'bson'
   }
 ]
 
@@ -475,6 +504,11 @@ var methodSnippet = [
   {
     caption: "update()",
     value: "update()",
+    meta: "method"
+  },
+  {
+    caption: "explain()",
+    value: "explain()",
     meta: "method"
   },
 ]
