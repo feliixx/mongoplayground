@@ -35,10 +35,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var templates = template.Must(template.ParseFiles("playground.html"))
+var templates = template.Must(template.ParseFiles("web/playground.html"))
 
 const (
-	staticDir = "static"
+	staticDir = "web/static"
 	badgerDir = "storage"
 	backupDir = "backups"
 
