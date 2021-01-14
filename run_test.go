@@ -578,7 +578,7 @@ func TestRunCreateDB(t *testing.T) {
 				"query":  {`db.collection.update({},{"$set":{"_id":"new"}},{"upsert":true})`},
 			},
 			result:    `[{"_id":"new"}]`,
-			createdDB: 1, // this should create a db even if config is emtpy, because of the upsert
+			createdDB: 1, // this should create a db even if config is empty, because of the upsert
 		},
 		{
 			name: `update with pipeline`,

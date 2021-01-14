@@ -90,9 +90,9 @@ func (p *page) ID() []byte {
 // same config and mode should generate the same dbHash
 func (p *page) dbHash() string {
 
-	// if the query is an update, the base collection will change, wich can
+	// if the query is an update, the base collection will change, which can
 	// mess up things if a find() is run after an update() with the same config
-	// for example, when running the two folowing playgrounds successively
+	// for example, when running the two following playgrounds successively
 	//
 	// {
 	//  "config": {"n": 1},
@@ -108,7 +108,7 @@ func (p *page) dbHash() string {
 	// second playground.
 	//
 	// to avoid this, add an extra byte when computing the hashsum, so the two above
-	// playgrounds get different database	
+	// playgrounds get different database
 	if bytes.Contains(p.Query, []byte(".update(")) {
 		return fmt.Sprintf("%x", md5.Sum(append(p.Config, p.Mode, 0)))
 	}

@@ -74,7 +74,7 @@ func TestSave(t *testing.T) {
 			mode:      bsonSingleCollection,
 		},
 		{
-			name:      "bson mutliple db",
+			name:      "bson multiple db",
 			params:    url.Values{"mode": {"bson"}, "config": {`db={"c1":[{k:1}],"c2":[]}`}, "query": {templateQuery}},
 			result:    "p/AHWNKW4GK50",
 			newRecord: true,
