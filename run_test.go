@@ -631,6 +631,16 @@ func TestRunCreateDB(t *testing.T) {
 			createdDB: 1,
 		},
 		{
+			name: `malformatted explain`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"unfinished"}]`},
+				"query":  {`db.collection.find().explain(`},
+			},
+			result:    `[{"_id":1,"username":"unfinished"}]`,
+			createdDB: 1,
+		},
+		{
 			name: `mgodatagen $text query without index`,
 			params: url.Values{
 				"mode": {"mgodatagen"},
