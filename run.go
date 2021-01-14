@@ -70,7 +70,7 @@ db = {
 	aggregateMethod = "aggregate"
 	updateMethod    = "update"
 )
-
+	
 // run a query and return the results as plain text.
 // the result is compacted and looks like:
 //
@@ -339,40 +339,24 @@ func seededObjectID(n int32) primitive.ObjectID {
 	}
 }
 
-// query has to match the following regex:
+// find, aggregate and update queries are supported, with or without explain()
+// once the .explain() part is stripped, the query has to match the folowing
+// regex:
+//           /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/
 //
-//   /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/
-//
-// for example:
+// for example, thoses queries are valid:
 //
 //   db.collection.find({k:1})
 //   db.collection.aggregate([{$project:{_id:0}}])
 //   db.collection.update({k:1},{$set:{n:1}},{upsert:true})
+//   db.collection.find({k:1}).explain()
+//   db.collection.explain("executionStats").find({k:1})
 //
 // input is filtered from front-end side, but this should
 // not panic on pathological/malformatted input
 func parseQuery(query []byte) (collectionName, method string, stages []interface{}, explainMode string, err error) {
 
-	startExplain := bytes.Index(query, []byte(".explain("))
-	if startExplain != -1 {
-		endExplain := bytes.Index(query[startExplain:], []byte(")"))
-		if endExplain != -1 {
-			endExplain += startExplain
-			explainMode = string(query[startExplain+9 : endExplain])
-
-			if endExplain+1 == len(query) {
-				query = query[:startExplain]
-			} else {
-				query = append(query[:startExplain], query[endExplain+1:]...)
-			}
-
-			if explainMode == "" {
-				explainMode = "queryPlanner"
-			} else {
-				explainMode = explainMode[1 : len(explainMode)-1]
-			}
-		}
-	}
+	query, explainMode = stripExplain(query)
 
 	p := bytes.SplitN(query, []byte{'.'}, 3)
 	if len(p) != 3 {
@@ -397,6 +381,36 @@ func parseQuery(query []byte) (collectionName, method string, stages []interface
 	}
 
 	return collectionName, method, stages, explainMode, nil
+}
+
+func stripExplain(query []byte) (strippedQuery []byte, explainMode string) {
+
+	startExplain := bytes.Index(query, []byte(".explain("))
+	if startExplain == -1 {
+		return query, ""
+	}
+
+	endExplain := bytes.Index(query[startExplain:], []byte(")"))
+	if endExplain == -1 {
+		return query, ""
+	}
+
+	endExplain += startExplain
+	if endExplain+1 == len(query) {
+		query = query[:startExplain]
+	} else {
+		query = append(query[:startExplain], query[endExplain+1:]...)
+	}
+
+	explainMode = string(query[startExplain+9 : endExplain])
+	if len(explainMode) == 0 {
+		explainMode = "queryPlanner"
+	} else {
+		// remove the enclosing double quote (")
+		explainMode = explainMode[1 : len(explainMode)-1]
+	}
+
+	return query, explainMode
 }
 
 // most of the time, each stage is a bson.M document.
