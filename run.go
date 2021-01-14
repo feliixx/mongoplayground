@@ -70,7 +70,7 @@ db = {
 	aggregateMethod = "aggregate"
 	updateMethod    = "update"
 )
-	
+
 // run a query and return the results as plain text.
 // the result is compacted and looks like:
 //
@@ -340,7 +340,7 @@ func seededObjectID(n int32) primitive.ObjectID {
 }
 
 // find, aggregate and update queries are supported, with or without explain()
-// once the .explain() part is stripped, the query has to match the folowing
+// once the .explain() part is stripped, the query has to match the following
 // regex:
 //           /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/
 //
