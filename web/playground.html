@@ -53,6 +53,8 @@
             configEditor.completers = [configWordCompleter]
             queryEditor.completers = [queryWordCompleter]
 
+            updateAvailableCollection(configEditor.getValue(), getCurrentMode())
+
             configEditor.getSession().on('change', changeFunc)
             queryEditor.getSession().on('change', changeFunc)
 
@@ -120,9 +122,12 @@
         }
 
         function setTemplate(index) {
-            configEditor.setValue(indent(templates[index].config), 1)
+            var formattedConfig = indent(templates[index].config)
+            configEditor.setValue(formattedConfig, 1)
             queryEditor.setValue(indent(templates[index].query), 1)
+            resultEditor.setValue("", 1)
             document.getElementById(templates[index].mode).checked = true
+            updateAvailableCollection(formattedConfig, getCurrentMode())
         }
 
         function showDoc(doShow) {
