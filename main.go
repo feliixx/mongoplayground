@@ -22,11 +22,26 @@ import (
 	"os"
 )
 
+func redirectTLS(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
+}
+
 func main() {
 	l := log.New(os.Stdout, "", log.LstdFlags)
 	s, err := newServer(l)
 	if err != nil {
 		l.Fatalf("aborting: %v\n", err)
 	}
-	l.Fatal(http.ListenAndServe(":80", s))
+	go func() {
+		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
+			l.Fatalf("ListenAndServe error: %v", err)
+		}
+	}()
+	l.Fatal(http.ListenAndServeTLS(
+		":443",
+		"/etc/letsencrypt/live/www.mongoplayground.net/fullchain.pem",
+		"/etc/letsencrypt/live/www.mongoplayground.net/privkey.pem",
+		s,
+	),
+	)
 }
