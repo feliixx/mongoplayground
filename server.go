@@ -205,6 +205,9 @@ func (s *server) backup() {
 	if err != nil {
 		s.logger.Printf("backup failed: %v", err)
 	}
+
+	saveBackupToGoogleDrive(s.logger, f)
+
 	fileInfo, err := f.Stat()
 	if err != nil {
 		s.logger.Printf("fail to get backup stats")

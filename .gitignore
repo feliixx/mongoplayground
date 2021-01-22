@@ -11,3 +11,5 @@ debug
 tests/*.js
 backups
 .idea
+credentials.json
+token.json
