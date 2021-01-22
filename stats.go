@@ -49,6 +49,12 @@ var (
 			Help: "Database cleanup in second",
 		},
 	)
+	badgerBackup = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "badger_backup_size_bytes",
+			Help: "Size of last badger backup in bytes",
+		},
+	)
 )
 
 func init() {
@@ -56,6 +62,7 @@ func init() {
 	prometheus.MustRegister(activeDatabases)
 	prometheus.MustRegister(savedPlayground)
 	prometheus.MustRegister(cleanupDuration)
+	prometheus.MustRegister(badgerBackup)
 }
 
 func (s *server) computeSavedPlaygroundStats() error {

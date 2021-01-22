@@ -205,6 +205,11 @@ func (s *server) backup() {
 	if err != nil {
 		s.logger.Printf("backup failed: %v", err)
 	}
+	fileInfo, err := f.Stat()
+	if err != nil {
+		s.logger.Printf("fail to get backup stats")
+	}
+	badgerBackup.Set(float64(fileInfo.Size()))
 }
 
 type dbMetaInfo struct {
