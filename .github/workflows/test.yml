@@ -1,13 +1,21 @@
-name: Run tests
+name: Run tests with coverage 
 
-on: [ push, pull_request ]
+on:
+  push:
+    branches-ignore:
+      - production
+  pull_request:
+    branches-ignore:
+      - production
 
 env: 
-  MONGO_VERSION: 4.4.2
+  GO_VERSION: 1.15
+  LINT_VERSION: 1.34 
+  MONGO_VERSION: 4.4.3
 
 jobs:
-  build:
-    runs-on: ubuntu-18.04
+  test:
+    runs-on: ubuntu-20.04
 
     steps:
     - name: Check out code
@@ -16,7 +24,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v1
       with:
-        go-version: 1.15
+        go-version: $GO_VERSION
 
     - name: Vet code
       run: go vet ./...
@@ -24,13 +32,13 @@ jobs:
     - name: Lint code
       uses: golangci/golangci-lint-action@v2
       with:
-        version: v1.34
+        version: v$LINT_VERSION
 
     - name: Download MongoDB and setup standalone db
       run: |
-        wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
-        tar xzvf mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION.tgz
-        echo "$PWD/mongodb-linux-x86_64-ubuntu1804-$MONGO_VERSION/bin" >> $GITHUB_PATH
+        wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION.tgz
+        tar xzvf mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION.tgz
+        echo "$PWD/mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION/bin" >> $GITHUB_PATH
         mkdir $PWD/db
         mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
 
