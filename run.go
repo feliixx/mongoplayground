@@ -291,7 +291,12 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo d
 		// same, at least in bson mode
 		var toInsert = make([]interface{}, len(docs))
 		for i, doc := range docs {
-			if _, hasID := doc["_id"]; !hasID {
+
+			// in production logs, it appears that some docs can be
+			// nil at this point, triggering a panic.
+			// couldn't find how it's possible yet, so just add a nil
+			// check in the meantime
+			if _, hasID := doc["_id"]; !hasID && doc != nil {
 				doc["_id"] = seededObjectID(int32(base + i))
 			}
 			toInsert[i] = doc
