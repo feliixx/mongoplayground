@@ -48,6 +48,7 @@ const (
 	saveEndpoint    = "/save"
 	staticEndpoint  = "/static/"
 	metricsEndpoint = "/metrics"
+	healthEndpoint  = "/health"
 
 	// interval between two MongoDB cleanup
 	cleanupInterval = 4 * time.Hour
@@ -121,6 +122,7 @@ func newServer(logger *log.Logger) (*server, error) {
 	s.mux.HandleFunc(runEndpoint, s.runHandler)
 	s.mux.HandleFunc(saveEndpoint, s.saveHandler)
 	s.mux.HandleFunc(staticEndpoint, s.staticHandler)
+	s.mux.HandleFunc(healthEndpoint, s.healthHandler)
 	s.mux.Handle(metricsEndpoint, promhttp.Handler())
 
 	return s, nil
