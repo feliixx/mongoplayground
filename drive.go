@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
+	"google.golang.org/api/option"
 )
 
 const tokenFile = "token.json"
@@ -35,7 +36,7 @@ func saveBackupToGoogleDrive(log *log.Logger, backup io.Reader) {
 	}
 	client := config.Client(context.Background(), token)
 
-	service, err := drive.New(client)
+	service, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		log.Printf("Unable to retrieve Drive client: %v", err)
 		return
