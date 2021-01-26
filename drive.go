@@ -14,9 +14,12 @@ import (
 	"google.golang.org/api/option"
 )
 
-const tokenFile = "token.json"
+const (
+	tokenFile      = "token.json"
+	driveBackupDir = "autobackup"
+)
 
-func saveBackupToGoogleDrive(log *log.Logger, backup io.Reader) {
+func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
@@ -42,13 +45,20 @@ func saveBackupToGoogleDrive(log *log.Logger, backup io.Reader) {
 		return
 	}
 
-	dir, err := createDir(service, "autobackup", "root")
+	dir, err := getBackupDir(service)
 	if err != nil {
 		log.Printf("Unable to create dir: %v", err)
 		return
 	}
 
-	file, err := createFile(service, "backup.bak", "", backup, dir.Id)
+	backup, err := os.Open(fileName)
+	if err != nil {
+		log.Printf("Fail to open backup file: %v", err)
+		return
+	}
+	defer backup.Close()
+
+	file, err := createFile(service, "backup.bak", "application/data", backup, dir.Id)
 	if err != nil {
 		log.Printf("Fail to write backup in drive: %v", err)
 		return
@@ -67,16 +77,32 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	return tok, err
 }
 
-func createDir(service *drive.Service, name string, parentID string) (*drive.File, error) {
+func getBackupDir(service *drive.Service) (*drive.File, error) {
+
+	fileList, _ := service.Files.List().Do()
+	for _, dir := range fileList.Files {
+		if dir.Name == driveBackupDir {
+			return dir, nil
+		}
+	}
+
 	d := &drive.File{
-		Name:     name,
+		Name:     driveBackupDir,
 		MimeType: "application/vnd.google-apps.folder",
-		Parents:  []string{parentID},
+		Parents:  []string{"root"},
 	}
 	return service.Files.Create(d).Do()
 }
 
 func createFile(service *drive.Service, name string, mimeType string, content io.Reader, parentID string) (*drive.File, error) {
+
+	fileList, _ := service.Files.List().Do()
+	for _, f := range fileList.Files {
+		if f.Name == name {
+			service.Files.Delete(f.Id).Do()
+		}
+	}
+
 	f := &drive.File{
 		MimeType: mimeType,
 		Name:     name,

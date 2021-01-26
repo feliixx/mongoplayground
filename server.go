@@ -117,6 +117,8 @@ func newServer(logger *log.Logger) (*server, error) {
 		}
 	}(s)
 
+	s.backup()
+
 	s.mux.HandleFunc(homeEndpoint, s.newPageHandler)
 	s.mux.HandleFunc(viewEndpoint, s.viewHandler)
 	s.mux.HandleFunc(runEndpoint, s.runHandler)
@@ -199,20 +201,21 @@ func (s *server) backup() {
 	if err != nil {
 		s.logger.Printf("fail to create file %s: %v", fileName, err)
 	}
-	defer f.Close()
 
 	_, err = s.storage.Backup(f, 1)
 	if err != nil {
 		s.logger.Printf("backup failed: %v", err)
 	}
 
-	saveBackupToGoogleDrive(s.logger, f)
-
 	fileInfo, err := f.Stat()
 	if err != nil {
 		s.logger.Printf("fail to get backup stats")
 	}
 	badgerBackup.Set(float64(fileInfo.Size()))
+
+	f.Close()
+
+	saveBackupToGoogleDrive(s.logger, fileName)
 }
 
 type dbMetaInfo struct {
