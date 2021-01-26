@@ -117,8 +117,6 @@ func newServer(logger *log.Logger) (*server, error) {
 		}
 	}(s)
 
-	s.backup()
-
 	s.mux.HandleFunc(homeEndpoint, s.newPageHandler)
 	s.mux.HandleFunc(viewEndpoint, s.viewHandler)
 	s.mux.HandleFunc(runEndpoint, s.runHandler)
