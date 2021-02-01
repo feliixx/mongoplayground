@@ -1,12 +1,15 @@
-package main
+package internal
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"os"
+	"time"
 
+	"github.com/dgraph-io/badger/v2"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -15,9 +18,47 @@ import (
 )
 
 const (
-	tokenFile      = "token.json"
+	// local dir for storing backups
+	backupDir = "../backups"
+	// google drive dir for storing last backup
 	driveBackupDir = "autobackup"
+	// file holding google drive token
+	tokenFile = "token.json"
 )
+
+// create a backup from the badger db, and store it in backupDir.
+// keep a backup of last seven days only. Older backups are
+// overwritten
+func (s *Server) backup() {
+
+	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
+		os.Mkdir(backupDir, os.ModePerm)
+	}
+
+	fileName := fmt.Sprintf("%s/badger_%d.bak", backupDir, time.Now().Weekday())
+
+	localBackup(s.logger, s.storage, fileName)
+	saveBackupToGoogleDrive(s.logger, fileName)
+}
+
+func localBackup(log *log.Logger, storage *badger.DB, fileName string) {
+	f, err := os.Create(fileName)
+	if err != nil {
+		log.Printf("fail to create file %s: %v", fileName, err)
+	}
+	defer f.Close()
+
+	_, err = storage.Backup(f, 1)
+	if err != nil {
+		log.Printf("backup failed: %v", err)
+	}
+
+	fileInfo, err := f.Stat()
+	if err != nil {
+		log.Printf("fail to get backup stats")
+	}
+	badgerBackup.Set(float64(fileInfo.Size()))
+}
 
 func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 
@@ -63,6 +104,7 @@ func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 		log.Printf("Fail to write backup in drive: %v", err)
 		return
 	}
+
 	log.Printf("Successfully uploaded %s to drive", file.Name)
 }
 

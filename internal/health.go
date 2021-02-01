@@ -1,16 +1,23 @@
-package main
+package internal
 
 import (
 	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
-	statusUp      = "UP"
+	// everything is ok
+	statusUp = "UP"
+	// application is up, but at least one service it depends on
+	// is down
 	statusDegrade = "DEGRADE"
-	statusDown    = "DOWN"
+	// service is unavalaible
+	statusDown = "DOWN"
 )
 
 // Following variables will be statically linked at the time of compiling
@@ -28,9 +35,10 @@ var GitBranch string
 var BuildDate string
 
 type service struct {
-	Name   string
-	Status string
-	Cause  string `json:",omitempty"`
+	Name    string
+	Version string `json:",omitempty"`
+	Status  string
+	Cause   string `json:",omitempty"`
 }
 
 type buildInfo struct {
@@ -45,12 +53,12 @@ type healthResponse struct {
 	BuildInfo buildInfo
 }
 
-func (s *server) healthHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Write(s.healthCheck())
 }
 
-func (s *server) healthCheck() []byte {
+func (s *Server) healthCheck() []byte {
 
 	response := healthResponse{
 		Status: statusUp,
@@ -73,8 +81,9 @@ func (s *server) healthCheck() []byte {
 	}
 
 	mongodb := service{
-		Name:   "mongodb",
-		Status: statusUp,
+		Name:    "mongodb",
+		Version: string(s.mongodbVersion),
+		Status:  statusUp,
 	}
 
 	err := s.session.Ping(context.Background(), nil)
@@ -88,7 +97,20 @@ func (s *server) healthCheck() []byte {
 		badger,
 		mongodb,
 	}
-
 	b, _ := json.Marshal(response)
 	return b
+}
+
+func getMongodVersion(client *mongo.Client) []byte {
+
+	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
+
+	var buildInfo struct {
+		Version []byte
+	}
+	err := result.Decode(&buildInfo)
+	if err != nil {
+		return []byte("unknown")
+	}
+	return buildInfo.Version
 }

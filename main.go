@@ -20,11 +20,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/feliixx/mongoplayground/internal"
 )
 
 func main() {
 	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := newServer(l)
+	s, err := internal.NewServer(l)
 	if err != nil {
 		l.Fatalf("aborting: %v\n", err)
 	}

@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"bytes"
@@ -26,25 +26,14 @@ import (
 )
 
 const (
-	templateConfigOld = `[
-  {
-    "collection": "collection",
-    "count": 10,
-    "content": {
-		"k": {
-		  "type": "int",
-		  "minInt": 0, 
-		  "maxInt": 10
-		}
-	}
-  }
-]`
-	templateConfigNew = `[{"key":1},{"key":2}]`
-	templateQuery     = "db.collection.find()"
+	staticDir = "../web/static"
+
+	templateConfig = `[{"key":1},{"key":2}]`
+	templateQuery  = "db.collection.find()"
 )
 
 // serve static ressources (css/js/html)
-func (s *server) staticHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 
@@ -78,13 +67,13 @@ func contentTypeFromName(name string) string {
 
 // load static resources (javascript, css, docs and default page)
 // and compress them in order to serve them faster
-func (s *server) compressStaticResources() error {
+func (s *Server) compressStaticResources() error {
 
 	var buf bytes.Buffer
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
 	zw.Name, zw.ModTime = homeEndpoint, time.Now()
 
-	p, _ := newPage(bsonLabel, templateConfigNew, templateQuery)
+	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
 	p.MongoVersion = s.mongodbVersion
 	if err := templates.Execute(zw, p); err != nil {
 		return err
@@ -116,7 +105,7 @@ func (s *server) compressStaticResources() error {
 	return nil
 }
 
-func (s *server) add(zw *gzip.Writer, buf *bytes.Buffer) error {
+func (s *Server) add(zw *gzip.Writer, buf *bytes.Buffer) error {
 	if s.staticContent == nil {
 		s.staticContent = map[string][]byte{}
 	}
