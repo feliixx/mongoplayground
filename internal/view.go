@@ -14,20 +14,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"errors"
+	"html/template"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/badger/v2"
 )
 
+var templates = template.Must(template.ParseFiles("../web/playground.html"))
+
 const errNoMatchingPlayground = "this playground doesn't exist"
 
 // view a saved playground page identified by its ID
-func (s *server) viewHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := extractPageIDFromURL(r.URL.Path)
 
@@ -54,7 +57,7 @@ func extractPageIDFromURL(url string) []byte {
 	return []byte(id)
 }
 
-func (s *server) loadPage(id []byte) (*page, error) {
+func (s *Server) loadPage(id []byte) (*page, error) {
 
 	if len(id) != pageIDLength {
 		return nil, errors.New("invalid page id length")

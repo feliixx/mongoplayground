@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"github.com/dgraph-io/badger/v2"
@@ -33,7 +33,7 @@ var (
 	activeDatabases = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "active_db_count",
-			Help: "Active databases created on the server",
+			Help: "Active databases created on the Server",
 		},
 	)
 	savedPlayground = prometheus.NewCounterVec(
@@ -57,7 +57,7 @@ var (
 	)
 )
 
-func init() {
+func registerPrometheus() {
 	prometheus.MustRegister(requestDurations)
 	prometheus.MustRegister(activeDatabases)
 	prometheus.MustRegister(savedPlayground)
@@ -65,7 +65,7 @@ func init() {
 	prometheus.MustRegister(badgerBackup)
 }
 
-func (s *server) computeSavedPlaygroundStats() error {
+func (s *Server) computeSavedPlaygroundStats() error {
 
 	return s.storage.View(func(txn *badger.Txn) error {
 

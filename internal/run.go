@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"bytes"
@@ -41,7 +41,7 @@ const (
 	maxCollNb = 10
 	// max number of documents in a collection
 	maxDoc = 100
-	// max time a query can run before being aborted by the server
+	// max time a query can run before being aborted by the Server
 	maxQueryTime = 1 * time.Minute
 	// errInvalidConfig error message when the configuration doesn't match expected format
 	errInvalidConfig = `expecting an array of documents like 
@@ -75,7 +75,7 @@ db = {
 // the result is compacted and looks like:
 //
 //    [{_id:1,k:1},{_id:2,k:33}]
-func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) runHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -97,7 +97,7 @@ func (s *server) runHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *server) run(p *page) ([]byte, error) {
+func (s *Server) run(p *page) ([]byte, error) {
 
 	collectionName, method, stages, explainMode, err := parseQuery(p.Query)
 	if err != nil {
@@ -109,7 +109,8 @@ func (s *server) run(p *page) ([]byte, error) {
 	// if this is an 'update' query, always re-create the database,
 	// run the update and return the result of a 'find' query on the
 	// same collection
-	dbInfos, err := s.createDatabase(db, p.Mode, p.Config, method == updateMethod)
+	forceCreate := method == updateMethod
+	dbInfos, err := s.createDatabase(db, p.Mode, p.Config, forceCreate)
 	if err != nil {
 		return nil, fmt.Errorf("error in configuration:\n  %v", err)
 	}
@@ -123,10 +124,10 @@ func (s *server) run(p *page) ([]byte, error) {
 	return runQuery(db.Collection(collectionName), method, stages, explainMode)
 }
 
-func (s *server) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
+func (s *Server) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
 
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+	s.activeDbLock.Lock()
+	defer s.activeDbLock.Unlock()
 
 	dbInfo, exists := s.activeDB[db.Name()]
 	if !exists || forceCreate {

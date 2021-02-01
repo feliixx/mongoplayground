@@ -14,33 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
-	"os"
-	"sort"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var templates = template.Must(template.ParseFiles("web/playground.html"))
-
 const (
-	staticDir = "web/static"
-	badgerDir = "storage"
-	backupDir = "backups"
+	badgerDir = "../storage"
 
 	homeEndpoint    = "/"
 	viewEndpoint    = "/p/"
@@ -56,21 +48,26 @@ const (
 	backupInterval = 24 * time.Hour
 )
 
-type server struct {
+// Server is struct implementing http.Handler and holding
+// mongodb and badger connection
+type Server struct {
 	mux     *http.ServeMux
 	session *mongo.Client
 	storage *badger.DB
 	logger  *log.Logger
 
-	// mutex guards the activeDB map
-	mutex    sync.RWMutex
-	activeDB map[string]dbMetaInfo
+	// activeDB holds info of the database created / used during
+	// the last cleanupInterval. Its access is garded by activeDbLock
+	activeDbLock sync.RWMutex
+	activeDB     map[string]dbMetaInfo
 
+	// map storing static content compressed with gzip
 	staticContent  map[string][]byte
 	mongodbVersion []byte
 }
 
-func newServer(logger *log.Logger) (*server, error) {
+// NewServer returns a new instance of Server
+func NewServer(logger *log.Logger) (*Server, error) {
 
 	session, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -86,7 +83,7 @@ func newServer(logger *log.Logger) (*server, error) {
 		return nil, err
 	}
 
-	s := &server{
+	s := &Server{
 		mux:            http.DefaultServeMux,
 		session:        session,
 		storage:        db,
@@ -97,7 +94,7 @@ func newServer(logger *log.Logger) (*server, error) {
 
 	err = s.compressStaticResources()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("fail to compress statc resources: %v", err)
 	}
 
 	err = s.computeSavedPlaygroundStats()
@@ -105,19 +102,21 @@ func newServer(logger *log.Logger) (*server, error) {
 		return nil, fmt.Errorf("fail to read data from badger: %v", err)
 	}
 
-	go func(s *server) {
+	registerPrometheus()
+
+	go func(s *Server) {
 		for range time.Tick(cleanupInterval) {
 			s.removeExpiredDB()
 		}
 	}(s)
 
-	go func(s *server) {
+	go func(s *Server) {
 		for range time.Tick(backupInterval) {
 			s.backup()
 		}
 	}(s)
 
-	s.mux.HandleFunc(homeEndpoint, s.newPageHandler)
+	s.mux.HandleFunc(homeEndpoint, s.homeHandler)
 	s.mux.HandleFunc(viewEndpoint, s.viewHandler)
 	s.mux.HandleFunc(runEndpoint, s.runHandler)
 	s.mux.HandleFunc(saveEndpoint, s.saveHandler)
@@ -128,21 +127,7 @@ func newServer(logger *log.Logger) (*server, error) {
 	return s, nil
 }
 
-func getMongodVersion(client *mongo.Client) []byte {
-
-	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
-
-	var buildInfo struct {
-		Version []byte
-	}
-	err := result.Decode(&buildInfo)
-	if err != nil {
-		return []byte("unknown")
-	}
-	return buildInfo.Version
-}
-
-func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	start := time.Now()
 	s.mux.ServeHTTP(w, r)
@@ -155,78 +140,4 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if label == runEndpoint || label == viewEndpoint || label == homeEndpoint || label == saveEndpoint {
 		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
 	}
-}
-
-// return a playground with the default configuration
-func (s *server) newPageHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Encoding", "gzip")
-	w.Write(s.staticContent[homeEndpoint])
-}
-
-// remove database not used since the previous cleanup in MongoDB
-func (s *server) removeExpiredDB() {
-
-	now := time.Now()
-
-	s.mutex.Lock()
-	for name, infos := range s.activeDB {
-		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
-			err := s.session.Database(name).Drop(context.Background())
-			if err != nil {
-				s.logger.Printf("fail to drop database %v: %v", name, err)
-			}
-			delete(s.activeDB, name)
-		}
-	}
-	s.mutex.Unlock()
-
-	cleanupDuration.Set(time.Since(now).Seconds())
-	activeDatabases.Set(float64(len(s.activeDB)))
-}
-
-// create a backup from the badger db, and store it in backupDir.
-// keep a backup of last seven days only. Older backups are
-// overwritten
-func (s *server) backup() {
-
-	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		os.Mkdir(backupDir, os.ModePerm)
-	}
-
-	fileName := fmt.Sprintf("%s/badger_%d.bak", backupDir, time.Now().Weekday())
-	f, err := os.Create(fileName)
-	if err != nil {
-		s.logger.Printf("fail to create file %s: %v", fileName, err)
-	}
-
-	_, err = s.storage.Backup(f, 1)
-	if err != nil {
-		s.logger.Printf("backup failed: %v", err)
-	}
-
-	fileInfo, err := f.Stat()
-	if err != nil {
-		s.logger.Printf("fail to get backup stats")
-	}
-	badgerBackup.Set(float64(fileInfo.Size()))
-
-	f.Close()
-
-	saveBackupToGoogleDrive(s.logger, fileName)
-}
-
-type dbMetaInfo struct {
-	collections   sort.StringSlice
-	lastUsed      int64
-	emptyDatabase bool
-}
-
-func (d *dbMetaInfo) hasCollection(collectionName string) bool {
-	for _, name := range d.collections {
-		if name == collectionName {
-			return true
-		}
-	}
-	return false
 }
