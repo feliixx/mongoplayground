@@ -45,6 +45,8 @@ const (
 // create a backup from the badger db, and store it in backupDir.
 // keep a backup of last seven days only. Older backups are
 // overwritten
+// upload the last backup to google drive. Previous backup is moved to trash
+// and automatically removed after 30 days
 func (s *Server) backup() {
 
 	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
@@ -102,7 +104,7 @@ func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 		return
 	}
 
-	dir, err := getBackupDir(service)
+	dir, err := getDriveBackupDir(service)
 	if err != nil {
 		log.Printf("Unable to create dir: %v", err)
 		return
@@ -115,7 +117,7 @@ func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 	}
 	defer backup.Close()
 
-	file, err := createFile(service, "backup.bak", "application/data", backup, dir.Id)
+	file, err := uploadNewBackup(service, "backup.bak", "application/data", backup, dir.Id)
 	if err != nil {
 		log.Printf("Fail to write backup in drive: %v", err)
 		return
@@ -135,7 +137,7 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	return tok, err
 }
 
-func getBackupDir(service *drive.Service) (*drive.File, error) {
+func getDriveBackupDir(service *drive.Service) (*drive.File, error) {
 
 	fileList, _ := service.Files.List().Do()
 	for _, dir := range fileList.Files {
@@ -152,12 +154,14 @@ func getBackupDir(service *drive.Service) (*drive.File, error) {
 	return service.Files.Create(d).Do()
 }
 
-func createFile(service *drive.Service, name string, mimeType string, content io.Reader, parentID string) (*drive.File, error) {
+func uploadNewBackup(service *drive.Service, name string, mimeType string, content io.Reader, parentID string) (*drive.File, error) {
 
 	fileList, _ := service.Files.List().Do()
 	for _, f := range fileList.Files {
 		if f.Name == name {
-			service.Files.Delete(f.Id).Do()
+			// previous backup is moved to trash.
+			// files in trash for more than 30 days are automatically removed
+			service.Files.Update(f.Id, &drive.File{Trashed: true}).Do()
 		}
 	}
 
