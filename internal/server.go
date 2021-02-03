@@ -32,8 +32,6 @@ import (
 )
 
 const (
-	badgerDir = "../storage"
-
 	homeEndpoint    = "/"
 	viewEndpoint    = "/p/"
 	runEndpoint     = "/run"
@@ -64,10 +62,12 @@ type Server struct {
 	// map storing static content compressed with gzip
 	staticContent  map[string][]byte
 	mongodbVersion []byte
+	// local dir to store badger backups
+	backupDir      string
 }
 
 // NewServer returns a new instance of Server
-func NewServer(logger *log.Logger) (*Server, error) {
+func NewServer(logger *log.Logger, webDir, badgerDir, backupDir string) (*Server, error) {
 
 	session, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -90,9 +90,10 @@ func NewServer(logger *log.Logger) (*Server, error) {
 		activeDB:       map[string]dbMetaInfo{},
 		logger:         logger,
 		mongodbVersion: getMongodVersion(session),
+		backupDir:      backupDir,
 	}
 
-	err = s.compressStaticResources()
+	err = s.compressStaticResources(webDir)
 	if err != nil {
 		return nil, fmt.Errorf("fail to compress statc resources: %v", err)
 	}

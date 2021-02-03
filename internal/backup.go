@@ -34,8 +34,6 @@ import (
 )
 
 const (
-	// local dir for storing backups
-	backupDir = "../backups"
 	// google drive dir for storing last backup
 	driveBackupDir = "autobackup"
 	// file holding google drive token
@@ -49,11 +47,11 @@ const (
 // and automatically removed after 30 days
 func (s *Server) backup() {
 
-	if _, err := os.Stat(backupDir); os.IsNotExist(err) {
-		os.Mkdir(backupDir, os.ModePerm)
+	if _, err := os.Stat(s.backupDir); os.IsNotExist(err) {
+		os.Mkdir(s.backupDir, os.ModePerm)
 	}
 
-	fileName := fmt.Sprintf("%s/badger_%d.bak", backupDir, time.Now().Weekday())
+	fileName := fmt.Sprintf("%s/badger_%d.bak", s.backupDir, time.Now().Weekday())
 
 	localBackup(s.logger, s.storage, fileName)
 	saveBackupToGoogleDrive(s.logger, fileName)

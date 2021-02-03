@@ -60,13 +60,13 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	err := os.RemoveAll(badgerDir)
+	err := os.RemoveAll("../storage")
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
 	log := log.New(ioutil.Discard, "", 0)
-	s, err := NewServer(log)
+	s, err := NewServer(log, "../web", "../storage", "../backup")
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
@@ -164,14 +164,14 @@ func TestRemoveOldDB(t *testing.T) {
 
 func TestBackup(t *testing.T) {
 
-	dir, _ := ioutil.ReadDir(backupDir)
+	dir, _ := ioutil.ReadDir(testServer.backupDir)
 	for _, d := range dir {
-		os.RemoveAll(path.Join([]string{backupDir, d.Name()}...))
+		os.RemoveAll(path.Join([]string{testServer.backupDir, d.Name()}...))
 	}
 
 	testServer.backup()
 
-	dir, _ = ioutil.ReadDir(backupDir)
+	dir, _ = ioutil.ReadDir(testServer.backupDir)
 	if len(dir) != 1 {
 		t.Error("a backup file should have been created, but there was none")
 	}

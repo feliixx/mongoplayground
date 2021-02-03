@@ -18,14 +18,11 @@ package internal
 
 import (
 	"errors"
-	"html/template"
 	"net/http"
 	"strings"
 
 	"github.com/dgraph-io/badger/v2"
 )
-
-var templates = template.Must(template.ParseFiles("../web/playground.html"))
 
 const errNoMatchingPlayground = "this playground doesn't exist"
 
@@ -41,7 +38,7 @@ func (s *Server) viewHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(errNoMatchingPlayground))
 		return
 	}
-	err = templates.Execute(w, p)
+	err = homeTemplate.Execute(w, p)
 	if err != nil {
 		s.logger.Printf("fail to execute template for playground %s: %v", id, err)
 		return

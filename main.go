@@ -24,9 +24,15 @@ import (
 	"github.com/feliixx/mongoplayground/internal"
 )
 
+const (
+	badgerDir = "storage"
+	backupDir = "backups"
+	webDir    = "web"
+)
+
 func main() {
 	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := internal.NewServer(l)
+	s, err := internal.NewServer(l, webDir, badgerDir, backupDir)
 	if err != nil {
 		l.Fatalf("aborting: %v\n", err)
 	}

@@ -19,6 +19,7 @@ package internal
 import (
 	"bytes"
 	"compress/gzip"
+	"html/template"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -26,11 +27,11 @@ import (
 )
 
 const (
-	staticDir = "../web/static"
-
 	templateConfig = `[{"key":1},{"key":2}]`
 	templateQuery  = "db.collection.find()"
 )
+
+var homeTemplate *template.Template
 
 // serve static ressources (css/js/html)
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +68,11 @@ func contentTypeFromName(name string) string {
 
 // load static resources (javascript, css, docs and default page)
 // and compress them in order to serve them faster
-func (s *Server) compressStaticResources() error {
+func (s *Server) compressStaticResources(webDir string) error {
+
+	homeTemplate = template.Must(template.ParseFiles(webDir + "/playground.html"))
+
+	staticDir := webDir + "/static"
 
 	var buf bytes.Buffer
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
@@ -75,7 +80,7 @@ func (s *Server) compressStaticResources() error {
 
 	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
 	p.MongoVersion = s.mongodbVersion
-	if err := templates.Execute(zw, p); err != nil {
+	if err := homeTemplate.Execute(zw, p); err != nil {
 		return err
 	}
 	if err := s.add(zw, &buf); err != nil {
