@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"fmt"
@@ -27,15 +27,15 @@ import (
 // like:
 //
 //   https://mongoplayground.net/p/nJhd-dhf3Ea
-func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) saveHandler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	p, err := newPage(
 		r.FormValue("mode"),
 		r.FormValue("config"),
 		r.FormValue("query"),
 	)
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
@@ -46,7 +46,7 @@ func (s *server) saveHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%sp/%s", r.Referer(), id)
 }
 
-func (s *server) save(p *page) []byte {
+func (s *Server) save(p *page) []byte {
 
 	id, val := p.ID(), p.encode()
 

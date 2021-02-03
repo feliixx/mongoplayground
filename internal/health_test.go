@@ -14,42 +14,25 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
-	"log"
+	"fmt"
 	"net/http"
-	"os"
-
-	"github.com/feliixx/mongoplayground/internal"
+	"net/url"
+	"testing"
 )
 
-const (
-	badgerDir = "storage"
-	backupDir = "backups"
-	webDir    = "web"
-)
+func TestHealthCheck(t *testing.T) {
 
-func redirectTLS(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
-}
+	GitCommit = "af36b1ee99f0709d751fe7e70493b4e103560b2a"
+	GitBranch = "dev"
+	BuildDate = "2021-01-24T10:59:00"
 
-func main() {
-	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := internal.NewServer(l, webDir, badgerDir, backupDir)
-	if err != nil {
-		l.Fatalf("aborting: %v\n", err)
+	buf := httpBody(t, testServer.healthHandler, http.MethodGet, healthEndpoint, url.Values{})
+
+	want := fmt.Sprintf(`{"Status":"UP","Services":[{"Name":"badger","Status":"UP"},{"Name":"mongodb","Version":"%s","Status":"UP"}],"BuildInfo":{"Commit":"af36b1ee99f0709d751fe7e70493b4e103560b2a","Branch":"dev","BuildDate":"2021-01-24T10:59:00"}}`, testServer.mongodbVersion)
+	if got := buf.String(); want != got {
+		t.Errorf("expected\n%s\nbut got\n%s", want, got)
 	}
-	go func() {
-		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
-			l.Fatalf("ListenAndServe error: %v", err)
-		}
-	}()
-	l.Fatal(http.ListenAndServeTLS(
-		":443",
-		"/etc/letsencrypt/live/www.mongoplayground.net/fullchain.pem",
-		"/etc/letsencrypt/live/www.mongoplayground.net/privkey.pem",
-		s,
-	),
-	)
 }

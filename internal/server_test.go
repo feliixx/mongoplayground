@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"bytes"
@@ -37,32 +37,42 @@ import (
 )
 
 const (
-	templateResult = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
-	templateURL    = "p/snbIQ3uGHGq"
-	testDir        = "tests"
+	templateResult    = `[{"_id":ObjectId("5a934e000102030405000000"),"k":10},{"_id":ObjectId("5a934e000102030405000001"),"k":2},{"_id":ObjectId("5a934e000102030405000002"),"k":7},{"_id":ObjectId("5a934e000102030405000003"),"k":6},{"_id":ObjectId("5a934e000102030405000004"),"k":9},{"_id":ObjectId("5a934e000102030405000005"),"k":10},{"_id":ObjectId("5a934e000102030405000006"),"k":9},{"_id":ObjectId("5a934e000102030405000007"),"k":10},{"_id":ObjectId("5a934e000102030405000008"),"k":2},{"_id":ObjectId("5a934e000102030405000009"),"k":1}]`
+	templateURL       = "p/snbIQ3uGHGq"
+	templateConfigOld = `[
+  {
+    "collection": "collection",
+    "count": 10,
+    "content": {
+		"k": {
+		  "type": "int",
+		  "minInt": 0, 
+		  "maxInt": 10
+		}
+	}
+  }
+]`
 )
 
 var (
 	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	testServer     *server
+	testServer     *Server
 )
 
 func TestMain(m *testing.M) {
-	err := os.RemoveAll(badgerDir)
+	err := os.RemoveAll("../storage")
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
-	if _, err := os.Stat(testDir); os.IsNotExist(err) {
-		os.Mkdir(testDir, os.ModePerm)
-	}
 	log := log.New(ioutil.Discard, "", 0)
-	s, err := newServer(log)
+	s, err := NewServer(log, "../web", "../storage", "../backup")
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
 	testServer = s
+
 	defer s.session.Disconnect(context.Background())
 	defer s.storage.Close()
 
@@ -89,7 +99,7 @@ func TestBasePage(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, homeEndpoint, nil)
 	resp := httptest.NewRecorder()
 
-	testServer.newPageHandler(resp, req)
+	testServer.homeHandler(resp, req)
 
 	if http.StatusOK != resp.Code {
 		t.Errorf("expected response code %d but got %d", http.StatusOK, resp.Code)
@@ -154,34 +164,20 @@ func TestRemoveOldDB(t *testing.T) {
 
 func TestBackup(t *testing.T) {
 
-	dir, _ := ioutil.ReadDir(backupDir)
+	dir, _ := ioutil.ReadDir(testServer.backupDir)
 	for _, d := range dir {
-		os.RemoveAll(path.Join([]string{backupDir, d.Name()}...))
+		os.RemoveAll(path.Join([]string{testServer.backupDir, d.Name()}...))
 	}
 
 	testServer.backup()
 
-	dir, _ = ioutil.ReadDir(backupDir)
+	dir, _ = ioutil.ReadDir(testServer.backupDir)
 	if len(dir) != 1 {
 		t.Error("a backup file should have been created, but there was none")
 	}
 }
 
-func TestHealthCheck(t *testing.T) {
-
-	GitCommit = "af36b1ee99f0709d751fe7e70493b4e103560b2a"
-	GitBranch = "dev"
-	BuildDate = "2021-01-24T10:59:00"
-
-	buf := httpBody(t, testServer.healthHandler, http.MethodGet, healthEndpoint, url.Values{})
-
-	want := `{"Status":"UP","Services":[{"Name":"badger","Status":"UP"},{"Name":"mongodb","Status":"UP"}],"BuildInfo":{"Commit":"af36b1ee99f0709d751fe7e70493b4e103560b2a","Branch":"dev","BuildDate":"2021-01-24T10:59:00"}}`
-	if got := buf.String(); want != got {
-		t.Errorf("expected\n%s\nbut got\n%s", want, got)
-	}
-}
-
-func (s *server) clearDatabases(t *testing.T) {
+func (s *Server) clearDatabases(t *testing.T) {
 	dbNames, err := s.session.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
@@ -264,7 +260,7 @@ func filterDBNames(dbNames []string) []string {
 	return r
 }
 
-func (s *server) countSavedPages() (count int) {
+func (s *Server) countSavedPages() (count int) {
 	s.storage.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
