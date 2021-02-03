@@ -66,7 +66,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 	log := log.New(ioutil.Discard, "", 0)
-	s, err := NewServer(log, "../web", "../storage", "../backup")
+	s, err := NewServer(log, "../web", "../storage", "../backups")
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
