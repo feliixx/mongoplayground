@@ -76,6 +76,7 @@ jobs:
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} sudo systemctl stop $APP_NAME
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} mongo dropAll.js
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} mv /home/$APP_NAME/$APP_NAME /home/$APP_NAME/${APP_NAME}_old || true
+        ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} rm -r /home/$APP_NAME/web_old || true
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} mv /home/$APP_NAME/web /home/$APP_NAME/web_old || true
         scp $APP_NAME $APP_NAME@${{ secrets.HOST_PRODUCTION }}:/home/$APP_NAME
         scp -r web $APP_NAME@${{ secrets.HOST_PRODUCTION }}:/home/$APP_NAME
