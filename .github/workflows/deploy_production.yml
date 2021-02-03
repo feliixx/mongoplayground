@@ -46,9 +46,9 @@ jobs:
     - name: Run test
       run: go test ./... -race 
 
-    # build binary with git info, and strip debug info to reduce its size
+    # build binary without debug info to reduce its size
     - name: build binary 
-      run: go build -ldflags "-w -s -X main.BuildDate=$(date '+%Y-%m-%dT%H:%M:%S') -X main.GitCommit=$(git rev-parse HEAD) -X main.GitBranch=$(git rev-parse --abbrev-ref HEAD)"
+      run: go build -ldflags "-w -s"
 
     # no need to deploy thoses files, only web/static and web/playground.html
     # are used when the server is running
