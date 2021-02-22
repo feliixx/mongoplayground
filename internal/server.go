@@ -67,7 +67,7 @@ type Server struct {
 }
 
 // NewServer returns a new instance of Server
-func NewServer(logger *log.Logger, webDir, badgerDir, backupDir string) (*Server, error) {
+func NewServer(logger *log.Logger, badgerDir, backupDir string) (*Server, error) {
 
 	session, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -93,7 +93,7 @@ func NewServer(logger *log.Logger, webDir, badgerDir, backupDir string) (*Server
 		backupDir:      backupDir,
 	}
 
-	err = s.compressStaticResources(webDir)
+	err = s.compressStaticResources()
 	if err != nil {
 		return nil, fmt.Errorf("fail to compress statc resources: %v", err)
 	}

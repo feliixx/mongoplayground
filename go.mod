@@ -1,6 +1,6 @@
 module github.com/feliixx/mongoplayground
 
-go 1.14
+go 1.16
 
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.2

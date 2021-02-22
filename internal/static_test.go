@@ -19,7 +19,6 @@ package internal
 import (
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -101,7 +100,7 @@ func TestStaticHandlers(t *testing.T) {
 				if err != nil {
 					t.Errorf("coulnd't read response body: %v", err)
 				}
-				_, err = io.Copy(ioutil.Discard, zr)
+				_, err = io.Copy(io.Discard, zr)
 				if err != nil {
 					t.Errorf("fail to read gzip content: %v", err)
 				}

@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"time"
@@ -78,7 +77,7 @@ func localBackup(log *log.Logger, storage *badger.DB, fileName string) {
 
 func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
 
-	b, err := ioutil.ReadFile("credentials.json")
+	b, err := os.ReadFile("credentials.json")
 	if err != nil {
 		log.Printf("Unable to read client secret file: %v", err)
 		return
