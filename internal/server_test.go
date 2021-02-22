@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -60,13 +61,12 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	err := os.RemoveAll("../storage")
-	if err != nil {
-		fmt.Printf("aborting: %v\n", err)
-		os.Exit(1)
-	}
-	log := log.New(ioutil.Discard, "", 0)
-	s, err := NewServer(log, "../web", "../storage", "../backups")
+
+	storage, _ := ioutil.TempDir(os.TempDir(), "storage")
+	backups, _ := ioutil.TempDir(os.TempDir(), "backups")
+
+	log := log.New(io.Discard, "", 0)
+	s, err := NewServer(log, storage, backups)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
@@ -164,14 +164,14 @@ func TestRemoveOldDB(t *testing.T) {
 
 func TestBackup(t *testing.T) {
 
-	dir, _ := ioutil.ReadDir(testServer.backupDir)
+	dir, _ := os.ReadDir(testServer.backupDir)
 	for _, d := range dir {
 		os.RemoveAll(path.Join([]string{testServer.backupDir, d.Name()}...))
 	}
 
 	testServer.backup()
 
-	dir, _ = ioutil.ReadDir(testServer.backupDir)
+	dir, _ = os.ReadDir(testServer.backupDir)
 	if len(dir) != 1 {
 		t.Error("a backup file should have been created, but there was none")
 	}

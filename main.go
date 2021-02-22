@@ -27,12 +27,11 @@ import (
 const (
 	badgerDir = "storage"
 	backupDir = "backups"
-	webDir    = "web"
 )
 
 func main() {
 	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := internal.NewServer(l, webDir, badgerDir, backupDir)
+	s, err := internal.NewServer(l, badgerDir, backupDir)
 	if err != nil {
 		l.Fatalf("aborting: %v\n", err)
 	}

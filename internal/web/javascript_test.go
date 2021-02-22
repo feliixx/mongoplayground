@@ -14,13 +14,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package main
+package internal
 
 import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strconv"
@@ -908,7 +907,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 }
 
 func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
-	playgroundjs, err := ioutil.ReadFile("playground.js")
+	playgroundjs, err := os.ReadFile("playground.js")
 	if err != nil {
 		t.Error(err)
 	}
@@ -919,7 +918,7 @@ func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
 
 func runJsTest(t *testing.T, buffer *bytes.Buffer, filename string) {
 
-	testFile, err := ioutil.TempFile(os.TempDir(), filename)
+	testFile, err := os.CreateTemp(os.TempDir(), filename)
 	if err != nil {
 		t.Error(err)
 	}
