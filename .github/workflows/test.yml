@@ -9,7 +9,7 @@ on:
       - production
 
 env: 
-  MONGO_VERSION: 4.4.3
+  MONGO_VERSION: 4.4.4
 
 jobs:
   test:
