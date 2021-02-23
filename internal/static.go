@@ -19,9 +19,10 @@ package internal
 import (
 	"bytes"
 	"compress/gzip"
+	"embed"
 	"html/template"
-	"io/ioutil"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -31,12 +32,21 @@ const (
 	templateQuery  = "db.collection.find()"
 )
 
-var homeTemplate *template.Template
+var (
+	//go:embed web/static web/playground.html
+	assets embed.FS
+
+	homeTemplate *template.Template
+	reg          = regexp.MustCompile("-[0-9]+.")
+)
 
 // serve static ressources (css/js/html)
 func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 
+	// transform 'static/playground-min-10.css' to 'playground-min.css'
+	// the numeric id is juste used to force the browser to reload the new version
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
+	name = reg.ReplaceAllString(name, ".")
 
 	content, ok := s.staticContent[name]
 	if !ok {
@@ -68,11 +78,9 @@ func contentTypeFromName(name string) string {
 
 // load static resources (javascript, css, docs and default page)
 // and compress them in order to serve them faster
-func (s *Server) compressStaticResources(webDir string) error {
+func (s *Server) compressStaticResources() error {
 
-	homeTemplate = template.Must(template.ParseFiles(webDir + "/playground.html"))
-
-	staticDir := webDir + "/static"
+	homeTemplate = template.Must(template.ParseFS(assets, "web/playground.html"))
 
 	var buf bytes.Buffer
 	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
@@ -87,7 +95,9 @@ func (s *Server) compressStaticResources(webDir string) error {
 		return err
 	}
 
-	files, err := ioutil.ReadDir(staticDir)
+	staticDir := "web/static"
+
+	files, err := assets.ReadDir(staticDir)
 	if err != nil {
 		return err
 	}
@@ -96,7 +106,7 @@ func (s *Server) compressStaticResources(webDir string) error {
 		zw.Reset(&buf)
 
 		zw.Name, zw.ModTime = f.Name(), time.Now()
-		b, err := ioutil.ReadFile(staticDir + "/" + f.Name())
+		b, err := assets.ReadFile(staticDir + "/" + f.Name())
 		if err != nil {
 			return err
 		}

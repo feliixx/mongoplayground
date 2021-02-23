@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"runtime/debug"
 	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -36,20 +37,6 @@ const (
 	statusDown = "DOWN"
 )
 
-// Following variables will be statically linked at the time of compiling
-// to link, update ldflags during build like this:
-//
-// go build -ldflags "-X main.BuildDate=$(date '+%Y-%m-%dT%H:%M:%S') -X main.GitCommit=$(git rev-parse HEAD) -X main.GitBranch=$(git rev-parse --abbrev-ref HEAD)"
-
-// GitCommit holds commit hash of source tree
-var GitCommit string
-
-// GitBranch holds current branch name the code is built off
-var GitBranch string
-
-// BuildDate holds RFC3339 formatted UTC date (build time)
-var BuildDate string
-
 type service struct {
 	Name    string
 	Version string `json:",omitempty"`
@@ -57,16 +44,10 @@ type service struct {
 	Cause   string `json:",omitempty"`
 }
 
-type buildInfo struct {
-	Commit    string
-	Branch    string
-	BuildDate string
-}
-
 type healthResponse struct {
-	Status    string
-	Services  []service
-	BuildInfo buildInfo
+	Status   string
+	Services []service
+	Version  string
 }
 
 func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
@@ -78,11 +59,6 @@ func (s *Server) healthCheck() []byte {
 
 	response := healthResponse{
 		Status: statusUp,
-		BuildInfo: buildInfo{
-			Commit:    GitCommit,
-			Branch:    GitBranch,
-			BuildDate: BuildDate,
-		},
 	}
 
 	badger := service{
@@ -113,6 +89,11 @@ func (s *Server) healthCheck() []byte {
 		badger,
 		mongodb,
 	}
+
+	if moduleInfo, ok := debug.ReadBuildInfo(); ok {
+		response.Version = moduleInfo.Main.Version
+	}
+
 	b, _ := json.Marshal(response)
 	return b
 }
