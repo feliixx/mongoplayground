@@ -77,7 +77,7 @@
 
         function addDivResizeListener() {
 
-            document.addEventListener('mousedown', function (e) {
+            document.addEventListener("mousedown", function (e) {
                 if (e.target.id === "configResizeHandler") {
                     isConfigHandlerDragging = true
                 }
@@ -86,22 +86,23 @@
                 }
             })
 
-            document.addEventListener('mouseup', function (e) {
+            document.addEventListener("mouseup", function (e) {
                 isConfigHandlerDragging = false
                 isQueryHandlerDragging = false
             })
 
-            document.addEventListener('mousemove', function (e) {
+            document.addEventListener("mousemove", function (e) {
+                var box
                 if (isConfigHandlerDragging) {
-                    var box = document.getElementById("configPanel")
+                    box = document.getElementById("configPanel")
                 } else if (isQueryHandlerDragging) {
-                    var box = document.getElementById("queryPanel")
+                    box = document.getElementById("queryPanel")
                 } else {
                     return false
                 }
                 var pointerRelativeXpos = e.clientX - box.offsetLeft
-                box.style.width = (Math.max(minWidth, pointerRelativeXpos + 2)) + 'px'
-                box.style.flexGrow = 0
+                box.style.width = (Math.max(minWidth, pointerRelativeXpos + 2)) + "px"
+                box.style.flexGrow = "0"
             })
         }
 
@@ -208,7 +209,7 @@
         }
 
         function getCurrentMode() {
-            return document.querySelector('input[name="mode"]:checked').value
+            return document.querySelector("input[name='mode']:checked").value
         }
 
         function encodePlayground(keepComment) {
