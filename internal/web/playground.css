@@ -7,7 +7,7 @@ body {
 .toolbar {
     width: 100%;
     height: 50px;
-    background-color: #333
+    background-color: #353535
 }
 
 .toolbar>.title {
@@ -39,20 +39,6 @@ body {
     font-size: 1.2em
 }
 
-.toolbar>.controls>select {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: 1px solid gray;
-    border-radius: 4px;
-    background-color: #ececec;
-    font-size: 1em;
-    height: 30px;
-    width: 200px;
-    text-align: center;
-    text-align-last: center
-}
-
 .toolbar>.controls>input[type=text] {
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -71,17 +57,12 @@ body {
     border: 1px solid #375eab;
     font-size: 1em;
     background: #375eab;
-    color: #fff;
+    color: #ffffff;
     border-radius: 5px
 }
 
 .toolbar>.controls>input[type=button]:hover, input[type=button]:disabled {
     background: #1f3663!important
-}
-
-.toolbar>.controls>input[type=radio] {
-    vertical-align: middle;
-    margin: 0
 }
 
 .content {
@@ -209,10 +190,13 @@ body {
         margin: 0
     }
     .toolbar>.controls>:nth-child(2),
-    .toolbar>.controls>:nth-child(4),
     .toolbar>.controls>:nth-child(5),
     .toolbar>.controls>:nth-child(6),
     .toolbar>.controls>:nth-child(7),
+    .toolbar>.controls>:nth-child(8),
+    .toolbar>.controls>:nth-child(9),
+    .toolbar>.controls>:nth-child(10),
+    .toolbar>.controls>:nth-child(11),
     .toolbar>.title {
         display: none
     }
@@ -239,9 +223,10 @@ body {
 }
 
 @media only screen and (min-width:1000px) and (max-width:1450px) {
-    .toolbar>.controls>:nth-child(5),
-    .toolbar>.controls>:nth-child(6),
-    .toolbar>.controls>:nth-child(7) {
+    .toolbar>.controls>:nth-child(2),
+    .toolbar>.controls>:nth-child(7),
+    .toolbar>.controls>:nth-child(8),
+    .toolbar>.controls>:nth-child(9){
         display: none
     }
 }
@@ -657,4 +642,82 @@ body {
     position: relative;
     z-index: 1;
     border-color: #0366d6
+}
+
+/** Style for custom combobox, adapatation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
+
+.js-Dropdown {
+    display: inline-block;
+    font-size: 1em;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    position: relative;
+}
+
+.js-Dropdown-title {
+    color: #C9D1D9;
+    background: #0D1117;
+    border: 1px solid #a5a5a5;
+    border-radius: 4px;
+    box-sizing: border-box;
+    cursor: pointer;
+    font-size: 1em;
+    padding: .4em .6em;
+    position: relative;
+    text-align: left;
+    height: 30px;
+}
+.js-Dropdown-title:after {
+    border-color: #a5a5a5 transparent transparent transparent;
+    border-style: solid;
+    border-width: 6px;
+    content: '';
+    display: block;
+    height: 0;
+    position: absolute;
+    right: 0.5em;
+    top: 44%;
+    width: 0;
+}
+.js-Dropdown-list {
+    color: #ffffff;
+    background: #0D1117;
+    border-left: 1px solid #a5a5a5;
+    border-right: 1px solid #a5a5a5;
+    box-sizing: border-box;
+    display: none;
+    height: 0;
+    list-style: none;
+    margin: 0;
+    opacity: 0;
+    padding: 0;
+    position: absolute;
+    transition: .2s linear;
+    z-index: 999;
+}
+.js-Dropdown-list.is-open {
+    display: block;
+    height: auto;
+    opacity: 1;
+}
+.js-Dropdown-list li {
+    border-bottom: 1px solid #a5a5a5;
+    cursor: pointer;
+    padding: .8em 0 .8em 1.5em;
+}
+.js-Dropdown-list li:hover {
+    background-color: #375eab;
+}
+.js-Dropdown-list li.is-selected {
+    background-color: #1f3663;
+    color: #ffffff;
+}
+
+#custom-mode > .js-Dropdown-title,
+#custom-mode > .js-Dropdown-list {
+    width: 130px;
+}
+
+#custom-template > .js-Dropdown-title,
+#custom-template > .js-Dropdown-list {
+    width: 210px;
 }
