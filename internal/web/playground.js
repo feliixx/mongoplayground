@@ -364,8 +364,8 @@ var templates = [
     mode: 'bson'
   },
   {
-    config: '[{"collection":"collection","count":10,"content":{"word":{"type":"string","minLength":3,"maxLength":10}},"indexes":[{"name":"word_text","key":{"word":"text"}}]}]',
-    query: 'db.collection.find({"$text":{"$search":"RIre"}})',
+    config: '[{"collection":"collection","count":5,"content":{"description":{"type":"fromArray","in":["Coffee and cakes","Gourmet hamburgers","Just coffee","Discount clothing","Indonesian goods"]}},"indexes":[{"name":"description_text_idx","key":{"description":"text"}}]}]',
+    query: 'db.collection.find({"$text":{"$search":"coffee"}})',
     mode: 'mgodatagen'
   },
   {
@@ -922,7 +922,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$bucket",
-    value: '$bucket: {\n "groupBy": "expression",\n "boundaries": [ "lowerbound1", "lowerbound2" ],\n "default": "literal",\n "output": {\n  "output1": "$accumulator expression",\n  "outputN": "$accumulator expression" \n }\n}',
+    value: '$bucket: {\n "groupBy": "expression",\n "boundaries": [ "lowerbound1", "lowerbound2" ],\n "default": "literal",\n "output": {\n  "output1": "$accumulator expression",\n  "outputN": "$accumulator expression"\n }\n}',
     meta: "aggregation stage"
   },
   {
@@ -957,7 +957,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$convert",
-    value: '$convert:\n{\n "input": "expression",\n "to": "type expression",\n "onError": "expression",\n "onNull": "expression"\n}',
+    value: '$convert: {\n "input": "expression",\n "to": "type expression",\n "onError": "expression",\n "onNull": "expression"\n}',
     meta: "type operator"
   },
   {
@@ -1067,7 +1067,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$group",
-    value: '$group:\n{\n "_id": "group by expression", \n "field1": "accumulator1" : "expression1" }',
+    value: '$group: {\n "_id": "group by expression",\n "field": { "accumulator" : "expression" }\n}',
     meta: "aggregation stage"
   },
   {
@@ -1162,7 +1162,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$lookup",
-    value: '$lookup:\n{\n "from": "collection to join",\n "localField": "field from the input documents",\n "foreignField": "field from the documents of the from collection",\n "as": "output array field"\n }',
+    value: '$lookup: {\n "from": "collection to join",\n "localField": "field from the input documents",\n "foreignField": "field from the documents of the from collection",\n "as": "output array field"\n}',
     meta: "aggregation stage"
   },
   {
@@ -1197,7 +1197,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$merge",
-    value: '$merge: {\n "into": "collection",\n "on": "identifier field", \n "let": "variables",\n "whenMatched": "replace|keepExisting|merge|fail|pipeline",\n "whenNotMatched": "insert|discard|fail"}',                     // Optional\n}",
+    value: '$merge: {\n "into": "collection",\n "on": "identifier field",\n "let": "variables",\n "whenMatched": "replace|keepExisting|merge|fail|pipeline",\n "whenNotMatched": "insert|discard|fail"\n}',                     // Optional\n}",
     meta: "aggregation stage"
   },
   {
@@ -1292,7 +1292,7 @@ var aggregationSnippet = [
   },
   {
     caption: "$reduce",
-    value: '$reduce: {\n "input": "array",\n "initialValue": "expression",\n "in": "expression"\n}',
+    value: '$reduce: { "input": "array", "initialValue": "expression", "in": "expression" }',
     meta: "array operator"
   },
   {
