@@ -133,10 +133,8 @@ func testPlaygroundStats(t *testing.T, nbMgoDatagen, nbBsonSingle, nbBsonMultipl
 
 	// reset saved playground metrics
 	savedPlayground.Reset()
-	err := testServer.computeSavedPlaygroundStats()
-	if err != nil {
-		t.Errorf("fail to get stats from saved playgrounds")
-	}
+	computeSavedPlaygroundStats(testServer.storage)
+
 	resp := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, metricsEndpoint, nil)
 	promhttp.Handler().ServeHTTP(resp, req)
