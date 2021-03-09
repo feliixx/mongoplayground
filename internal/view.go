@@ -17,8 +17,10 @@
 package internal
 
 import (
+	"compress/gzip"
 	"errors"
 	"github.com/andybalholm/brotli"
+	"io"
 	"net/http"
 	"strings"
 
@@ -32,24 +34,25 @@ func (s *Server) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := extractPageIDFromURL(r.URL.Path)
 
-	p, err := s.loadPage(id)
+	page, err := s.loadPage(id)
 	if err != nil {
 		s.logger.Printf("fail to load page with id %s : %v", id, err)
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(errNoMatchingPlayground))
+		serveNoMatchingPlayground(w)
 		return
 	}
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Encoding", contentEncoding)
 
-	br := brotli.NewWriter(w)
-	err = homeTemplate.Execute(br, p)
-	if err != nil {
-		s.logger.Printf("fail to execute template for playground %s: %v", id, err)
-		return
+	var writer io.WriteCloser
+	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		w.Header().Set("Content-Encoding", brotliEncoding)
+		writer = brotli.NewWriter(w)
+	} else {
+		w.Header().Set("Content-Encoding", gzipEncoding)
+		writer = gzip.NewWriter(w)
 	}
-	br.Close()
+
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	homeTemplate.Execute(writer, page)
+	writer.Close()
 }
 
 func extractPageIDFromURL(url string) []byte {
@@ -81,4 +84,10 @@ func (s *Server) loadPage(id []byte) (*page, error) {
 		})
 	})
 	return p, err
+}
+
+func serveNoMatchingPlayground(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(errNoMatchingPlayground))
 }
