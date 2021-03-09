@@ -91,11 +91,12 @@ func NewServer(logger *log.Logger, badgerDir, backupDir string) (*Server, error)
 		logger:         logger,
 		mongodbVersion: getMongodVersion(session),
 		backupDir:      backupDir,
+		staticContent:  map[string][]byte{},
 	}
 
 	err = s.compressStaticResources()
 	if err != nil {
-		return nil, fmt.Errorf("fail to compress statc resources: %v", err)
+		return nil, fmt.Errorf("fail to compress static resources: %v", err)
 	}
 
 	err = s.computeSavedPlaygroundStats()
