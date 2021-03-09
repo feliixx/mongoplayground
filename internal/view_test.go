@@ -18,7 +18,6 @@ package internal
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 )
@@ -82,13 +81,9 @@ func TestView(t *testing.T) {
 
 				t.Parallel()
 
-				req, _ := http.NewRequest(http.MethodGet, "/"+test.url, nil)
-				resp := httptest.NewRecorder()
-				testServer.viewHandler(resp, req)
+				checkHandlerResponse(t, testServer.viewHandler, tt.url, tt.responseCode, "text/html; charset=utf-8", brotliEncoding)
+				checkHandlerResponse(t, testServer.viewHandler, tt.url, tt.responseCode, "text/html; charset=utf-8", gzipEncoding)
 
-				if test.responseCode != resp.Code {
-					t.Errorf("expected response code %d but got %d", test.responseCode, resp.Code)
-				}
 			})
 		}
 	})
