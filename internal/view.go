@@ -18,6 +18,7 @@ package internal
 
 import (
 	"errors"
+	"github.com/andybalholm/brotli"
 	"net/http"
 	"strings"
 
@@ -34,15 +35,21 @@ func (s *Server) viewHandler(w http.ResponseWriter, r *http.Request) {
 	p, err := s.loadPage(id)
 	if err != nil {
 		s.logger.Printf("fail to load page with id %s : %v", id, err)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
 		w.Write([]byte(errNoMatchingPlayground))
 		return
 	}
-	err = homeTemplate.Execute(w, p)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Encoding", contentEncoding)
+
+	br := brotli.NewWriter(w)
+	err = homeTemplate.Execute(br, p)
 	if err != nil {
 		s.logger.Printf("fail to execute template for playground %s: %v", id, err)
 		return
 	}
+	br.Close()
 }
 
 func extractPageIDFromURL(url string) []byte {

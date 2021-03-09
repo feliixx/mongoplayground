@@ -17,7 +17,7 @@
 package internal
 
 import (
-	"compress/gzip"
+	"github.com/andybalholm/brotli"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -88,7 +88,7 @@ func TestStaticHandlers(t *testing.T) {
 
 			if tt.responseCode == http.StatusOK {
 
-				if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
+				if want, got := contentEncoding, resp.Header().Get("Content-Encoding"); want != got {
 					t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
 				}
 
@@ -96,15 +96,11 @@ func TestStaticHandlers(t *testing.T) {
 					t.Errorf("expected Content-Type: %s, but got %s", want, got)
 				}
 
-				zr, err := gzip.NewReader(resp.Body)
-				if err != nil {
-					t.Errorf("coulnd't read response body: %v", err)
-				}
-				_, err = io.Copy(io.Discard, zr)
+				br := brotli.NewReader(resp.Body)
+				_, err := io.Copy(io.Discard, br)
 				if err != nil {
 					t.Errorf("fail to read gzip content: %v", err)
 				}
-				zr.Close()
 			}
 		})
 	}

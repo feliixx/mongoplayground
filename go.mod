@@ -3,6 +3,7 @@ module github.com/feliixx/mongoplayground
 go 1.16
 
 require (
+	github.com/andybalholm/brotli v1.0.1
 	github.com/dgraph-io/badger/v2 v2.2007.2
 	github.com/feliixx/mgodatagen v0.8.5
 	github.com/feliixx/mongoextjson v1.1.3

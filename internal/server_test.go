@@ -109,7 +109,7 @@ func TestBasePage(t *testing.T) {
 		t.Errorf("expected Content-Type: %s but got %s", want, got)
 	}
 
-	if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
+	if want, got := contentEncoding, resp.Header().Get("Content-Encoding"); want != got {
 		t.Errorf("expected Content-Encoding: %s but got %s", want, got)
 	}
 }
