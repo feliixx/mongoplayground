@@ -132,7 +132,7 @@
 
         function showDoc(doShow) {
 
-            if (!document.getElementById("docPanel").hasChildNodes()) {
+            if (doShow && !document.getElementById("docPanel").hasChildNodes()) {
                 loadDocs()
             }
 
