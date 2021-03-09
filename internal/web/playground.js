@@ -1,15 +1,37 @@
+/**
+ * indent string representation of bson documents
+ *
+ * @param {(string)} src - string representation of bson documents
+ */
 function indent(src) {
   return format(src, true, true)
 }
 
+/**
+ * compact string representation of bson documents
+ *
+ * @param {(string)} src - string representation of bson documents
+ */
 function compact(src) {
   return format(src, false, true)
 }
 
+/**
+ * compact string representation of bson documents, and remove comment if any
+ *
+ * @param {(string)} src - string representation of bson documents
+ */
 function compactAndRemoveComment(src) {
   return format(src, false, false)
 }
 
+/**
+ * format string representation of bson documents
+ *
+ * @param {(string)} src - string representation of bson documents
+ * @param {(boolean)} indent
+ * @param {(boolean)} keepComment
+ */
 function format(src, indent, keepComment) {
 
   if (src.endsWith(";")) {
@@ -94,7 +116,7 @@ function format(src, indent, keepComment) {
         }
         break
       case "n":
-        if (src.length >= i+9 && src.substring(i, i + 9) === "new Date(") {
+        if (src.length >= i + 9 && src.substring(i, i + 9) === "new Date(") {
           result += "new Date("
           i += "new Date(".length
           c = src.charAt(i)
@@ -111,7 +133,7 @@ function format(src, indent, keepComment) {
         }
         break
       case "/":
-        // single ligne comment, starting with '//' 
+        // single ligne comment, starting with '//'
         if (src.length >= i + 1 && src.charAt(i + 1) == "/") {
 
           if (!keepComment) {
@@ -123,7 +145,7 @@ function format(src, indent, keepComment) {
             continue
           }
 
-          // rewrite every line with /**...*/ 
+          // rewrite every line with /**...*/
           result += "/**"
           i += 2
           c = src.charAt(i)
@@ -256,9 +278,17 @@ function newline(depth) {
   return line
 }
 
-function isConfigValid(content, mode) {
+/**
+ * check if a config is valid
+ *
+ * @param {(string)} config
+ * @param {(string)} mode - 'bson' or 'mgodatagen'
+ *
+ * @return {(boolean)}
+ */
+function isConfigValid(config, mode) {
 
-  var configWithoutComment = compactAndRemoveComment(content)
+  var configWithoutComment = compactAndRemoveComment(config)
 
   // mgodatagen and bson single collection have an array as config
   if (configWithoutComment.startsWith("[") && configWithoutComment.endsWith("]")) {
@@ -271,28 +301,36 @@ function isConfigValid(content, mode) {
   return false
 }
 
-function isQueryValid(content) {
-  if (content.endsWith(";")) {
-    content = content.slice(0, -1)
+/**
+ * check if a query is valid
+ *
+ * @param {(string)} query
+ *
+ * @return {(boolean)}
+ */
+function isQueryValid(query) {
+
+  if (query.endsWith(";")) {
+    query = query.slice(0, -1)
   }
 
   // explain() is supported, it can be placed before or after the main query
-  // for example, folowing queries are valid: 
+  // for example, folowing queries are valid:
   //
   // db.c.find().explain()
   // db.c.explain().find()
   // db.c.explain("queryPlanner").aggregate([])
   //
-  var startExplain = content.indexOf(".explain(")
+  var startExplain = query.indexOf(".explain(")
   if (startExplain != -1) {
-    var endExplain = content.indexOf(")", startExplain)
+    var endExplain = query.indexOf(")", startExplain)
     if (endExplain != -1) {
-      var explainPart = content.substring(startExplain, endExplain+1)
-      content  = content.replace(explainPart, "")
+      var explainPart = query.substring(startExplain, endExplain + 1)
+      query = query.replace(explainPart, "")
     }
   }
 
-  var queryWithoutComment = compactAndRemoveComment(content)
+  var queryWithoutComment = compactAndRemoveComment(query)
 
   var correctQuery = /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/.test(queryWithoutComment)
   if (!correctQuery) {
@@ -301,10 +339,7 @@ function isQueryValid(content) {
 
   var start = queryWithoutComment.indexOf("(") + 1
   query = queryWithoutComment.substring(start, queryWithoutComment.length - 1)
-  if (query !== "" && !query.endsWith("}") && !query.endsWith("]")) {
-    return false
-  }
-  return true
+  return !(query !== "" && !query.endsWith("}") && !query.endsWith("]"));
 }
 
 var templates = [
@@ -425,6 +460,12 @@ var queryWordCompleter = {
   }
 }
 
+/**
+ * extract collections name from config
+ *
+ * @param {(string)} formattedConfig - propery indented configuration
+ * @param {(string)} mode - 'bson' or 'mgodatagen'
+ */
 function updateAvailableCollection(formattedConfig, mode) {
   availableCollections = []
 
@@ -435,12 +476,12 @@ function updateAvailableCollection(formattedConfig, mode) {
 
   if (formattedConfig.startsWith("[") && mode == "mgodatagen") {
 
-    for (line of formattedConfig.split("\n")) {
-      
+    for (var line of formattedConfig.split("\n")) {
+
       if (!line.startsWith("    \"collection")) {
         continue
       }
-      
+
       var index = line.indexOf(":")
       if (index == -1 || index + 1 >= line.length) {
         continue
@@ -459,7 +500,7 @@ function updateAvailableCollection(formattedConfig, mode) {
     return
   }
 
-  for (line of formattedConfig.split("\n")) { 
+  for (line of formattedConfig.split("\n")) {
 
     if (!line.startsWith("  \"")) {
       continue
@@ -1643,3 +1684,111 @@ var updateSnippet = [
     meta: "update operator"
   }
 ]
+
+/**
+ * adapatation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth
+ *
+ * @class
+ * @param {(string)} options.elem - HTML id of the select.
+ */
+var CustomSelect = function (options) {
+
+  var elem = document.getElementById(options.elem)
+  var mainClass = 'js-Dropdown'
+  var titleClass = 'js-Dropdown-title'
+  var listClass = 'js-Dropdown-list'
+  var selectedClass = 'is-selected'
+  var openClass = 'is-open'
+  var selectOptions = elem.options
+  var optionsLength = selectOptions.length
+  var index = 0
+
+  var selectContainer = document.createElement('div')
+  selectContainer.className = mainClass
+  selectContainer.id = 'custom-' + elem.id
+
+  var button = document.createElement('button')
+  button.className = titleClass;
+  button.textContent = selectOptions[0].textContent
+
+  var ul = document.createElement('ul')
+  ul.className = listClass
+
+  generateOptions(selectOptions)
+
+  selectContainer.appendChild(button)
+  selectContainer.appendChild(ul)
+  selectContainer.addEventListener('click', onClick)
+
+  // pseudo-select is ready - append it and hide the original
+  elem.parentNode.insertBefore(selectContainer, elem)
+  elem.style.display = 'none'
+
+  function generateOptions(options) {
+    for (var i = 0; i < options.length; i++) {
+
+      var li = document.createElement('li')
+      li.innerText = options[i].textContent;
+      li.setAttribute('data-value', options[i].value)
+      li.setAttribute('data-index', index++)
+
+      if (selectOptions[elem.selectedIndex].textContent === options[i].textContent) {
+        li.classList.add(selectedClass)
+        button.textContent = options[i].textContent
+      }
+      ul.appendChild(li)
+    }
+  }
+
+  document.addEventListener('click', function (e) {
+    if (!selectContainer.contains(e.target)) {
+      close()
+    }
+  })
+
+  function onClick(e) {
+    e.preventDefault()
+
+    var t = e.target
+
+    if (t.className === titleClass) {
+      toggle()
+    }
+
+    if (t.tagName === 'LI') {
+
+      selectContainer.querySelector('.' + titleClass).innerText = t.innerText
+      elem.options.selectedIndex = t.getAttribute('data-index')
+      elem.dispatchEvent(new CustomEvent('change'))
+
+      for (var i = 0; i < optionsLength; i++) {
+        ul.querySelectorAll('li')[i].classList.remove(selectedClass)
+      }
+      t.classList.add(selectedClass)
+      close()
+    }
+  }
+
+  function toggle() {
+    ul.classList.toggle(openClass)
+  }
+
+  function open() {
+    ul.classList.add(openClass)
+  }
+
+  function close() {
+    ul.classList.remove(openClass)
+  }
+
+  function getValue() {
+    return selectContainer.querySelector('.' + titleClass).innerText
+  }
+
+  return {
+    toggle: toggle,
+    close: close,
+    open: open,
+    getValue: getValue
+  }
+}
