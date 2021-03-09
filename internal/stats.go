@@ -57,17 +57,19 @@ var (
 	)
 )
 
-func registerPrometheus() {
+func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(requestDurations)
 	prometheus.MustRegister(activeDatabases)
 	prometheus.MustRegister(savedPlayground)
 	prometheus.MustRegister(cleanupDuration)
 	prometheus.MustRegister(badgerBackup)
+
+	computeSavedPlaygroundStats(storage)
 }
 
-func (s *Server) computeSavedPlaygroundStats() error {
+func computeSavedPlaygroundStats(storage *badger.DB) {
 
-	return s.storage.View(func(txn *badger.Txn) error {
+	storage.View(func(txn *badger.Txn) error {
 
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()

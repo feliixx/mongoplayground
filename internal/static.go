@@ -103,21 +103,23 @@ func fallbackToGzip(w http.ResponseWriter, assetPath string) {
 
 // load static resources (javascript, css, docs and default page)
 // and compress them once at startup in order to serve them faster
-func (s *Server) compressStaticResources() error {
+func compressStaticResources(mongodbVersion []byte) (map[string][]byte, error) {
+
+	staticContent := map[string][]byte{}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	br := brotli.NewWriterLevel(buf, brotli.BestCompression)
 
 	homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
-	err := executeHomeTemplate(br, s.mongodbVersion)
+	err := executeHomeTemplate(br, mongodbVersion)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	s.addCompressedRessource(homeEndpoint, buf)
+	addCompressedRessource(staticContent, homeEndpoint, buf)
 
 	files, err := assets.ReadDir(staticDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, f := range files {
 
@@ -126,23 +128,23 @@ func (s *Server) compressStaticResources() error {
 
 		b, err := assets.ReadFile(staticDir + "/" + f.Name())
 		if err != nil {
-			return err
+			return nil, err
 		}
 		if _, err = br.Write(b); err != nil {
-			return err
+			return nil, err
 		}
 		if err := br.Close(); err != nil {
-			return err
+			return nil, err
 		}
-		s.addCompressedRessource(f.Name(), buf)
+		addCompressedRessource(staticContent, f.Name(), buf)
 	}
-	return nil
+	return staticContent, nil
 }
 
-func (s *Server) addCompressedRessource(fileName string, buf *bytes.Buffer) {
+func addCompressedRessource(staticContent map[string][]byte, fileName string, buf *bytes.Buffer) {
 	c := make([]byte, buf.Len())
 	copy(c, buf.Bytes())
-	s.staticContent[fileName] = c
+	staticContent[fileName] = c
 }
 
 func executeHomeTemplate(writer io.WriteCloser, mongoVersion []byte) error {
