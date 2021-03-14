@@ -17,6 +17,7 @@
 package internal
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -81,9 +82,8 @@ func TestView(t *testing.T) {
 
 				t.Parallel()
 
-				checkHandlerResponse(t, testServer.viewHandler, tt.url, tt.responseCode, "text/html; charset=utf-8", brotliEncoding)
-				checkHandlerResponse(t, testServer.viewHandler, tt.url, tt.responseCode, "text/html; charset=utf-8", gzipEncoding)
-
+				checkHandlerResponse(t, testServer.viewHandler, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", gzipEncoding)
+				checkHandlerResponse(t, testServer.viewHandler, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", brotliEncoding)
 			})
 		}
 	})
