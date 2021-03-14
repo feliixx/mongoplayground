@@ -77,10 +77,14 @@ func TestStaticHandlers(t *testing.T) {
 		},
 	}
 	for _, tt := range staticFileTests {
-		t.Run(tt.name, func(t *testing.T) {
 
-			checkHandlerResponse(t, testServer.staticHandler, tt.url, tt.responseCode, tt.contentType, brotliEncoding)
-			checkHandlerResponse(t, testServer.staticHandler, tt.url, tt.responseCode, tt.contentType, gzipEncoding)
+		test := tt // capture range variable
+		t.Run(test.name, func(t *testing.T) {
+
+			t.Parallel()
+
+			checkHandlerResponse(t, testServer.staticHandler, test.url, test.responseCode, test.contentType, brotliEncoding)
+			checkHandlerResponse(t, testServer.staticHandler, test.url, test.responseCode, test.contentType, gzipEncoding)
 		})
 	}
 }
