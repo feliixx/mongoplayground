@@ -131,6 +131,8 @@ body {
     margin-top: 50px
 }
 
+/* styles specific to ace editor */
+
 .ace_editor {
     background-color: #f6f8fa!important;
     height: 93%!important;
@@ -153,21 +155,12 @@ body {
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==)!important
 }
 
-.ace_info {
-    background-image: none!important
-}
-
 .ace_comment {
     color: #9299a2!important
 }
 
-.text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line>span {
+.text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line {
     color: darkred!important
-}
-
-.ignore_warnings>.ace_gutter>.ace_layer>.ace_warning,
-.ace_info {
-    background-image: none!important
 }
 
 .ace_variable {
@@ -231,6 +224,7 @@ body {
     }
 }
 
+/* styles for documentation */
 .markdown-body {
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
