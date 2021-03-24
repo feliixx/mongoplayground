@@ -1718,7 +1718,6 @@ var Parser = function () {
         next(":")
         white()
         array()
-
         addCollectionSnippet(collName)
     }
 

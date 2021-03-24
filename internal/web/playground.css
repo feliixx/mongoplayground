@@ -131,8 +131,6 @@ body {
     margin-top: 50px
 }
 
-/* styles specific to ace editor */
-
 .ace_editor {
     background-color: #f6f8fa!important;
     height: 93%!important;
