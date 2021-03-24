@@ -839,6 +839,21 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 			input: `db.u.update({},{},{},{})`,
 			valid: false,
 		},
+		{
+			name:  `empty new Date()`,
+			input: `db.0.find({"date": { $gt: new Date()}})`,
+			valid: true,
+		},
+		{
+			name:  `new Date("str")`,
+			input: `db.0.find({"date": new Date("2020-07-08T04:00:00.000+00:00")})`,
+			valid: true,
+		},
+		{
+			name:  `new Date(int)`,
+			input: `db.0.find({"date": { $gt: new Date(1253653)}})`,
+			valid: true,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -871,7 +886,7 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		let want = tt.expected
 		let got = ( parser.parse(tt.input, "query", "bson") === null )
 		if (want != got) {
-			print("test " + tt.name + " format mode bson failed, expected: " + want +  " but got: " + got)
+			print("test query with" + tt.name + " failed, expected: " + want +  " but got: " + got)
 		}
 	}	
 	`))

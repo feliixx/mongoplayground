@@ -1471,7 +1471,11 @@ var Parser = function () {
                 error("Unexpected remaining char after end of " + type)
             }
         } catch (err) {
-            output += src.slice(at)
+            // if there's an error, keep indenting so it's easyer to
+            // see where the error is
+            while(ch) {
+                next()
+            }
             return err
         }
         return null
@@ -1718,7 +1722,6 @@ var Parser = function () {
         next(":")
         white()
         array()
-
         addCollectionSnippet(collName)
     }
 
@@ -1890,10 +1893,17 @@ var Parser = function () {
         inNewDate = false
         next("(")
         white()
-        if (ch === ")") {
-            return
+
+        switch (ch) {
+            case ")":
+                return next()
+            case '"':
+            case "'":
+                string()
+                break
+            default:
+                number()
         }
-        number()
         white()
         next(")")
     }
