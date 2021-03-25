@@ -132,22 +132,22 @@ func TestSave(t *testing.T) {
 func testPlaygroundStats(t *testing.T, nbMgoDatagen, nbBsonSingle, nbBsonMultiple, nbUnknown int) {
 
 	// reset saved playground metrics
-	savedPlayground.Reset()
+	savedPlaygroundSize.Reset()
 	computeSavedPlaygroundStats(testServer.storage)
 
 	resp := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, metricsEndpoint, nil)
 	promhttp.Handler().ServeHTTP(resp, req)
 
-	want := fmt.Sprintf(`saved_playground_count{type="bson_multiple_collection"} %d
-saved_playground_count{type="bson_single_collection"} %d
-saved_playground_count{type="mgodatagen"} %d
-saved_playground_count{type="unknown"} %d`, nbBsonMultiple, nbBsonSingle, nbMgoDatagen, nbUnknown)
+	want := fmt.Sprintf(`saved_playground_size_count{type="bson_multiple_collection"} %d
+saved_playground_size_count{type="bson_single_collection"} %d
+saved_playground_size_count{type="mgodatagen"} %d
+saved_playground_size_count{type="unknown"} %d`, nbBsonMultiple, nbBsonSingle, nbMgoDatagen, nbUnknown)
 
 	lines := make([]string, 0, 4)
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		if strings.HasPrefix(scanner.Text(), "saved_playground_count") {
+		if strings.HasPrefix(scanner.Text(), "saved_playground_size_count") {
 			lines = append(lines, scanner.Text())
 		}
 	}
