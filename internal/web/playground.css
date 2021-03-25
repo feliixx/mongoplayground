@@ -1,3 +1,7 @@
+:root {
+    --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+}
+
 body {
     height: 100vh;
     margin: 0;
@@ -12,7 +16,7 @@ body {
 
 .toolbar>.title {
     width: 220px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: var(--main-font-family);
     float: left;
     font-size: 1.6em;
     color: #d3d3d3;
@@ -31,7 +35,7 @@ body {
 
 .toolbar>.controls>label {
     color: #d3d3d3;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif
+    font-family: var(--main-font-family);
 }
 
 .toolbar>.controls>label.bold {
@@ -96,7 +100,7 @@ body {
     text-align: center;
     font-size: 1.2em;
     color: #24292e;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif
+    font-family: var(--main-font-family);
 }
 
 .content>div>.resizable_editor {
@@ -123,7 +127,7 @@ body {
 .footer {
     text-align: center;
     color: #646262;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif
+    font-family: var(--main-font-family);
 }
 
 .about {
@@ -153,21 +157,12 @@ body {
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==)!important
 }
 
-.ace_info {
-    background-image: none!important
-}
-
 .ace_comment {
     color: #9299a2!important
 }
 
-.text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line>span {
+.text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line {
     color: darkred!important
-}
-
-.ignore_warnings>.ace_gutter>.ace_layer>.ace_warning,
-.ace_info {
-    background-image: none!important
 }
 
 .ace_variable {
@@ -231,14 +226,14 @@ body {
     }
 }
 
+/* styles for documentation */
 .markdown-body {
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
-    line-height: 1.5;
     color: #24292e;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    font-family: var(--main-font-family);
     font-size: 16px;
-    line-height: 1.5;
+    line-height: 24px;
     word-wrap: break-word
 }
 
@@ -649,7 +644,7 @@ body {
 .js-Dropdown {
     display: inline-block;
     font-size: 1em;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-family: var(--main-font-family);
     position: relative;
 }
 
