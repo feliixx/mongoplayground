@@ -70,7 +70,7 @@ func (s *Server) save(p *page) []byte {
 		})
 		// At this point, we know for sure that a new playground
 		// has been saved, so update the stats
-		savedPlayground.WithLabelValues(p.label()).Inc()
+		savedPlaygroundSize.WithLabelValues(p.label()).Observe(float64(len(val)))
 	}
 	return id
 }
