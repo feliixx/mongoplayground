@@ -1708,6 +1708,11 @@ var Parser = function () {
                     error("Invalid configuration")
                 }
                 next()
+                white()
+                if (ch === "}") {
+                    // trailing comma are allowed
+                    return next()
+                }
             }
         }
         error("Invalid configuration:\n\nmust be an array of documents like '[ {_id: 1}, {_id: 2} ]'\n\nor\n\nmust match 'db = { collection: [ {_id: 1}, {_id: 2} ] }'")
@@ -1832,7 +1837,7 @@ var Parser = function () {
                 next()
                 switch (ch) {
                     case "u":
-                        next("u")
+                        next()
                         next("l")
                         return next("l")
                     case "e":
@@ -2066,7 +2071,7 @@ var Parser = function () {
             if (ch !== ",") {
                 error("Invalid array: missing closing bracket")
             }
-            next(',')
+            next()
             white()
             if (ch === "]") {
                 // trailing comma are allowed
@@ -2109,7 +2114,7 @@ var Parser = function () {
             if (ch !== ",") {
                 error("Invalid object: missing closing bracket")
             }
-            next(",")
+            next()
             white()
             if (ch === "}") {
                 // trailing comma are allowed
