@@ -6,24 +6,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
     <link rel="icon" type="image/png" href="/static/favicon.png"/>
-    <link href="/static/playground-min-12.css" rel="stylesheet" type="text/css">
+    <link href="/static/playground-min-13.css" rel="stylesheet" type="text/css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js" type="text/javascript"></script>
     <script src="/static/playground-min-12.js" type="text/javascript"></script>
     <script src="/static/mode-mongo-min.js" type="text/javascript"></script>
     <script type="text/javascript">
 
-        var configEditor, queryEditor, resultEditor
-        var comboMode, comboTemplate
-        var parser
-        var checkSyntax = true
+        var configEditor,
+            queryEditor,
+            resultEditor,
 
-        var hasChangedSinceLastRun = false
-        var hasChangedSinceLastSave = false
+            comboMode,
+            comboTemplate,
 
-        var minWidth = 60
-        var isConfigHandlerDragging = false
-        var isQueryHandlerDragging = false
+            parser,
+
+            checkSyntax = true,
+            hasChangedSinceLastRun = false,
+            hasChangedSinceLastSave = false,
+            isConfigHandlerDragging = false,
+            isQueryHandlerDragging = false
 
         window.onload = function () {
 
@@ -40,6 +43,8 @@
                 "enableLiveAutocompletion": true,
                 "enableSnippets": true,
                 "useWorker": false,
+                "useSoftTabs": true,
+                "tabSize": 2,
             }
 
             configEditor = ace.edit(document.getElementById("config"), commonOpts)
@@ -86,7 +91,6 @@
         }
 
         function addDivResizeListener() {
-
             document.addEventListener("mousedown", function (e) {
                 if (e.target.id === "configResizeHandler") {
                     isConfigHandlerDragging = true
@@ -111,7 +115,7 @@
                     return false
                 }
                 var pointerRelativeXpos = e.clientX - box.offsetLeft
-                box.style.width = (Math.max(minWidth, pointerRelativeXpos + 2)) + "px"
+                box.style.width = (Math.max(60, pointerRelativeXpos + 2)) + "px"
                 box.style.flexGrow = "0"
             })
         }
@@ -124,8 +128,7 @@
                 return
             }
 
-            var value = editor.getValue()
-            var err = parser.parse(value, type, comboMode.getValue())
+            var err = parser.parse(editor.getValue(), type, comboMode.getValue())
             if (err != null) {
                 var pos = editor.getSession().getDocument().indexToPosition(err.at - 1)
                 errors.push({
