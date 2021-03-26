@@ -25,7 +25,7 @@ import (
 
 func TestHealthCheck(t *testing.T) {
 
-	buf := httpBody(t, testServer.healthHandler, http.MethodGet, healthEndpoint, url.Values{})
+	buf := httpBody(t, healthEndpoint, http.MethodGet, url.Values{})
 
 	want := fmt.Sprintf(`{"Status":"UP","Services":[{"Name":"badger","Status":"UP"},{"Name":"mongodb","Version":"%s","Status":"UP"}],"Version":""}`, testServer.mongodbVersion)
 	if got := buf.String(); want != got {

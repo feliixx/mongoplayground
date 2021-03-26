@@ -80,20 +80,12 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func TestServeHTTP(t *testing.T) {
-
-	t.Parallel()
-
-	checkHandlerResponse(t, testServer.ServeHTTP, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
-	checkHandlerResponse(t, testServer.ServeHTTP, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
-}
-
 func TestBasePage(t *testing.T) {
 
 	t.Parallel()
 
-	checkHandlerResponse(t, testServer.homeHandler, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
-	checkHandlerResponse(t, testServer.homeHandler, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
+	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
+	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
 }
 
 func TestRemoveOldDB(t *testing.T) {
@@ -101,7 +93,7 @@ func TestRemoveOldDB(t *testing.T) {
 	defer testServer.clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	buf := httpBody(t, runEndpoint, http.MethodPost, params)
 	if want, got := templateResult, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
@@ -119,7 +111,7 @@ func TestRemoveOldDB(t *testing.T) {
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	buf = httpBody(t, runEndpoint, http.MethodPost, params)
 
 	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
@@ -253,13 +245,13 @@ func (s *Server) countSavedPages() (count int) {
 	return count
 }
 
-func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
+func httpBody(t *testing.T, url string, method string, params url.Values) *bytes.Buffer {
 	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
 	if err != nil {
 		t.Error(err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
-	handler(resp, req)
+	testServer.ServeHTTP(resp, req)
 	return resp.Body
 }

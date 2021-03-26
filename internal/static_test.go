@@ -70,10 +70,10 @@ func TestStaticHandlers(t *testing.T) {
 			responseCode: http.StatusNotFound,
 		},
 		{
-			name:         "file outside of static",
+			name:         "file outside of static redirect to home page",
 			url:          "/static/../README.md",
 			contentType:  "",
-			responseCode: http.StatusNotFound,
+			responseCode: http.StatusMovedPermanently,
 		},
 	}
 	for _, tt := range staticFileTests {
@@ -83,19 +83,19 @@ func TestStaticHandlers(t *testing.T) {
 
 			t.Parallel()
 
-			checkHandlerResponse(t, testServer.staticHandler, test.url, test.responseCode, test.contentType, brotliEncoding)
-			checkHandlerResponse(t, testServer.staticHandler, test.url, test.responseCode, test.contentType, gzipEncoding)
+			checkServerResponse(t, test.url, test.responseCode, test.contentType, brotliEncoding)
+			checkServerResponse(t, test.url, test.responseCode, test.contentType, gzipEncoding)
 		})
 	}
 }
 
-func checkHandlerResponse(t *testing.T, handler func(w http.ResponseWriter, r *http.Request), url string, expectedResponseCode int, expectedContentType, expectedEncoding string) {
+func checkServerResponse(t *testing.T, url string, expectedResponseCode int, expectedContentType, expectedEncoding string) {
 
 	resp := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Accept-Encoding", expectedEncoding)
 
-	handler(resp, req)
+	testServer.ServeHTTP(resp, req)
 
 	if expectedResponseCode != resp.Code {
 		t.Errorf("expected response code %d but got %d", expectedResponseCode, resp.Code)
