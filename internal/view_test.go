@@ -71,7 +71,7 @@ func TestView(t *testing.T) {
 
 	// start by saving all needed playground
 	for _, tt := range viewTests {
-		httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, tt.params)
+		httpBody(t, saveEndpoint, http.MethodPost, tt.params)
 	}
 
 	t.Run("parallel view", func(t *testing.T) {
@@ -82,8 +82,8 @@ func TestView(t *testing.T) {
 
 				t.Parallel()
 
-				checkHandlerResponse(t, testServer.viewHandler, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", gzipEncoding)
-				checkHandlerResponse(t, testServer.viewHandler, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", brotliEncoding)
+				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", gzipEncoding)
+				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", brotliEncoding)
 			})
 		}
 	})

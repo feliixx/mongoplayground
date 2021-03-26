@@ -97,7 +97,7 @@ func TestSave(t *testing.T) {
 
 				t.Parallel()
 
-				buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, test.params)
+				buf := httpBody(t, saveEndpoint, http.MethodPost, test.params)
 
 				if want, got := test.result, buf.String(); want != got {
 					t.Errorf("expected %s, but got %s", want, got)
@@ -165,7 +165,7 @@ func TestErrorOnSavePlaygroundTooBig(t *testing.T) {
 		"query":  {"db.collection.find()"},
 	}
 
-	buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, params)
+	buf := httpBody(t, saveEndpoint, http.MethodPost, params)
 	if want, got := errPlaygroundToBig, buf.String(); want != got {
 		t.Errorf("expected %s, but got %s", want, got)
 	}
