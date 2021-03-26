@@ -40,7 +40,7 @@ var (
 		prometheus.HistogramOpts{
 			Name:    "saved_playground_size",
 			Help:    "Histogram of saved playground size in byte",
-			Buckets: []float64{1000, 10000, 100000, 350000},
+			Buckets: []float64{1000, 5000, 10000, 100000, 300000},
 		},
 		[]string{"type"},
 	)
