@@ -31,100 +31,6 @@ var templates = [
     }
 ]
 
-var configWordCompleter = {
-    getCompletions: function (editor, session, pos, prefix, callback) {
-
-        var token = session.getTokenAt(pos.row, pos.column)
-
-        callback(null, basicBsonSnippet.map(function (snippet) {
-            return {
-                caption: snippet.caption,
-                value: snippet.value,
-                meta: snippet.meta,
-                completer: {
-                    insertMatch: function (editor, data) {
-
-                        editor.removeWordLeft()
-
-                        var start = ""
-                        if (!token.value.startsWith("\"")) {
-                            start = "\""
-                        }
-
-                        if (token.value.endsWith("\"")) {
-                            editor.removeWordRight()
-                        }
-
-                        editor.insert(start + data.value.replace(":", "\":"))
-                    }
-                }
-            }
-        }))
-    }
-}
-
-var queryWordCompleter = {
-
-    getCompletions: function (editor, session, pos, prefix, callback) {
-
-        var token = session.getTokenAt(pos.row, pos.column)
-
-        var tokens = session.getTokens(pos.row)
-        if (tokens.length > 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
-            callback(null, methodSnippet)
-            return
-        } else if (tokens.length === 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
-            callback(null, availableCollections)
-            return
-        }
-
-        var wordsQuery = basicBsonSnippet
-
-        if (editor.getSession().getLine(0).includes(".find(")) {
-            wordsQuery = wordsQuery.concat(querySnippet)
-        } else if (editor.getSession().getLine(0).includes(".aggregate(")) {
-            wordsQuery = wordsQuery.concat(aggregationSnippet)
-        } else {
-            wordsQuery = wordsQuery.concat(updateSnippet)
-        }
-
-        callback(null, wordsQuery.map(function (snippet) {
-            return {
-                caption: snippet.caption,
-                value: snippet.value,
-                meta: snippet.meta,
-                completer: {
-                    insertMatch: function (editor, data) {
-
-                        editor.removeWordLeft()
-
-                        var start = ""
-                        if (!token.value.startsWith("\"")) {
-                            start = "\""
-                        }
-
-                        if (token.value.endsWith("\"")) {
-                            editor.removeWordRight()
-                        }
-
-                        editor.insert(start + data.value.replace(":", "\":"))
-                    }
-                }
-            }
-        }))
-    }
-}
-
-
-function addCollectionSnippet(collectionName) {
-    availableCollections.push({
-        caption: collectionName,
-        value: collectionName,
-        meta: "collection name"
-    })
-}
-
-
 var methodSnippet = [
     {
         caption: "find()",
@@ -1279,6 +1185,98 @@ var updateSnippet = [
     }
 ]
 
+var configWordCompleter = {
+    getCompletions: function (editor, session, pos, prefix, callback) {
+
+        var token = session.getTokenAt(pos.row, pos.column)
+
+        callback(null, basicBsonSnippet.map(function (snippet) {
+            return {
+                caption: snippet.caption,
+                value: snippet.value,
+                meta: snippet.meta,
+                completer: {
+                    insertMatch: function (editor, data) {
+
+                        editor.removeWordLeft()
+
+                        var start = ""
+                        if (!token.value.startsWith("\"")) {
+                            start = "\""
+                        }
+
+                        if (token.value.endsWith("\"")) {
+                            editor.removeWordRight()
+                        }
+
+                        editor.insert(start + data.value.replace(":", "\":"))
+                    }
+                }
+            }
+        }))
+    }
+}
+
+var queryWordCompleter = {
+
+    getCompletions: function (editor, session, pos, prefix, callback) {
+
+        var token = session.getTokenAt(pos.row, pos.column)
+
+        var tokens = session.getTokens(pos.row)
+        if (tokens.length > 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
+            callback(null, methodSnippet)
+            return
+        } else if (tokens.length === 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
+            callback(null, availableCollections)
+            return
+        }
+
+        var wordsQuery = basicBsonSnippet
+
+        if (editor.getSession().getLine(0).includes(".find(")) {
+            wordsQuery = wordsQuery.concat(querySnippet)
+        } else if (editor.getSession().getLine(0).includes(".aggregate(")) {
+            wordsQuery = wordsQuery.concat(aggregationSnippet)
+        } else {
+            wordsQuery = wordsQuery.concat(updateSnippet)
+        }
+
+        callback(null, wordsQuery.map(function (snippet) {
+            return {
+                caption: snippet.caption,
+                value: snippet.value,
+                meta: snippet.meta,
+                completer: {
+                    insertMatch: function (editor, data) {
+
+                        editor.removeWordLeft()
+
+                        var start = ""
+                        if (!token.value.startsWith("\"")) {
+                            start = "\""
+                        }
+
+                        if (token.value.endsWith("\"")) {
+                            editor.removeWordRight()
+                        }
+
+                        editor.insert(start + data.value.replace(":", "\":"))
+                    }
+                }
+            }
+        }))
+    }
+}
+
+function addCollectionSnippet(collectionName) {
+    availableCollections.push({
+        caption: collectionName,
+        value: collectionName,
+        meta: "collection name"
+    })
+}
+
 /**
  * adapatation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth
  *
@@ -1548,7 +1546,7 @@ var Parser = function () {
     }
 
     function newline() {
-        // might happend with some pathological input
+        // might happen with some pathological input
         if (depth < 0) {
             return "\n"
         }
