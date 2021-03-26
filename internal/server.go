@@ -129,10 +129,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(label, viewEndpoint) {
 		label = viewEndpoint
 	}
-
-	if label == runEndpoint || label == viewEndpoint || label == homeEndpoint || label == saveEndpoint {
-		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
+	if strings.HasPrefix(label, staticEndpoint) {
+		label = staticEndpoint
 	}
+	requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
 }
 
 func createMongodbSession() (session *mongo.Client, version []byte, err error) {
