@@ -49,61 +49,53 @@ const (
 // Server is struct implementing http.Handler and holding
 // mongodb and badger connection
 type Server struct {
-	mux     *http.ServeMux
-	session *mongo.Client
-	storage *badger.DB
-	logger  *log.Logger
+	mux            *http.ServeMux
+	session        *mongo.Client
+	mongodbVersion []byte
+	storage        *badger.DB
+	logger         *log.Logger
 
 	// activeDB holds info of the database created / used during
 	// the last cleanupInterval. Its access is garded by activeDbLock
 	activeDbLock sync.RWMutex
 	activeDB     map[string]dbMetaInfo
 
-	// map storing static content compressed with gzip
-	staticContent  map[string][]byte
-	mongodbVersion []byte
+	// map storing static content compressed with brotli
+	staticContent map[string][]byte
 	// local dir to store badger backups
-	backupDir      string
+	backupDir string
 }
 
 // NewServer returns a new instance of Server
 func NewServer(logger *log.Logger, badgerDir, backupDir string) (*Server, error) {
 
-	session, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		return nil, fmt.Errorf("fail to create mongodb client: %v", err)
-	}
-	err = session.Connect(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
-	}
-
-	db, err := badger.Open(badger.DefaultOptions(badgerDir))
+	session, mongodbVersion, err := createMongodbSession()
 	if err != nil {
 		return nil, err
+	}
+
+	badgerDB, err := badger.Open(badger.DefaultOptions(badgerDir))
+	if err != nil {
+		return nil, err
+	}
+
+	staticContent, err := compressStaticResources(mongodbVersion)
+	if err != nil {
+		return nil, fmt.Errorf("fail to compress static resources: %v", err)
 	}
 
 	s := &Server{
 		mux:            http.DefaultServeMux,
 		session:        session,
-		storage:        db,
+		mongodbVersion: mongodbVersion,
+		storage:        badgerDB,
 		activeDB:       map[string]dbMetaInfo{},
 		logger:         logger,
-		mongodbVersion: getMongodVersion(session),
 		backupDir:      backupDir,
+		staticContent:  staticContent,
 	}
 
-	err = s.compressStaticResources()
-	if err != nil {
-		return nil, fmt.Errorf("fail to compress statc resources: %v", err)
-	}
-
-	err = s.computeSavedPlaygroundStats()
-	if err != nil {
-		return nil, fmt.Errorf("fail to read data from badger: %v", err)
-	}
-
-	registerPrometheus()
+	initPrometheusCounter(s.storage)
 
 	go func(s *Server) {
 		for range time.Tick(cleanupInterval) {
@@ -137,8 +129,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(label, viewEndpoint) {
 		label = viewEndpoint
 	}
-
-	if label == runEndpoint || label == viewEndpoint || label == homeEndpoint || label == saveEndpoint {
-		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
+	if strings.HasPrefix(label, staticEndpoint) {
+		label = staticEndpoint
 	}
+	requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
+}
+
+func createMongodbSession() (session *mongo.Client, version []byte, err error) {
+	session, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+	if err != nil {
+		return nil, nil, fmt.Errorf("fail to create mongodb client: %v", err)
+	}
+	err = session.Connect(context.Background())
+	if err != nil {
+		return nil, nil, fmt.Errorf("fail to connect to mongodb: %v", err)
+	}
+	return session, getMongodVersion(session), nil
 }

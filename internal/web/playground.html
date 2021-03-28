@@ -5,39 +5,50 @@
     <title>Mongo playground</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
-    <link rel="icon" type="image/png" href="/static/favicon.png" />
-    <link href="/static/playground-min-10.css" rel="stylesheet" type="text/css">
-    <script src="/static/playground-min-11.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.10/ace.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.10/ext-language_tools.js"
-        type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.10/mode-javascript.js" type="text/javascript"></script>
+    <link rel="icon" type="image/png" href="/static/favicon.png"/>
+    <link href="/static/playground-min-13.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js" type="text/javascript"></script>
+    <script src="/static/playground-min-12.js" type="text/javascript"></script>
+    <script src="/static/mode-mongo-min.js" type="text/javascript"></script>
     <script type="text/javascript">
 
-        var configEditor, queryEditor, resultEditor
+        var configEditor,
+            queryEditor,
+            resultEditor,
 
-        var hasChangedSinceLastRun = false
-        var hasChangedSinceLastSave = false
+            comboMode,
+            comboTemplate,
 
-        var minWidth = 60
-        var isConfigHandlerDragging = false
-        var isQueryHandlerDragging = false
+            parser,
+
+            checkSyntax = true,
+            hasChangedSinceLastRun = false,
+            hasChangedSinceLastSave = false,
+            isConfigHandlerDragging = false,
+            isQueryHandlerDragging = false
 
         window.onload = function () {
-            var configDiv = document.getElementById("config")
-            var queryDiv = document.getElementById("query")
-            configDiv.innerHTML = indent(configDiv.innerHTML)
-            queryDiv.innerHTML = indent(queryDiv.innerHTML)
+
+            comboMode = new CustomSelect({elem: 'mode'})
+            comboTemplate = new CustomSelect({elem: 'template'})
+            parser = new Parser()
+
+            ace.config.setModuleUrl("ace/mode/mongo", "/static/mode-mongo-min.js")
 
             var commonOpts = {
-                "mode": "ace/mode/javascript",
+                "mode": "ace/mode/mongo",
                 "fontSize": "16px",
                 "enableBasicAutocompletion": true,
                 "enableLiveAutocompletion": true,
-                "enableSnippets": true
+                "enableSnippets": true,
+                "useWorker": false,
+                "useSoftTabs": true,
+                "tabSize": 2,
             }
-            configEditor = ace.edit(configDiv, commonOpts)
-            queryEditor = ace.edit(queryDiv, commonOpts)
+
+            configEditor = ace.edit(document.getElementById("config"), commonOpts)
+            queryEditor = ace.edit(document.getElementById("query"), commonOpts)
             resultEditor = ace.edit(document.getElementById("result"), {
                 "mode": commonOpts.mode,
                 "fontSize": commonOpts.fontSize,
@@ -53,10 +64,14 @@
             configEditor.completers = [configWordCompleter]
             queryEditor.completers = [queryWordCompleter]
 
-            updateAvailableCollection(configEditor.getValue(), getCurrentMode())
+            configEditor.getSession().on('change', checkEditorContent.bind(null, configEditor, "config"))
+            queryEditor.getSession().on('change', checkEditorContent.bind(null, queryEditor, "query"))
 
-            configEditor.getSession().on('change', changeFunc)
-            queryEditor.getSession().on('change', changeFunc)
+            configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), -1)
+            queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), -1)
+
+            hasChangedSinceLastRun = false
+            hasChangedSinceLastSave = false
 
             addKeyDownListener()
             addDivResizeListener()
@@ -76,8 +91,7 @@
         }
 
         function addDivResizeListener() {
-
-            document.addEventListener('mousedown', function (e) {
+            document.addEventListener("mousedown", function (e) {
                 if (e.target.id === "configResizeHandler") {
                     isConfigHandlerDragging = true
                 }
@@ -86,23 +100,46 @@
                 }
             })
 
-            document.addEventListener('mouseup', function (e) {
+            document.addEventListener("mouseup", function (e) {
                 isConfigHandlerDragging = false
                 isQueryHandlerDragging = false
             })
 
-            document.addEventListener('mousemove', function (e) {
+            document.addEventListener("mousemove", function (e) {
+                var box
                 if (isConfigHandlerDragging) {
-                    var box = document.getElementById("configPanel")
+                    box = document.getElementById("configPanel")
                 } else if (isQueryHandlerDragging) {
-                    var box = document.getElementById("queryPanel")
+                    box = document.getElementById("queryPanel")
                 } else {
                     return false
                 }
                 var pointerRelativeXpos = e.clientX - box.offsetLeft
-                box.style.width = (Math.max(minWidth, pointerRelativeXpos + 2)) + 'px'
-                box.style.flexGrow = 0
+                box.style.width = (Math.max(60, pointerRelativeXpos + 2)) + "px"
+                box.style.flexGrow = "0"
             })
+        }
+
+        function checkEditorContent(editor, type) {
+
+            var errors = []
+            if (!checkSyntax) {
+                editor.getSession().setAnnotations(errors)
+                return
+            }
+
+            var err = parser.parse(editor.getValue(), type, comboMode.getValue())
+            if (err != null) {
+                var pos = editor.getSession().getDocument().indexToPosition(err.at - 1)
+                errors.push({
+                    row: pos.row,
+                    column: pos.column,
+                    text: err.message,
+                    type: "error"
+                })
+            }
+            editor.getSession().setAnnotations(errors)
+            changeFunc()
         }
 
         function changeFunc() {
@@ -122,17 +159,17 @@
         }
 
         function setTemplate(index) {
-            var formattedConfig = indent(templates[index].config)
-            configEditor.setValue(formattedConfig, 1)
-            queryEditor.setValue(indent(templates[index].query), 1)
+            checkSyntax = false
+            comboMode.setValue(templates[index].mode)
+            configEditor.setValue(parser.indent(templates[index].config, "config", comboMode.getValue()), 1)
+            queryEditor.setValue(parser.indent(templates[index].query, "query", comboMode.getValue()), 1)
             resultEditor.setValue("", 1)
-            document.getElementById(templates[index].mode).checked = true
-            updateAvailableCollection(formattedConfig, getCurrentMode())
+            checkSyntax = true
         }
 
         function showDoc(doShow) {
 
-            if (!document.getElementById("docPanel").hasChildNodes()) {
+            if (doShow && !document.getElementById("docPanel").hasChildNodes()) {
                 loadDocs()
             }
 
@@ -149,7 +186,7 @@
 
         function loadDocs() {
             var r = new XMLHttpRequest()
-            r.open("GET", "/static/docs-10.html", true)
+            r.open("GET", "/static/docs-12.html", true)
             r.onreadystatechange = function () {
                 if (r.readyState !== 4) { return }
                 if (r.status === 200) {
@@ -161,6 +198,8 @@
 
         function run() {
             if (formatAll(false)) {
+
+                showResult("running query...", false)
 
                 var r = new XMLHttpRequest()
                 r.open("POST", "/run")
@@ -207,18 +246,14 @@
             r.send(encodePlayground(true))
         }
 
-        function getCurrentMode() {
-            return document.querySelector('input[name="mode"]:checked').value
-        }
-
         function encodePlayground(keepComment) {
-            var result = "mode=" + getCurrentMode()
+            var result = "mode=" + comboMode.getValue()
             if (keepComment) {
-                result += "&config=" + encodeURIComponent(compact(configEditor.getValue()))
-                    + "&query=" + encodeURIComponent(compact(queryEditor.getValue()))
+                result += "&config=" + encodeURIComponent(parser.compact(configEditor.getValue(), "config", comboMode.getValue()))
+                    + "&query=" + encodeURIComponent(parser.compact(queryEditor.getValue(), "query", comboMode.getValue()))
             } else {
-                result += "&config=" + encodeURIComponent(compactAndRemoveComment(configEditor.getValue()))
-                    + "&query=" + encodeURIComponent(compactAndRemoveComment(queryEditor.getValue()))
+                result += "&config=" + encodeURIComponent(parser.compactAndRemoveComment(configEditor.getValue(), "config", comboMode.getValue()))
+                    + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue()))
             }
             return result
         }
@@ -231,44 +266,24 @@
 
             showDoc(false)
 
-            if (document.querySelectorAll("#config > .ace_gutter > .ace_layer > .ace_error").length > 0) {
-                showAceError("configuration", configEditor)
+            var errors = configEditor.getSession().getAnnotations()
+            if (errors.length > 0) {
+                showError("Invalid configuration:\n\nLine " + (errors[0].row + 1) + ": " + errors[0].text)
+                return false
+            }
+            errors = queryEditor.getSession().getAnnotations()
+            if (errors.length > 0) {
+                showError("Invalid query:\n\nLine " + (errors[0].row + 1) + ": " + errors[0].text)
                 return false
             }
 
-            if (document.querySelectorAll("#query > .ace_gutter > .ace_layer > .ace_error").length > 0) {
-                showAceError("query", queryEditor)
-                return false
-            }
-
-            if (!isConfigValid(configEditor.getValue().trim(), getCurrentMode())) {
-                showError("invalid configuration:\n\nmust be an array of documents like '[ {_id: 1}, {_id: 2} ]'\n\nor\n\nmust match 'db = { collection: [ {_id: 1}, {_id: 2} ] }'")
-                return false
-            }
             if (hasChangedSinceLastRun) {
-                var formattedConfig = indent(configEditor.getValue().trim())
-                configEditor.setValue(formattedConfig, -1)
-                updateAvailableCollection(formattedConfig, getCurrentMode())
-            }
-
-            if (!isQueryValid(queryEditor.getValue().trim())) {
-                showError("invalid query:\n\nmust match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()")
-                return false
-            }
-            if (hasChangedSinceLastRun) {
-                queryEditor.setValue(indent(queryEditor.getValue().trim()), -1)
+                checkSyntax = false
+                configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), 1)
+                queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), 1)
+                checkSyntax = true
             }
             return true
-        }
-
-        function showAceError(name, editor) {
-
-            var msg = "Invalid " + name + ":\n\n"
-            editor.getSession().getAnnotations()
-                .filter(error => error.type === "error")
-                .forEach(error => msg += "Line " + error.row + " : " + error.text + "\n")
-
-            showError(msg)
         }
 
         function showError(errMsg) {
@@ -280,7 +295,7 @@
         function showResult(result, doIndent) {
             document.getElementById("result").classList.remove("text_red")
             if (doIndent) {
-                result = indent(result)
+                result = parser.indent(result, "result", comboMode.getValue())
             }
             resultEditor.setOption("wrap", false)
             resultEditor.setValue(result, -1)
@@ -290,59 +305,58 @@
 </head>
 
 <body>
-    <div class="toolbar">
-        <div class="title" onclick="location.href='/';">Mongo Playground</div>
-        <div class="controls">
-            <input type="button" value="run" onclick="run()" title="ctrl + enter">
-            <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
-            <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
-            <input id="link" type="text">
-            <label class="bold">Template:</label>
-            <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
-                <option value=0>bson single collection</option>
-                <option value=1>bson multiple collections</option>
-                <option value=2>mgodatagen</option>
-                <option value=3>update</option>
-                <option value=4>indexe</option>
-                <option value=5>explain</option>
-            </select>
-            <label class="bold">Mode:</label>
-            <input id="bson" type="radio" name="mode" value="bson" onchange="changeFunc()" {{if eq .Mode 1 }} checked {{end}} />
-            <label for="bson">bson</label>
-            <input id="mgodatagen" type="radio" name="mode" value="mgodatagen" onchange="changeFunc()" {{if eq .Mode 0 }} checked
-                {{end}} />
-            <label for="mgodatagen">mgodatagen</label>
-            <input type="button" value="docs" onclick="showDoc(true)">
+<div class="toolbar">
+    <div class="title" onclick="location.href='/';">Mongo Playground</div>
+    <div class="controls">
+        <input type="button" value="run" onclick="run()" title="ctrl + enter">
+        <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
+        <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
+        <input id="link" type="text">
+        <label class="bold">Mode:</label>
+        <select id="mode" onchange="checkEditorContent(configEditor, 'config')">
+            <option value=0 {{if eq .Mode 1 }} selected {{end}}>bson</option>
+            <option value=2 {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
+        </select>
+        <label class="bold">Template:</label>
+        <select id="template" onchange="setTemplate(this.options[this.selectedIndex].value)">
+            <option value=0>bson single collection</option>
+            <option value=1>bson multiple collections</option>
+            <option value=2>mgodatagen</option>
+            <option value=3>update</option>
+            <option value=4>indexe</option>
+            <option value=5>explain</option>
+        </select>
+        <input type="button" value="docs" onclick="showDoc(true)">
+    </div>
+</div>
+<div class="content">
+    <div id="configPanel">
+        <h3>Configuration</h3>
+        <div class="resizable_editor">
+            <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
+            <div id="configResizeHandler" class="handler"></div>
         </div>
     </div>
-    <div class="content">
-        <div id="configPanel">
-            <h3>Configuration</h3>
-            <div class="resizable_editor">
-                <div id="config" class="ignore_warnings">{{printf "%s" .Config}}</div>
-                <div id="configResizeHandler" class="handler"></div>
-            </div>
+    <div id="queryPanel">
+        <h3>Query</h3>
+        <div class="resizable_editor">
+            <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
+            <div id="queryResizeHandler" class="handler"></div>
         </div>
-        <div id="queryPanel">
-            <h3>Query</h3>
-            <div class="resizable_editor">
-                <div id="query" class="ignore_warnings">{{printf "%s" .Query}}</div>
-                <div id="queryResizeHandler" class="handler"></div>
-            </div>
-        </div>
-        <div id="resultPanel">
-            <h3>Result</h3>
-            <div id="result" class="text_red"></div>
-        </div>
-        <div id="docPanel" class="markdown-body"></div>
     </div>
-    <div class="footer">
-        <p>
-            MongoDB version {{ printf "%s" .MongoVersion }} -
-            <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> - 
-            <a href="/static/about.html">About this playground</a>
-        </p>
+    <div id="resultPanel">
+        <h3>Result</h3>
+        <div id="result" class="text_red"></div>
     </div>
+    <div id="docPanel" class="markdown-body"></div>
+</div>
+<div class="footer">
+    <p>
+        MongoDB version {{ printf "%s" .MongoVersion }} -
+        <a href="https://github.com/feliixx/mongoplayground/issues">Report an issue</a> -
+        <a href="/static/about.html">About this playground</a>
+    </p>
+</div>
 </body>
 
 </html>

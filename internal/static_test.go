@@ -18,6 +18,7 @@ package internal
 
 import (
 	"compress/gzip"
+	"github.com/andybalholm/brotli"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -36,76 +37,90 @@ func TestStaticHandlers(t *testing.T) {
 			name:         "css",
 			url:          "/static/playground-min-10.css",
 			contentType:  "text/css; charset=utf-8",
-			responseCode: 200,
+			responseCode: http.StatusOK,
 		},
 		{
 			name:         "documentation",
 			url:          "/static/docs-10.html",
 			contentType:  "text/html; charset=utf-8",
-			responseCode: 200,
+			responseCode: http.StatusOK,
 		},
 		{
 			name:         "documentation",
 			url:          "/static/about.html",
 			contentType:  "text/html; charset=utf-8",
-			responseCode: 200,
+			responseCode: http.StatusOK,
 		},
 		{
 			name:         "documentation",
 			url:          "/static/playground-min-11.js",
 			contentType:  "application/javascript; charset=utf-8",
-			responseCode: 200,
+			responseCode: http.StatusOK,
 		},
 		{
 			name:         "favicon",
 			url:          "/static/favicon.png",
 			contentType:  "image/png",
-			responseCode: 200,
+			responseCode: http.StatusOK,
 		},
 		{
 			name:         "non existing file",
 			url:          "/static/unknown.txt",
 			contentType:  "",
-			responseCode: 404,
+			responseCode: http.StatusNotFound,
 		},
 		{
-			name:         "file outside of static",
+			name:         "file outside of static redirect to home page",
 			url:          "/static/../README.md",
 			contentType:  "",
-			responseCode: 404,
+			responseCode: http.StatusMovedPermanently,
 		},
 	}
 	for _, tt := range staticFileTests {
-		t.Run(tt.name, func(t *testing.T) {
 
-			resp := httptest.NewRecorder()
-			req, _ := http.NewRequest(http.MethodGet, tt.url, nil)
-			testServer.staticHandler(resp, req)
+		test := tt // capture range variable
+		t.Run(test.name, func(t *testing.T) {
 
-			if tt.responseCode != resp.Code {
-				t.Errorf("expected response code %d but got %d", tt.responseCode, resp.Code)
-			}
+			t.Parallel()
 
-			if tt.responseCode == http.StatusOK {
-
-				if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
-					t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
-				}
-
-				if want, got := tt.contentType, resp.Header().Get("Content-Type"); want != got {
-					t.Errorf("expected Content-Type: %s, but got %s", want, got)
-				}
-
-				zr, err := gzip.NewReader(resp.Body)
-				if err != nil {
-					t.Errorf("coulnd't read response body: %v", err)
-				}
-				_, err = io.Copy(io.Discard, zr)
-				if err != nil {
-					t.Errorf("fail to read gzip content: %v", err)
-				}
-				zr.Close()
-			}
+			checkServerResponse(t, test.url, test.responseCode, test.contentType, brotliEncoding)
+			checkServerResponse(t, test.url, test.responseCode, test.contentType, gzipEncoding)
 		})
+	}
+}
+
+func checkServerResponse(t *testing.T, url string, expectedResponseCode int, expectedContentType, expectedEncoding string) {
+
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set("Accept-Encoding", expectedEncoding)
+
+	testServer.ServeHTTP(resp, req)
+
+	if expectedResponseCode != resp.Code {
+		t.Errorf("expected response code %d but got %d", expectedResponseCode, resp.Code)
+	}
+
+	if expectedResponseCode == http.StatusOK {
+
+		if want, got := expectedEncoding, resp.Header().Get("Content-Encoding"); want != got {
+			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
+		}
+
+		if want, got := expectedContentType, resp.Header().Get("Content-Type"); want != got {
+			t.Errorf("expected Content-Type: %s, but got %s", want, got)
+		}
+
+		var reader io.Reader
+		if expectedEncoding == brotliEncoding {
+			reader = brotli.NewReader(resp.Body)
+		} else {
+			reader, _ = gzip.NewReader(resp.Body)
+		}
+
+		_, err := io.Copy(io.Discard, reader)
+		if err != nil {
+			t.Errorf("fail to read %s content: %v", expectedEncoding, err)
+		}
 	}
 }

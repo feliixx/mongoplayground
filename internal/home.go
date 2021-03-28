@@ -16,13 +16,24 @@
 
 package internal
 
-import "net/http"
+import (
+	"compress/gzip"
+	"net/http"
+	"strings"
+)
 
 // return a playground with the default configuration
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.Header().Set("Content-Encoding", "gzip")
 
+	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		w.Header().Set("Content-Encoding", gzipEncoding)
+		writer := gzip.NewWriter(w)
+		executeHomeTemplate(writer, s.mongodbVersion)
+		return
+	}
+
+	w.Header().Set("Content-Encoding", brotliEncoding)
 	w.Write(s.staticContent[homeEndpoint])
 }

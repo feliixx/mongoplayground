@@ -17,8 +17,8 @@
 package internal
 
 import (
+	"fmt"
 	"net/http"
-	"net/http/httptest"
 	"net/url"
 	"testing"
 )
@@ -71,7 +71,7 @@ func TestView(t *testing.T) {
 
 	// start by saving all needed playground
 	for _, tt := range viewTests {
-		httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, tt.params)
+		httpBody(t, saveEndpoint, http.MethodPost, tt.params)
 	}
 
 	t.Run("parallel view", func(t *testing.T) {
@@ -82,13 +82,8 @@ func TestView(t *testing.T) {
 
 				t.Parallel()
 
-				req, _ := http.NewRequest(http.MethodGet, "/"+test.url, nil)
-				resp := httptest.NewRecorder()
-				testServer.viewHandler(resp, req)
-
-				if test.responseCode != resp.Code {
-					t.Errorf("expected response code %d but got %d", test.responseCode, resp.Code)
-				}
+				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", gzipEncoding)
+				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", brotliEncoding)
 			})
 		}
 	})

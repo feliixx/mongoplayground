@@ -97,7 +97,7 @@ func TestSave(t *testing.T) {
 
 				t.Parallel()
 
-				buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, test.params)
+				buf := httpBody(t, saveEndpoint, http.MethodPost, test.params)
 
 				if want, got := test.result, buf.String(); want != got {
 					t.Errorf("expected %s, but got %s", want, got)
@@ -132,24 +132,22 @@ func TestSave(t *testing.T) {
 func testPlaygroundStats(t *testing.T, nbMgoDatagen, nbBsonSingle, nbBsonMultiple, nbUnknown int) {
 
 	// reset saved playground metrics
-	savedPlayground.Reset()
-	err := testServer.computeSavedPlaygroundStats()
-	if err != nil {
-		t.Errorf("fail to get stats from saved playgrounds")
-	}
+	savedPlaygroundSize.Reset()
+	computeSavedPlaygroundStats(testServer.storage)
+
 	resp := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, metricsEndpoint, nil)
 	promhttp.Handler().ServeHTTP(resp, req)
 
-	want := fmt.Sprintf(`saved_playground_count{type="bson_multiple_collection"} %d
-saved_playground_count{type="bson_single_collection"} %d
-saved_playground_count{type="mgodatagen"} %d
-saved_playground_count{type="unknown"} %d`, nbBsonMultiple, nbBsonSingle, nbMgoDatagen, nbUnknown)
+	want := fmt.Sprintf(`saved_playground_size_count{type="bson_multiple_collection"} %d
+saved_playground_size_count{type="bson_single_collection"} %d
+saved_playground_size_count{type="mgodatagen"} %d
+saved_playground_size_count{type="unknown"} %d`, nbBsonMultiple, nbBsonSingle, nbMgoDatagen, nbUnknown)
 
 	lines := make([]string, 0, 4)
 	scanner := bufio.NewScanner(resp.Body)
 	for scanner.Scan() {
-		if strings.HasPrefix(scanner.Text(), "saved_playground_count") {
+		if strings.HasPrefix(scanner.Text(), "saved_playground_size_count") {
 			lines = append(lines, scanner.Text())
 		}
 	}
@@ -167,7 +165,7 @@ func TestErrorOnSavePlaygroundTooBig(t *testing.T) {
 		"query":  {"db.collection.find()"},
 	}
 
-	buf := httpBody(t, testServer.saveHandler, http.MethodPost, saveEndpoint, params)
+	buf := httpBody(t, saveEndpoint, http.MethodPost, params)
 	if want, got := errPlaygroundToBig, buf.String(); want != got {
 		t.Errorf("expected %s, but got %s", want, got)
 	}

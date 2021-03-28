@@ -32,12 +32,14 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 
 	jsIndentTests := []struct {
 		name    string
+		eType   string
 		input   string
 		indent  string
 		compact string
 	}{
 		{
 			name:  `valid json`,
+			eType: "config",
 			input: `[{ "_id": 1, "key": {"field": "someValue"}}]`,
 			indent: `[
   {
@@ -50,6 +52,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{"_id":1,"key":{"field":"someValue"}}]`,
 		}, {
 			name:  `find() query`,
+			eType: "query",
 			input: `db.collection.find({ "_id": ObjectId("5a934e000102030405000000")}, { "_id":   0} )`,
 			indent: `db.collection.find({
   "_id": ObjectId("5a934e000102030405000000")
@@ -60,7 +63,8 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `db.collection.find({"_id":ObjectId("5a934e000102030405000000")},{"_id":0})`,
 		},
 		{
-			name: `valid json with tabs`,
+			name:  `valid json with tabs`,
+			eType: "config",
 			input: `[{	"_id":	1, "key": 	{"field": "someValue"}}]`,
 			indent: `[
   {
@@ -73,7 +77,8 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{"_id":1,"key":{"field":"someValue"}}]`,
 		},
 		{
-			name: `new Date()`,
+			name:  `new Date()`,
+			eType: "config",
 			input: `[ { "key": new Date(18384919)	}]`,
 			indent: `[
   {
@@ -83,7 +88,8 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{"key":new Date(18384919)}]`,
 		},
 		{
-			name: `empty json`,
+			name:  `empty json`,
+			eType: "config",
 			input: `[
 {
 
@@ -96,7 +102,8 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{}]`,
 		},
 		{
-			name: `valid bson`,
+			name:  `valid bson`,
+			eType: "config",
 			input: `[{_id: ObjectId("5a934e000102030405000000"), "date": ISODate("2000-01-01T00:00:00Z") }, 
 			{ "_id": ObjectId("5a934e000102030405000001"), ts: Timestamp(1,1), newDate: new Date(1)}, 
 			{"k": NumberInt(10), "k2": NumberLong(15), k3: NumberDecimal(177), f: 2.994499433}, 
@@ -130,6 +137,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 		},
 		{
 			name:  `replace single quote with double quote`,
+			eType: "config",
 			input: `[{ 'k': 'value 1', 'k2': "O'Neil" }]`,
 			indent: `[
   {
@@ -140,35 +148,26 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 			compact: `[{"k":"value 1","k2":"O'Neil"}]`,
 		},
 		{
-			name: `javascript regex`,
-			input: `db.col123.aggregate([ { "$match": {
-				'k': /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/
-			}}])`,
-			indent: `db.col123.aggregate([
-  {
-    "$match": {
-      "k": /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/
-    }
-  }
-])`,
-			compact: `db.col123.aggregate([{"$match":{"k":/^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/}}])`,
-		},
-		{
 			name:    `invalid input missing '('`,
-			input:   `db.coll.find{ })`,
+			eType:   "query",
+			input:   `db.coll.find{})`,
 			indent:  `db.coll.find{})`,
 			compact: `db.coll.find{})`,
 		},
 		{
 			name:  `unfinished regex`,
+			eType: "config",
 			input: `[{ k: /^db.*(\w)}]`,
 			indent: `[
   {
-    k: /^db.*(\w)}]`,
+    k: /^db.*(\w)
+  }
+]`,
 			compact: `[{k:/^db.*(\w)}]`,
 		},
 		{
 			name:  `unfinished quoted string`,
+			eType: "config",
 			input: `[{k: "str}]`,
 			indent: `[
   {
@@ -177,14 +176,18 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 		},
 		{
 			name:  `unfinished new Date()`,
-			input: `[{k: new Date(89928  }  ]`,
+			eType: "config",
+			input: `[{k: new Date(89928}]`,
 			indent: `[
   {
-    k: new Date(89928  }  ]`,
-			compact: `[{k:new Date(89928  }  ]`,
+    k: new Date(89928
+  }
+]`,
+			compact: `[{k:new Date(89928}]`,
 		},
 		{
-			name: `multiple collection bson`,
+			name:  `multiple collection bson`,
+			eType: "config",
 			input: `
  db  =   {
 	 coll1: [
@@ -201,7 +204,8 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 }`,
 		},
 		{
-			name: "single line comment",
+			name:  "single line comment",
+			eType: "config",
 			input: `
 			db  =   {
 				// first coll to create
@@ -211,7 +215,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 		   }`,
 			compact: `db={/** first coll to create*/coll1:[{k:NumberInt(1234)}]}`,
 			indent: `db={
-  /** first coll to create*/
+  // first coll to create
   coll1: [
     {
       k: NumberInt(1234)
@@ -220,23 +224,24 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 }`,
 		},
 		{
-			name: "mutli line comment",
+			name:  "mutli line comment",
+			eType: "config",
 			input: `
 			db  =   {
-				/** the coll one
-				*
-				* that end here
-				*/
+				// the coll one
+//
+   // that end here
+				//
 				coll1: [
 					{k:NumberInt(1234)}
 			   ]
 		   }`,
-			compact: `db={/** the coll one** that end here*/coll1:[{k:NumberInt(1234)}]}`,
+			compact: `db={/** the coll one** that end here**/coll1:[{k:NumberInt(1234)}]}`,
 			indent: `db={
-  /** the coll one
-  *
-  * that end here
-  */
+  // the coll one
+  //
+  // that end here
+  //
   coll1: [
     {
       k: NumberInt(1234)
@@ -245,102 +250,166 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 }`,
 		},
 		{
-			name:    "unfinished comment",
-			input:   `[{"k":/*}]`,
-			compact: `[{"k":}]`,
-			indent: `[
-  {
-    "k": 
-  }
-]`,
-		},
-		{
-			name: "mixed single and multiple line",
+			name:  "mixed single and multiple line",
+			eType: "query",
 			input: `
 			db.collection.find({
 				// the key
 				k: 1
-			})/**   comment
-			*
-			*/`,
-			compact: `db.collection.find({/** the key*/k:1})/**   comment**/`,
+			})//   comment
+			//
+			//`,
+			compact: `db.collection.find({/** the key*/k:1})/**   comment***/`,
 			indent: `db.collection.find({
-  /** the key*/
+  // the key
   k: 1
-})/**   comment
-*
-*/
+})//   comment
+//
+//
 `,
 		},
 		{
-			name: "multiline comment single star",
+			name:  "multiline comment single star",
+			eType: "query",
 			input: `
 			db.collection.find({
-				/*
-				the key
-				*/
+				//
+				  // the key
+				//
 				k: 1
 			})`,
 			compact: `db.collection.find({/*** the key**/k:1})`,
 			indent: `db.collection.find({
-  /**
-  * the key
-  *
-  */
+  //
+  // the key
+  //
   k: 1
 })`,
 		},
 		{
-			name: "multiline comment single star",
+			name:  "multiline comment single star",
+			eType: "query",
 			input: `
 			db.collection.find({
-				/*some comment
-	   on multiple line 
-	                   with weird indentation 
-				*/
+				//some comment
+//	   on multiple line 
+//	                   with weird indentation 
+				//
 				k: 1
 			})`,
-			compact: `db.collection.find({/**some comment* on multiple line* with weird indentation**/k:1})`,
+			compact: `db.collection.find({/**some comment*	   on multiple line*	                   with weird indentation**/k:1})`,
 			indent: `db.collection.find({
-  /**some comment
-  * on multiple line
-  * with weird indentation
-  *
-  */
+  //some comment
+  //	   on multiple line
+  //	                   with weird indentation
+  //
   k: 1
 })`,
-		},
-		{
-			name:    "mix single star multiple star",
-			input:   `[{"k":1}]/**/`,
-			compact: `[{"k":1}]`,
-			indent: `[
-  {
-    "k": 1
-  }
-]`,
 		},
 		{
 			name:    "query with trailing comma",
+			eType:   "query",
 			input:   `db.collection.find();`,
 			compact: `db.collection.find()`,
 			indent:  `db.collection.find()`,
 		},
 		{
-			name: "comment with no line return",
+			name:  "comment with no line return",
+			eType: "query",
 			input: `db.collection.find()
 			// comment with no line return`,
 			compact: `db.collection.find()/** comment with no line return*/`,
-			indent: `db.collection.find()/** comment with no line return*/
+			indent: `db.collection.find()// comment with no line return
 `,
 		},
 		{
-			name: "aggregate with explain",
+			name:  "aggregate with explain",
+			eType: "query",
 			input: `db.collection.find().explain(
 				
 			)`,
 			compact: `db.collection.find().explain()`,
 			indent:  `db.collection.find().explain()`,
+		},
+		{
+			name:  "aggregation unquoted stages",
+			eType: "query",
+			input: `db.image_analysis.aggregate([
+{$match: {"account":"DJ4TV9JEW"}},
+{$unwind: "$vulnerabilities"},
+{$replaceRoot: {newRoot:{$mergeObjects:[{  $arrayElemAt:["$detail",0]},"$$ROOT"]}}}
+])`,
+			compact: `db.image_analysis.aggregate([{$match:{"account":"DJ4TV9JEW"}},{$unwind:"$vulnerabilities"},{$replaceRoot:{newRoot:{$mergeObjects:[{$arrayElemAt:["$detail",0]},"$$ROOT"]}}}])`,
+			indent: `db.image_analysis.aggregate([
+  {
+    $match: {
+      "account": "DJ4TV9JEW"
+    }
+  },
+  {
+    $unwind: "$vulnerabilities"
+  },
+  {
+    $replaceRoot: {
+      newRoot: {
+        $mergeObjects: [
+          {
+            $arrayElemAt: [
+              "$detail",
+              0
+            ]
+          },
+          "$$ROOT"
+        ]
+      }
+    }
+  }
+])`,
+		},
+		{
+			name:  "trailing comma are alowed",
+			eType: "query",
+			input: `db.store.aggregate([
+  {
+    $unwind: {
+      path: "$storeSignals",
+      preserveNullAndEmptyArrays: false,
+    }
+  },
+				
+			])`,
+			compact: `db.store.aggregate([{$unwind:{path:"$storeSignals",preserveNullAndEmptyArrays:false,}},])`,
+			indent: `db.store.aggregate([
+  {
+    $unwind: {
+      path: "$storeSignals",
+      preserveNullAndEmptyArrays: false,
+      
+    }
+  },
+  
+])`,
+		},
+		{
+			name:  "aggregate with multiple object instead of array",
+			eType: "query",
+			input: `db.020388243.aggregate(
+  {
+    $project: {
+      _id: "0"
+    }},{$match: {k_j: "1"}
+  })`,
+			compact: `db.020388243.aggregate({$project:{_id:"0"}},{$match:{k_j:"1"}})`,
+			indent: `db.020388243.aggregate({
+  $project: {
+    _id: "0"
+  }
+},
+{
+  $match: {
+    k_j: "1"
+  }
+})`,
 		},
 	}
 
@@ -350,6 +419,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 	{
 		"name": %s,
 		"input": %s, 
+        "type": %s,
 		"expectedIndent": %s, 
 		"expectedCompact": %s
 	}
@@ -358,7 +428,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 	buffer.Write([]byte(`
 		var tests = [`))
 	for _, tt := range jsIndentTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.eType), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -371,40 +441,42 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 	// results
 
 	buffer.Write([]byte(`
+
+	var parser = new Parser()
+
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let indentResult = indent(tt.input)
+		let indentResult = parser.indent(tt.input, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
 			print("test " + tt.name + " ident failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
-		let compactResult = compact(tt.input)
+		let compactResult = parser.compact(tt.input, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
 			print("test " + tt.name + " compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 
-		indentResult = indent(indentResult)
+		indentResult = parser.indent(indentResult, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
 			print("test " + tt.name + " re-indent failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 
-		compactResult = compact(indentResult)
+		compactResult = parser.compact(indentResult, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
 			print("test " + tt.name + " compact-indent failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 
-		indentResult = indent(compactResult)
+		indentResult = parser.indent(compactResult, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
 			print("test " + tt.name + " indent-compact failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 
-		compactResult = compact(compactResult)
+		compactResult = parser.compact(compactResult, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
 			print("test " + tt.name + " re-compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 	}	
 	`))
-
 	runJsTest(t, buffer, "testIndent.js")
 }
 
@@ -414,57 +486,64 @@ func TestCompactAndRemoveComment(t *testing.T) {
 
 	removeCommentTests := []struct {
 		name     string
+		eType    string
 		input    string
 		expected string
 	}{
 		{
-			name: "single line",
+			name:  "single line",
+			eType: "config",
 			input: `[{
-				// some comment 
-	
+				// some comment
+		
 				// and other
 				"key": 1
 			}]`,
 			expected: `[{"key":1}]`,
 		},
 		{
-			name: "multi line",
+			name:  "multi line",
+			eType: "config",
 			input: `[{
 				"key": 1
-			/**   comment 
+			/**   comment
 			*
 			*/}]`,
 			expected: `[{"key":1}]`,
 		},
 		{
-			name: "start of doc",
+			name:  "start of doc",
+			eType: "query",
 			input: `
-			/**   comment 
+			/**   comment
 			*
 			*/db.collection.find({})`,
 			expected: `db.collection.find({})`,
 		},
 		{
-			name: "end of query",
+			name:  "end of query",
+			eType: "query",
 			input: `
-			db.collection.find({})/**   comment 
+			db.collection.find({})/**   comment
 			*
 			*/`,
 			expected: `db.collection.find({})`,
 		},
 		{
-			name: "mixed single and multiple line",
+			name:  "mixed single and multiple line",
+			eType: "query",
 			input: `
 			db.collection.find({
 				// the key
 				k: 1
-			})/**   comment 
+			})/**   comment
 			*
 			*/`,
 			expected: `db.collection.find({k:1})`,
 		},
 		{
-			name: "multiple line single star",
+			name:  "multiple line single star",
+			eType: "query",
 			input: `
 			db.collection.find({
 				/*
@@ -477,17 +556,19 @@ func TestCompactAndRemoveComment(t *testing.T) {
 			expected: `db.collection.find({k:1})`,
 		},
 		{
-			name: "explain",
+			name:  "explain",
+			eType: "query",
 			input: `
-			db.collection.find().explain( )`,
+					db.collection.find().explain( )`,
 			expected: `db.collection.find().explain()`,
 		},
 		{
-			name: "explain before aggregate",
+			name:  "explain before aggregate",
+			eType: "query",
 			input: `
-			db.collection.explain(
-				"queryPlanner"
-			).aggregate([])`,
+					db.collection.explain(
+						"queryPlanner"
+					).aggregate([])`,
 			expected: `db.collection.explain("queryPlanner").aggregate([])`,
 		},
 	}
@@ -497,6 +578,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 	testFormat := `
 	{
 		"name": %s,
+		"type": %s,
 		"input": %s, 
 		"expected": %s
 	}
@@ -504,7 +586,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 
 	buffer.Write([]byte("var tests = ["))
 	for _, tt := range removeCommentTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.expected))
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.eType), strconv.Quote(tt.input), strconv.Quote(tt.expected))
 		buffer.WriteByte(',')
 	}
 	buffer.Write([]byte(`
@@ -513,11 +595,14 @@ func TestCompactAndRemoveComment(t *testing.T) {
 	`))
 
 	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
 	for (let i in tests) {
 		let tt = tests[i]
 
 		let want = tt.expected
-		let got = compactAndRemoveComment(tt.input) 
+		let got = parser.compactAndRemoveComment(tt.input, tt.type, "bson") 
 		if (want !== got) {
 			print("test " + tt.name + " compact and remove comment failed, expected: \n" + want +  "\nbut got: \n" + got)
 		}
@@ -591,15 +676,18 @@ func TestValidConfig(t *testing.T) {
 	`))
 
 	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
 	for (let i in tests) {
 		let tt = tests[i]
 
-		let got = isConfigValid(tt.input, "bson") 
+		let got = ( parser.parse(tt.input, "config", "bson") === null )
 		if (got !== tt.validModeBSON) {
 			print("test " + tt.name + " format mode bson failed, expected: " + tt.validModeBSON +  " but got: " + got)
 		}
 
-		got = isConfigValid(tt.input, "mgodatagen") 
+		got = ( parser.parse(tt.input, "config", "mgodatagen") === null )
 		if (got !== tt.validModeDatagen) {
 			print("test " + tt.name + " format mode mgodatagen failed, expected: " + tt.validModeDatagen +  " but got: " + got)
 		}
@@ -619,7 +707,7 @@ func TestValidQuery(t *testing.T) {
 		valid bool
 	}{
 		{
-			name:  `trailing comma`,
+			name:  `trailing semi-colon`,
 			input: `db.collection.find();`,
 			valid: true,
 		},
@@ -727,6 +815,48 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 			input: `db.collection.explain("queryPlanner").find({"k":1})`,
 			valid: true,
 		},
+		{
+			name:  `escaped quote in string`,
+			input: `db.collection.find({"k":"\"hello\""})`,
+			valid: true,
+		},
+		{
+			name:  `escaped quote in string`,
+			input: `db.collection.find({"k":"\"hello\""})`,
+			valid: true,
+		},
+		{
+			name: `javascript regex`,
+			input: `db.col123.aggregate([ { "$match": {
+		   				"k": /^db\..(\w+)\.(find|aggregate)\([\s\S]*\)$/
+		   			}}])`,
+			valid: false,
+		},
+		{
+			name:  `find with more than 3 object`,
+			input: `db.aaa.find({ }  , {},  {v: null})`,
+			valid: false,
+		},
+		{
+			name:  `update with more than 3 object`,
+			input: `db.u.update({},{},{},{})`,
+			valid: false,
+		},
+		{
+			name:  `empty new Date()`,
+			input: `db.0.find({"date": { $gt: new Date()}})`,
+			valid: true,
+		},
+		{
+			name:  `new Date("str")`,
+			input: `db.0.find({"date": new Date("2020-07-08T04:00:00.000+00:00")})`,
+			valid: true,
+		},
+		{
+			name:  `new Date(int)`,
+			input: `db.0.find({"date": { $gt: new Date(1253653)}})`,
+			valid: true,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
@@ -750,13 +880,16 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 	`))
 
 	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
 	for (let i in tests) {
 		let tt = tests[i]
 
 		let want = tt.expected
-		let got = isQueryValid(tt.input) 
+		let got = ( parser.parse(tt.input, "query", "bson") === null )
 		if (want != got) {
-			print("test " + tt.name + " format mode bson failed, expected: " + want +  " but got: " + got)
+			print("test query with" + tt.name + " failed, expected: " + want +  " but got: " + got)
 		}
 	}	
 	`))
@@ -778,7 +911,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 			name:                      `basic bson config default collection`,
 			input:                     `[{"k":1}]`,
 			collectionsBsonMode:       "collection",
-			collectionsMgodatagenMode: "collection",
+			collectionsMgodatagenMode: "",
 		},
 		{
 			name: `basic mgodatagen`,
@@ -809,16 +942,16 @@ func TestExtractAvailableCollections(t *testing.T) {
   ]
 }`,
 			collectionsBsonMode:       "orders,inventory",
-			collectionsMgodatagenMode: "orders,inventory",
+			collectionsMgodatagenMode: "",
 		},
 		{
 			name:                      "empty config",
 			input:                     "",
-			collectionsBsonMode:       "collection",
-			collectionsMgodatagenMode: "collection",
+			collectionsBsonMode:       "",
+			collectionsMgodatagenMode: "",
 		},
 		{
-			name: `mgodatagen config without ':'`,
+			name: `mgodatagen syntax error`,
 			input: `[
   {
     "collection" "test",
@@ -826,10 +959,10 @@ func TestExtractAvailableCollections(t *testing.T) {
   }
 ]`,
 			collectionsBsonMode:       "collection",
-			collectionsMgodatagenMode: "collection",
+			collectionsMgodatagenMode: "",
 		},
 		{
-			name: `bson multiple collection without ':'`,
+			name: `bson multiple collection syntax error`,
 			input: `db={
   "orders"
     {
@@ -845,8 +978,8 @@ func TestExtractAvailableCollections(t *testing.T) {
     }
   ]
 }`,
-			collectionsBsonMode:       "inventory",
-			collectionsMgodatagenMode: "inventory",
+			collectionsBsonMode:       "",
+			collectionsMgodatagenMode: "",
 		},
 		{
 			name: `mgodatagen config ending with ':'`,
@@ -856,7 +989,7 @@ func TestExtractAvailableCollections(t *testing.T) {
   }
 ]`,
 			collectionsBsonMode:       "collection",
-			collectionsMgodatagenMode: "collection",
+			collectionsMgodatagenMode: "",
 		},
 	}
 
@@ -882,10 +1015,13 @@ func TestExtractAvailableCollections(t *testing.T) {
 	`))
 
 	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
 	for (let i in tests) {
 		let tt = tests[i]
 
-		updateAvailableCollection(tt.input, "bson")
+		parser.parse(tt.input, "config", "bson")
 
 		let want = tt.expectedModeBson
 		let got = availableCollections.map(c => c.value).join(",") 
@@ -893,7 +1029,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 			print("test " + tt.name + " in bson mode failed, expected: " + want +  " but got: " + got)
 		}
 
-		updateAvailableCollection(tt.input, "mgodatagen")
+		parser.parse(tt.input, "config", "mgodatagen")
 
 		want = tt.expectedModeMgodatagen
 		got = availableCollections.map(c => c.value).join(",") 

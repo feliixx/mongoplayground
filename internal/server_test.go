@@ -65,8 +65,8 @@ func TestMain(m *testing.M) {
 	storage, _ := ioutil.TempDir(os.TempDir(), "storage")
 	backups, _ := ioutil.TempDir(os.TempDir(), "backups")
 
-	log := log.New(io.Discard, "", 0)
-	s, err := NewServer(log, storage, backups)
+	logger := log.New(io.Discard, "", 0)
+	s, err := NewServer(logger, storage, backups)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
@@ -80,38 +80,12 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func TestServeHTTP(t *testing.T) {
-
-	t.Parallel()
-
-	req, _ := http.NewRequest(http.MethodGet, homeEndpoint, nil)
-	resp := httptest.NewRecorder()
-	testServer.ServeHTTP(resp, req)
-	if http.StatusOK != resp.Code {
-		t.Errorf("expected code %d but got %d", http.StatusOK, resp.Code)
-	}
-}
-
 func TestBasePage(t *testing.T) {
 
 	t.Parallel()
 
-	req, _ := http.NewRequest(http.MethodGet, homeEndpoint, nil)
-	resp := httptest.NewRecorder()
-
-	testServer.homeHandler(resp, req)
-
-	if http.StatusOK != resp.Code {
-		t.Errorf("expected response code %d but got %d", http.StatusOK, resp.Code)
-	}
-
-	if want, got := "text/html; charset=utf-8", resp.Header().Get("Content-Type"); want != got {
-		t.Errorf("expected Content-Type: %s but got %s", want, got)
-	}
-
-	if want, got := "gzip", resp.Header().Get("Content-Encoding"); want != got {
-		t.Errorf("expected Content-Encoding: %s but got %s", want, got)
-	}
+	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
+	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
 }
 
 func TestRemoveOldDB(t *testing.T) {
@@ -119,7 +93,7 @@ func TestRemoveOldDB(t *testing.T) {
 	defer testServer.clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	buf := httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	buf := httpBody(t, runEndpoint, http.MethodPost, params)
 	if want, got := templateResult, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
@@ -137,7 +111,7 @@ func TestRemoveOldDB(t *testing.T) {
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, testServer.runHandler, http.MethodPost, runEndpoint, params)
+	buf = httpBody(t, runEndpoint, http.MethodPost, params)
 
 	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
 		t.Errorf("expected %s but got %s", want, got)
@@ -159,7 +133,6 @@ func TestRemoveOldDB(t *testing.T) {
 	}
 
 	testStorageContent(t, 1, 0)
-
 }
 
 func TestBackup(t *testing.T) {
@@ -272,13 +245,13 @@ func (s *Server) countSavedPages() (count int) {
 	return count
 }
 
-func httpBody(t *testing.T, handler func(http.ResponseWriter, *http.Request), method string, url string, params url.Values) *bytes.Buffer {
+func httpBody(t *testing.T, url string, method string, params url.Values) *bytes.Buffer {
 	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
 	if err != nil {
 		t.Error(err)
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
-	handler(resp, req)
+	testServer.ServeHTTP(resp, req)
 	return resp.Body
 }

@@ -20,16 +20,26 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
+	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
-	"time"
+
+	"github.com/andybalholm/brotli"
 )
 
 const (
 	templateConfig = `[{"key":1},{"key":2}]`
 	templateQuery  = "db.collection.find()"
+
+	staticDir        = "web/static"
+	homeTemplateFile = "web/playground.html"
+
+	brotliEncoding = "br"
+	gzipEncoding   = "gzip"
 )
 
 var (
@@ -56,8 +66,15 @@ func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", contentTypeFromName(name))
-	w.Header().Set("Content-Encoding", "gzip")
 	w.Header().Set("Cache-Control", "public, max-age=31536000")
+
+	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		fallbackToGzip(w, fmt.Sprintf("%s/%s", staticDir, name))
+		return
+	}
+
+	w.Header().Set("Content-Length", strconv.Itoa(len(content)))
+	w.Header().Set("Content-Encoding", brotliEncoding)
 
 	w.Write(content)
 }
@@ -76,59 +93,66 @@ func contentTypeFromName(name string) string {
 	return "text/html; charset=utf-8"
 }
 
+func fallbackToGzip(w http.ResponseWriter, assetPath string) {
+	w.Header().Set("Content-Encoding", gzipEncoding)
+	zw := gzip.NewWriter(w)
+	content, _ := assets.ReadFile(assetPath)
+	zw.Write(content)
+	zw.Close()
+}
+
 // load static resources (javascript, css, docs and default page)
-// and compress them in order to serve them faster
-func (s *Server) compressStaticResources() error {
+// and compress them once at startup in order to serve them faster
+func compressStaticResources(mongodbVersion []byte) (map[string][]byte, error) {
 
-	homeTemplate = template.Must(template.ParseFS(assets, "web/playground.html"))
+	staticContent := map[string][]byte{}
 
-	var buf bytes.Buffer
-	zw, _ := gzip.NewWriterLevel(&buf, gzip.BestCompression)
-	zw.Name, zw.ModTime = homeEndpoint, time.Now()
+	buf := bytes.NewBuffer(make([]byte, 0, 1024))
+	br := brotli.NewWriterLevel(buf, brotli.BestCompression)
 
-	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
-	p.MongoVersion = s.mongodbVersion
-	if err := homeTemplate.Execute(zw, p); err != nil {
-		return err
+	homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
+	err := executeHomeTemplate(br, mongodbVersion)
+	if err != nil {
+		return nil, err
 	}
-	if err := s.add(zw, &buf); err != nil {
-		return err
-	}
-
-	staticDir := "web/static"
+	addCompressedRessource(staticContent, homeEndpoint, buf)
 
 	files, err := assets.ReadDir(staticDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	for _, f := range files {
-		buf.Reset()
-		zw.Reset(&buf)
 
-		zw.Name, zw.ModTime = f.Name(), time.Now()
+		buf.Reset()
+		br.Reset(buf)
+
 		b, err := assets.ReadFile(staticDir + "/" + f.Name())
 		if err != nil {
-			return err
+			return nil, err
 		}
-		if _, err = zw.Write(b); err != nil {
-			return err
+		if _, err = br.Write(b); err != nil {
+			return nil, err
 		}
-		if err := s.add(zw, &buf); err != nil {
-			return err
+		if err := br.Close(); err != nil {
+			return nil, err
 		}
+		addCompressedRessource(staticContent, f.Name(), buf)
 	}
-	return nil
+	return staticContent, nil
 }
 
-func (s *Server) add(zw *gzip.Writer, buf *bytes.Buffer) error {
-	if s.staticContent == nil {
-		s.staticContent = map[string][]byte{}
-	}
-	if err := zw.Close(); err != nil {
-		return err
-	}
+func addCompressedRessource(staticContent map[string][]byte, fileName string, buf *bytes.Buffer) {
 	c := make([]byte, buf.Len())
 	copy(c, buf.Bytes())
-	s.staticContent[zw.Name] = c
-	return nil
+	staticContent[fileName] = c
+}
+
+func executeHomeTemplate(writer io.WriteCloser, mongoVersion []byte) error {
+	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
+	p.MongoVersion = mongoVersion
+
+	if err := homeTemplate.Execute(writer, p); err != nil {
+		return err
+	}
+	return writer.Close()
 }

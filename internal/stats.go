@@ -36,10 +36,11 @@ var (
 			Help: "Active databases created on the Server",
 		},
 	)
-	savedPlayground = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "saved_playground_count",
-			Help: "Saved playground",
+	savedPlaygroundSize = prometheus.NewHistogramVec(
+		prometheus.HistogramOpts{
+			Name:    "saved_playground_size",
+			Help:    "Histogram of saved playground size in byte",
+			Buckets: []float64{1000, 5000, 10000, 100000, 300000},
 		},
 		[]string{"type"},
 	)
@@ -57,17 +58,19 @@ var (
 	)
 )
 
-func registerPrometheus() {
+func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(requestDurations)
 	prometheus.MustRegister(activeDatabases)
-	prometheus.MustRegister(savedPlayground)
+	prometheus.MustRegister(savedPlaygroundSize)
 	prometheus.MustRegister(cleanupDuration)
 	prometheus.MustRegister(badgerBackup)
+
+	computeSavedPlaygroundStats(storage)
 }
 
-func (s *Server) computeSavedPlaygroundStats() error {
+func computeSavedPlaygroundStats(storage *badger.DB) {
 
-	return s.storage.View(func(txn *badger.Txn) error {
+	storage.View(func(txn *badger.Txn) error {
 
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
@@ -77,7 +80,7 @@ func (s *Server) computeSavedPlaygroundStats() error {
 			item.Value(func(val []byte) error {
 				p := &page{}
 				p.decode(val)
-				savedPlayground.WithLabelValues(p.label()).Inc()
+				savedPlaygroundSize.WithLabelValues(p.label()).Observe(float64(len(val)))
 				return nil
 			})
 		}
