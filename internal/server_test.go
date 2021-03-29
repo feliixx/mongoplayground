@@ -86,6 +86,8 @@ func TestBasePage(t *testing.T) {
 
 	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
 	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
+
+	checkServerResponse(t, "/robots.txt", http.StatusNotFound, "", gzipEncoding)
 }
 
 func TestRemoveOldDB(t *testing.T) {
