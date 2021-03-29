@@ -2224,8 +2224,29 @@ var Parser = function () {
         next("e")
         next("(")
         white()
-        nObject(3)
+        object()
         white()
+        next(",")
+        white()
+        if (ch === "[" ) {
+            array()
+        } else {
+            object()
+        }
+        white()
+        if (ch === ",") {
+            next()
+            if (ch === ")") {
+                return next()
+            }
+            white()
+            object()
+            white()
+        }
+        if (ch === ",") {
+            next()
+            white()
+        }
         next(")")
     }
 
