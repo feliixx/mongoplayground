@@ -857,6 +857,16 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 			input: `db.0.find({"date": { $gt: new Date(1253653)}})`,
 			valid: true,
 		},
+		{
+			name:  `update with pipeline`,
+			input: `db.collection.update({"key": 2},[{"$set": {"updated": true}}],{"multi": false,"upsert": false})`,
+			valid: true,
+		},
+		{
+			name:  `update with trailing comma`,
+			input: `db.collection.update({"key": 2},{"$set": {"updated": true}},)`,
+			valid: true,
+		},
 	}
 
 	buffer := loadPlaygroundJs(t)
