@@ -25,6 +25,13 @@ import (
 // return a playground with the default configuration
 func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 
+	if r.URL.Path != homeEndpoint {
+		s.logger.Printf("file not found: %s", r.URL.Path)
+		w.WriteHeader(http.StatusNotFound)
+		w.Write(nil)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {

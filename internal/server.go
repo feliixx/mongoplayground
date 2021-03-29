@@ -132,6 +132,16 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if strings.HasPrefix(label, staticEndpoint) {
 		label = staticEndpoint
 	}
+
+	if label != homeEndpoint &&
+		label != viewEndpoint &&
+		label != runEndpoint &&
+		label != saveEndpoint &&
+		label != staticEndpoint &&
+		label != healthEndpoint &&
+		label != metricsEndpoint {
+		label = "invalid"
+	}
 	requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
 }
 
