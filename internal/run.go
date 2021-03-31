@@ -409,7 +409,7 @@ func stripExplain(query []byte) (strippedQuery []byte, explainMode string) {
 	}
 
 	explainMode = string(query[startExplain+9 : endExplain])
-	if len(explainMode) == 0 {
+	if len(explainMode) < 2 {
 		explainMode = "queryPlanner"
 	} else {
 		// remove the enclosing double quote (")
