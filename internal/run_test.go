@@ -725,6 +725,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `[{"_id":1},{"_id":2},{"_id":3},{"_id":4},{"_id":5},{"_id":6},{"_id":7},{"_id":8},{"_id":9},{"_id":10},{"_id":11},{"_id":12},{"_id":13},{"_id":14},{"_id":15},{"_id":16},{"_id":17},{"_id":18},{"_id":19},{"_id":20},{"_id":21},{"_id":22},{"_id":23},{"_id":24},{"_id":25},{"_id":26},{"_id":27},{"_id":28},{"_id":29},{"_id":30},{"_id":31},{"_id":32},{"_id":33},{"_id":34},{"_id":35},{"_id":36},{"_id":37},{"_id":38},{"_id":39},{"_id":40},{"_id":41},{"_id":42},{"_id":43},{"_id":44},{"_id":45},{"_id":46},{"_id":47},{"_id":48},{"_id":49},{"_id":50},{"_id":51},{"_id":52},{"_id":53},{"_id":54},{"_id":55},{"_id":56},{"_id":57},{"_id":58},{"_id":59},{"_id":60},{"_id":61},{"_id":62},{"_id":63},{"_id":64},{"_id":65},{"_id":66},{"_id":67},{"_id":68},{"_id":69},{"_id":70},{"_id":71},{"_id":72},{"_id":73},{"_id":74},{"_id":75},{"_id":76},{"_id":77},{"_id":78},{"_id":79},{"_id":80},{"_id":81},{"_id":82},{"_id":83},{"_id":84},{"_id":85},{"_id":86},{"_id":87},{"_id":88},{"_id":89},{"_id":90},{"_id":91},{"_id":92},{"_id":93},{"_id":94},{"_id":95},{"_id":96},{"_id":97},{"_id":98},{"_id":99},{"_id":100},{"_id":101},{"_id":102},{"_id":103},{"_id":104},{"_id":105},{"_id":106},{"_id":107},{"_id":108},{"_id":109},{"_id":110}]`,
 			createdDB: 1,
 		},
+		{
+			name: `explain too short`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1,"username":"singleQuote"}]`},
+				"query":  {`db.collection.find().explain(")`},
+			},
+			result:    `{"queryPlanner":{"indexFilterSet":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{},"planCacheKey":"8B3D4AB8","plannerVersion":1,"queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			createdDB: 1,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
