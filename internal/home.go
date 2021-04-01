@@ -36,6 +36,7 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		gzipCounter.Inc()
 		w.Header().Set("Content-Encoding", gzipEncoding)
 		writer := gzip.NewWriter(w)
 		executeHomeTemplate(writer, s.mongodbVersion)
