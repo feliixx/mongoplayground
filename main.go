@@ -17,11 +17,8 @@
 package main
 
 import (
-	"log"
-	"net/http"
-	"os"
-
 	"github.com/feliixx/mongoplayground/internal"
+	"log"
 )
 
 const (
@@ -30,10 +27,9 @@ const (
 )
 
 func main() {
-	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := internal.NewServer(l, badgerDir, backupDir)
+	s, err := internal.NewServer(badgerDir, backupDir)
 	if err != nil {
-		l.Fatalf("aborting: %v\n", err)
+		log.Fatalf("aborting: %v\n", err)
 	}
-	l.Fatal(http.ListenAndServe(":80", s))
+	log.Fatal(s.ListenAndServe())
 }

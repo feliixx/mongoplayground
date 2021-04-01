@@ -57,24 +57,33 @@ const (
 
 var (
 	templateParams = url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	testServer     *Server
+	testServer     *http.Server
+	testStorage    *storage
 )
 
 func TestMain(m *testing.M) {
 
-	storage, _ := ioutil.TempDir(os.TempDir(), "storage")
-	backups, _ := ioutil.TempDir(os.TempDir(), "backups")
+	log.SetOutput(io.Discard)
 
-	logger := log.New(io.Discard, "", 0)
-	s, err := NewServer(logger, storage, backups)
+	storageDir, _ := ioutil.TempDir(os.TempDir(), "storage")
+	backupsDir, _ := ioutil.TempDir(os.TempDir(), "backups")
+
+	ts, err := newStorage(storageDir, backupsDir)
+	if err != nil {
+		fmt.Printf("aborting: %v\n", err)
+		os.Exit(1)
+	}
+	testStorage = ts
+
+	s, err := newHttpServerWithStorage(testStorage)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
 	testServer = s
 
-	defer s.session.Disconnect(context.Background())
-	defer s.storage.Close()
+	defer testStorage.mongoSession.Disconnect(context.Background())
+	defer testStorage.kvStore.Close()
 
 	retCode := m.Run()
 	os.Exit(retCode)
@@ -92,7 +101,7 @@ func TestBasePage(t *testing.T) {
 
 func TestRemoveOldDB(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
 	buf := httpBody(t, runEndpoint, http.MethodPost, params)
@@ -106,9 +115,9 @@ func TestRemoveOldDB(t *testing.T) {
 	}
 
 	DBHash := p.dbHash()
-	dbInfo := testServer.activeDB[DBHash]
+	dbInfo := testStorage.activeDB[DBHash]
 	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
-	testServer.activeDB[DBHash] = dbInfo
+	testStorage.activeDB[DBHash] = dbInfo
 
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
@@ -119,14 +128,14 @@ func TestRemoveOldDB(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testServer.removeExpiredDB()
+	testStorage.removeExpiredDB()
 
-	_, ok := testServer.activeDB[DBHash]
+	_, ok := testStorage.activeDB[DBHash]
 	if ok {
 		t.Errorf("DB %s should not be present in activeDB", DBHash)
 	}
 
-	dbNames, err := testServer.session.ListDatabaseNames(context.Background(), bson.D{})
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -139,43 +148,43 @@ func TestRemoveOldDB(t *testing.T) {
 
 func TestBackup(t *testing.T) {
 
-	dir, _ := os.ReadDir(testServer.backupDir)
+	dir, _ := os.ReadDir(testStorage.backupDir)
 	for _, d := range dir {
-		os.RemoveAll(path.Join([]string{testServer.backupDir, d.Name()}...))
+		os.RemoveAll(path.Join([]string{testStorage.backupDir, d.Name()}...))
 	}
 
-	testServer.backup()
+	testStorage.backup()
 
-	dir, _ = os.ReadDir(testServer.backupDir)
+	dir, _ = os.ReadDir(testStorage.backupDir)
 	if len(dir) != 1 {
 		t.Error("a backup file should have been created, but there was none")
 	}
 }
 
-func (s *Server) clearDatabases(t *testing.T) {
-	dbNames, err := s.session.ListDatabaseNames(context.Background(), bson.D{})
+func clearDatabases(t *testing.T) {
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
 
 	for _, name := range filterDBNames(dbNames) {
-		err = s.session.Database(name).Drop(context.Background())
+		err = testStorage.mongoSession.Database(name).Drop(context.Background())
 		if err != nil {
 			fmt.Printf("fail to drop db: %v", err)
 		}
-		delete(s.activeDB, name)
+		delete(testStorage.activeDB, name)
 	}
 
-	if len(s.activeDB) > 0 {
-		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", s.activeDB)
-		s.activeDB = map[string]dbMetaInfo{}
+	if len(testStorage.activeDB) > 0 {
+		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", testStorage.activeDB)
+		testStorage.activeDB = map[string]dbMetaInfo{}
 	}
 
 	// reset prometheus metrics
 	activeDatabases.Set(0)
 
 	keys := make([][]byte, 0)
-	err = s.storage.View(func(txn *badger.Txn) error {
+	err = testStorage.kvStore.View(func(txn *badger.Txn) error {
 		opts := badger.DefaultIteratorOptions
 		opts.PrefetchValues = false
 		it := txn.NewIterator(opts)
@@ -192,7 +201,7 @@ func (s *Server) clearDatabases(t *testing.T) {
 		t.Error(err)
 	}
 
-	deleteTxn := s.storage.NewTransaction(true)
+	deleteTxn := testStorage.kvStore.NewTransaction(true)
 	for i := 0; i < len(keys); i++ {
 		err = deleteTxn.Delete(keys[i])
 		if err != nil {
@@ -206,20 +215,20 @@ func (s *Server) clearDatabases(t *testing.T) {
 }
 
 func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
-	dbNames, err := testServer.session.ListDatabaseNames(context.Background(), bson.D{})
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
 	}
 	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
 		t.Errorf("expected %d DB, but got %d", want, got)
 	}
-	if want, got := nbMongoDatabases, len(testServer.activeDB); want != got {
+	if want, got := nbMongoDatabases, len(testStorage.activeDB); want != got {
 		t.Errorf("expected %d db in map, but got %d", want, got)
 	}
 	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabases)); want != got {
 		t.Errorf("expected %d active db in prometheus counter, but got %d", want, got)
 	}
-	if want, got := nbBadgerRecords, testServer.countSavedPages(); want != got {
+	if want, got := nbBadgerRecords, countSavedPages(testStorage.kvStore); want != got {
 		t.Errorf("expected %d page saved, but got %d", want, got)
 	}
 }
@@ -235,8 +244,8 @@ func filterDBNames(dbNames []string) []string {
 	return r
 }
 
-func (s *Server) countSavedPages() (count int) {
-	s.storage.View(func(txn *badger.Txn) error {
+func countSavedPages(kvStore *badger.DB) (count int) {
+	kvStore.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
 		for it.Rewind(); it.Valid(); it.Next() {
@@ -254,6 +263,6 @@ func httpBody(t *testing.T, url string, method string, params url.Values) *bytes
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
-	testServer.ServeHTTP(resp, req)
+	testServer.Handler.ServeHTTP(resp, req)
 	return resp.Body
 }

@@ -30,7 +30,7 @@ import (
 
 func TestSave(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	saveTests := []struct {
 		name      string
@@ -133,7 +133,7 @@ func testPlaygroundStats(t *testing.T, nbMgoDatagen, nbBsonSingle, nbBsonMultipl
 
 	// reset saved playground metrics
 	savedPlaygroundSize.Reset()
-	computeSavedPlaygroundStats(testServer.storage)
+	computeSavedPlaygroundStats(testStorage.kvStore)
 
 	resp := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodGet, metricsEndpoint, nil)
@@ -154,7 +154,6 @@ saved_playground_size_count{type="unknown"} %d`, nbBsonMultiple, nbBsonSingle, n
 	if got := strings.Join(lines, "\n"); want != got {
 		t.Errorf("expected %s\n but got\n %s", want, got)
 	}
-
 }
 
 func TestErrorOnSavePlaygroundTooBig(t *testing.T) {

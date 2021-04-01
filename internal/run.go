@@ -75,7 +75,7 @@ db = {
 // the result is compacted and looks like:
 //
 //    [{_id:1,k:1},{_id:2,k:33}]
-func (s *Server) runHandler(w http.ResponseWriter, r *http.Request) {
+func (s *storage) runHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -97,14 +97,14 @@ func (s *Server) runHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *Server) run(p *page) ([]byte, error) {
+func (s *storage) run(p *page) ([]byte, error) {
 
 	collectionName, method, stages, explainMode, err := parseQuery(p.Query)
 	if err != nil {
 		return nil, fmt.Errorf("error in query:\n  %v", err)
 	}
 
-	db := s.session.Database(p.dbHash())
+	db := s.mongoSession.Database(p.dbHash())
 
 	// if this is an 'update' query, always re-create the database,
 	// run the update and return the result of a 'find' query on the
@@ -124,7 +124,7 @@ func (s *Server) run(p *page) ([]byte, error) {
 	return runQuery(db.Collection(collectionName), method, stages, explainMode)
 }
 
-func (s *Server) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
+func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
 
 	s.activeDbLock.Lock()
 	defer s.activeDbLock.Unlock()
