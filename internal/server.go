@@ -66,8 +66,8 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 	return &http.Server{
 		Addr:         ":8080",
 		Handler:      latencyObserver(mux),
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 20 * time.Second,
 	}, nil
 }
 
