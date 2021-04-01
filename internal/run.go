@@ -42,7 +42,7 @@ const (
 	// max number of documents in a collection
 	maxDoc = 100
 	// max time a query can run before being aborted by the Server
-	maxQueryTime = 1 * time.Minute
+	maxQueryTime = 20 * time.Second
 	// errInvalidConfig error message when the configuration doesn't match expected format
 	errInvalidConfig = `expecting an array of documents like 
 
