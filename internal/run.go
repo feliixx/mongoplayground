@@ -42,7 +42,7 @@ const (
 	// max number of documents in a collection
 	maxDoc = 100
 	// max time a query can run before being aborted by the Server
-	maxQueryTime = 20 * time.Second
+	maxQueryTime = writeTimeout - readTimeout
 	// errInvalidConfig error message when the configuration doesn't match expected format
 	errInvalidConfig = `expecting an array of documents like 
 
@@ -89,7 +89,7 @@ func (s *storage) runHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := s.run(p)
+	res, err := s.run(r.Context(), p)
 	if err != nil {
 		w.Write([]byte(err.Error()))
 		return
@@ -97,7 +97,7 @@ func (s *storage) runHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(res)
 }
 
-func (s *storage) run(p *page) ([]byte, error) {
+func (s *storage) run(context context.Context, p *page) ([]byte, error) {
 
 	collectionName, method, stages, explainMode, err := parseQuery(p.Query)
 	if err != nil {
@@ -121,7 +121,7 @@ func (s *storage) run(p *page) ([]byte, error) {
 	if !dbInfos.hasCollection(collectionName) {
 		return nil, fmt.Errorf(`collection "%s" doesn't exist`, collectionName)
 	}
-	return runQuery(db.Collection(collectionName), method, stages, explainMode)
+	return runQuery(context, db.Collection(collectionName), method, stages, explainMode)
 }
 
 func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, forceCreate bool) (dbInfo dbMetaInfo, err error) {
@@ -448,7 +448,7 @@ func unmarshalStages(queryBytes []byte) (stages []interface{}, err error) {
 	return stages, err
 }
 
-func runQuery(collection *mongo.Collection, method string, stages []interface{}, explainMode string) ([]byte, error) {
+func runQuery(context context.Context, collection *mongo.Collection, method string, stages []interface{}, explainMode string) ([]byte, error) {
 
 	var cmd bson.D
 
@@ -482,9 +482,9 @@ func runQuery(collection *mongo.Collection, method string, stages []interface{},
 		var err error
 		multi, opts := parseUpdateOpts(stages[2])
 		if multi {
-			_, err = collection.UpdateMany(context.Background(), stages[0], stages[1], opts)
+			_, err = collection.UpdateMany(context, stages[0], stages[1], opts)
 		} else {
-			_, err = collection.UpdateOne(context.Background(), stages[0], stages[1], opts)
+			_, err = collection.UpdateOne(context, stages[0], stages[1], opts)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("fail to run update: %v", err)
@@ -512,7 +512,7 @@ func runQuery(collection *mongo.Collection, method string, stages []interface{},
 		}
 	}
 
-	res := collection.Database().RunCommand(context.Background(), cmd)
+	res := collection.Database().RunCommand(context, cmd)
 	if res.Err() != nil {
 		return nil, fmt.Errorf("query failed: %v", res.Err())
 	}
@@ -553,5 +553,4 @@ func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
 		SetArrayFilters(options.ArrayFilters{
 			Filters: arrayFilters,
 		})
-
 }
