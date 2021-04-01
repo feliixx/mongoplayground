@@ -33,6 +33,9 @@ const (
 	staticEndpoint  = "/static/"
 	metricsEndpoint = "/metrics"
 	healthEndpoint  = "/health"
+
+	readTimeout  = 5 * time.Second
+	writeTimeout = 20 * time.Second
 )
 
 // NewServer initialize a badger and a mongodb connection,
@@ -66,8 +69,8 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 	return &http.Server{
 		Addr:         ":8080",
 		Handler:      latencyObserver(mux),
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 20 * time.Second,
+		ReadTimeout:  readTimeout,
+		WriteTimeout: writeTimeout,
 	}, nil
 }
 
