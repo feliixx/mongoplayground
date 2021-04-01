@@ -95,6 +95,9 @@ func contentTypeFromName(name string) string {
 }
 
 func fallbackToGzip(w http.ResponseWriter, assetPath string) {
+
+	gzipCounter.Inc()
+
 	w.Header().Set("Content-Encoding", gzipEncoding)
 	zw := gzip.NewWriter(w)
 	content, _ := assets.ReadFile(assetPath)
