@@ -21,6 +21,7 @@ import (
 	"errors"
 	"github.com/andybalholm/brotli"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 
@@ -30,13 +31,13 @@ import (
 const errNoMatchingPlayground = "this playground doesn't exist"
 
 // view a saved playground page identified by its ID
-func (s *Server) viewHandler(w http.ResponseWriter, r *http.Request) {
+func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 
 	id := extractPageIDFromURL(r.URL.Path)
 
 	page, err := s.loadPage(id)
 	if err != nil {
-		s.logger.Printf("fail to load page with id %s : %v", id, err)
+		log.Printf("fail to load page with id %s : %v", id, err)
 		serveNoMatchingPlayground(w)
 		return
 	}
@@ -64,16 +65,16 @@ func extractPageIDFromURL(url string) []byte {
 	return []byte(id)
 }
 
-func (s *Server) loadPage(id []byte) (*page, error) {
+func (s *storage) loadPage(id []byte) (*page, error) {
 
 	if len(id) != pageIDLength {
 		return nil, errors.New("invalid page id length")
 	}
 
 	p := &page{
-		MongoVersion: s.mongodbVersion,
+		MongoVersion: s.mongoVersion,
 	}
-	err := s.storage.View(func(txn *badger.Txn) error {
+	err := s.kvStore.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(id)
 		if err != nil {
 			return err

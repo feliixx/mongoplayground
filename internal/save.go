@@ -27,7 +27,7 @@ import (
 // like:
 //
 //   https://mongoplayground.net/p/nJhd-dhf3Ea
-func (s *Server) saveHandler(w http.ResponseWriter, r *http.Request) {
+func (s *storage) saveHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
@@ -46,14 +46,14 @@ func (s *Server) saveHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "%sp/%s", r.Referer(), id)
 }
 
-func (s *Server) save(p *page) []byte {
+func (s *storage) save(p *page) []byte {
 
 	id, val := p.ID(), p.encode()
 
 	// before saving, check if the playground is not already
 	// saved
 	alreadySaved := false
-	s.storage.View(func(txn *badger.Txn) error {
+	s.kvStore.View(func(txn *badger.Txn) error {
 
 		_, err := txn.Get(id)
 		// if the key is not found, an 'ErrKeyNotFound' is returned.
@@ -65,7 +65,7 @@ func (s *Server) save(p *page) []byte {
 	})
 
 	if !alreadySaved {
-		s.storage.Update(func(txn *badger.Txn) error {
+		s.kvStore.Update(func(txn *badger.Txn) error {
 			return txn.Set(id, val)
 		})
 		// At this point, we know for sure that a new playground

@@ -50,12 +50,12 @@ type healthResponse struct {
 	Version  string
 }
 
-func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
+func (s *storage) healthHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Write(s.healthCheck())
 }
 
-func (s *Server) healthCheck() []byte {
+func (s *storage) healthCheck() []byte {
 
 	response := healthResponse{
 		Status: statusUp,
@@ -66,7 +66,7 @@ func (s *Server) healthCheck() []byte {
 		Status: "UP",
 	}
 
-	if s.storage.IsClosed() {
+	if s.kvStore.IsClosed() {
 		badger.Status = statusDown
 		badger.Cause = "database is closed"
 		response.Status = statusDegrade
@@ -74,11 +74,11 @@ func (s *Server) healthCheck() []byte {
 
 	mongodb := service{
 		Name:    "mongodb",
-		Version: string(s.mongodbVersion),
+		Version: string(s.mongoVersion),
 		Status:  statusUp,
 	}
 
-	err := s.session.Ping(context.Background(), nil)
+	err := s.mongoSession.Ping(context.Background(), nil)
 	if err != nil {
 		mongodb.Status = statusDown
 		mongodb.Cause = strconv.Quote(err.Error())

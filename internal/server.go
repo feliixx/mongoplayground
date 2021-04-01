@@ -17,18 +17,12 @@
 package internal
 
 import (
-	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/dgraph-io/badger/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const (
@@ -39,120 +33,67 @@ const (
 	staticEndpoint  = "/static/"
 	metricsEndpoint = "/metrics"
 	healthEndpoint  = "/health"
-
-	// interval between two MongoDB cleanup
-	cleanupInterval = 4 * time.Hour
-	// interval between two Badger backup
-	backupInterval = 24 * time.Hour
 )
 
-// Server is struct implementing http.Handler and holding
-// mongodb and badger connection
-type Server struct {
-	mux            *http.ServeMux
-	session        *mongo.Client
-	mongodbVersion []byte
-	storage        *badger.DB
-	logger         *log.Logger
+// NewServer initialize a badger and a mongodb connection,
+// and return an http server
+func NewServer(badgerDir, backupDir string) (*http.Server, error) {
 
-	// activeDB holds info of the database created / used during
-	// the last cleanupInterval. Its access is garded by activeDbLock
-	activeDbLock sync.RWMutex
-	activeDB     map[string]dbMetaInfo
-
-	// map storing static content compressed with brotli
-	staticContent map[string][]byte
-	// local dir to store badger backups
-	backupDir string
+	storage, err := newStorage(badgerDir, backupDir)
+	if err != nil {
+		return nil, err
+	}
+	return newHttpServerWithStorage(storage)
 }
 
-// NewServer returns a new instance of Server
-func NewServer(logger *log.Logger, badgerDir, backupDir string) (*Server, error) {
+func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 
-	session, mongodbVersion, err := createMongodbSession()
-	if err != nil {
-		return nil, err
-	}
-
-	badgerDB, err := badger.Open(badger.DefaultOptions(badgerDir))
-	if err != nil {
-		return nil, err
-	}
-
-	staticContent, err := compressStaticResources(mongodbVersion)
+	staticContent, err := compressStaticResources(storage.mongoVersion)
 	if err != nil {
 		return nil, fmt.Errorf("fail to compress static resources: %v", err)
 	}
 
-	s := &Server{
-		mux:            http.DefaultServeMux,
-		session:        session,
-		mongodbVersion: mongodbVersion,
-		storage:        badgerDB,
-		activeDB:       map[string]dbMetaInfo{},
-		logger:         logger,
-		backupDir:      backupDir,
-		staticContent:  staticContent,
-	}
+	mux := http.NewServeMux()
 
-	initPrometheusCounter(s.storage)
+	mux.HandleFunc(homeEndpoint, staticContent.homeHandler)
+	mux.HandleFunc(viewEndpoint, storage.viewHandler)
+	mux.HandleFunc(runEndpoint, storage.runHandler)
+	mux.HandleFunc(saveEndpoint, storage.saveHandler)
+	mux.HandleFunc(staticEndpoint, staticContent.staticHandler)
+	mux.HandleFunc(healthEndpoint, storage.healthHandler)
+	mux.Handle(metricsEndpoint, promhttp.Handler())
 
-	go func(s *Server) {
-		for range time.Tick(cleanupInterval) {
-			s.removeExpiredDB()
-		}
-	}(s)
-
-	go func(s *Server) {
-		for range time.Tick(backupInterval) {
-			s.backup()
-		}
-	}(s)
-
-	s.mux.HandleFunc(homeEndpoint, s.homeHandler)
-	s.mux.HandleFunc(viewEndpoint, s.viewHandler)
-	s.mux.HandleFunc(runEndpoint, s.runHandler)
-	s.mux.HandleFunc(saveEndpoint, s.saveHandler)
-	s.mux.HandleFunc(staticEndpoint, s.staticHandler)
-	s.mux.HandleFunc(healthEndpoint, s.healthHandler)
-	s.mux.Handle(metricsEndpoint, promhttp.Handler())
-
-	return s, nil
+	return &http.Server{
+		Addr:         ":8080",
+		Handler:      latencyObserver(mux),
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 10 * time.Second,
+	}, nil
 }
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func latencyObserver(handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-	start := time.Now()
-	s.mux.ServeHTTP(w, r)
+		start := time.Now()
+		handler.ServeHTTP(w, r)
 
-	label := r.URL.Path
-	if strings.HasPrefix(label, viewEndpoint) {
-		label = viewEndpoint
-	}
-	if strings.HasPrefix(label, staticEndpoint) {
-		label = staticEndpoint
-	}
+		label := r.URL.Path
+		if strings.HasPrefix(label, viewEndpoint) {
+			label = viewEndpoint
+		}
+		if strings.HasPrefix(label, staticEndpoint) {
+			label = staticEndpoint
+		}
 
-	if label != homeEndpoint &&
-		label != viewEndpoint &&
-		label != runEndpoint &&
-		label != saveEndpoint &&
-		label != staticEndpoint &&
-		label != healthEndpoint &&
-		label != metricsEndpoint {
-		label = "invalid"
-	}
-	requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
-}
-
-func createMongodbSession() (session *mongo.Client, version []byte, err error) {
-	session, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
-	if err != nil {
-		return nil, nil, fmt.Errorf("fail to create mongodb client: %v", err)
-	}
-	err = session.Connect(context.Background())
-	if err != nil {
-		return nil, nil, fmt.Errorf("fail to connect to mongodb: %v", err)
-	}
-	return session, getMongodVersion(session), nil
+		if label != homeEndpoint &&
+			label != viewEndpoint &&
+			label != runEndpoint &&
+			label != saveEndpoint &&
+			label != staticEndpoint &&
+			label != healthEndpoint &&
+			label != metricsEndpoint {
+			label = "invalid"
+		}
+		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
+	})
 }

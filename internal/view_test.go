@@ -25,7 +25,7 @@ import (
 
 func TestView(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	viewTests := []struct {
 		name         string

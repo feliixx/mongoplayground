@@ -25,7 +25,7 @@ import (
 
 func TestRunCreateDB(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	runCreateDBTests := []struct {
 		name      string
@@ -765,7 +765,7 @@ func TestRunCreateDB(t *testing.T) {
 
 func TestRunExistingDB(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	// the first /run request should create the database
 	buf := httpBody(t, runEndpoint, http.MethodPost, templateParams)
@@ -777,7 +777,7 @@ func TestRunExistingDB(t *testing.T) {
 		Config: []byte(templateParams.Get("config")),
 	}
 	DBHash := p.dbHash()
-	_, ok := testServer.activeDB[DBHash]
+	_, ok := testStorage.activeDB[DBHash]
 	if !ok {
 		t.Errorf("activeDb should contain DB %s", DBHash)
 	}
@@ -793,7 +793,7 @@ func TestRunExistingDB(t *testing.T) {
 
 func TestRunUpdateTwice(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"bson"}, "config": {`[]`}, "query": {`db.collection.update({},{"$set":{"_id":0}},{"upsert":true})`}}
 
@@ -814,7 +814,7 @@ func TestRunUpdateTwice(t *testing.T) {
 }
 
 func TestRunFindAfterUpdate(t *testing.T) {
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"bson"}, "config": {`[{_id:1}]`}, "query": {`db.collection.update({},{"$set":{"updated":true}})`}}
 
@@ -836,7 +836,7 @@ func TestRunFindAfterUpdate(t *testing.T) {
 
 func TestConsistentError(t *testing.T) {
 
-	defer testServer.clearDatabases(t)
+	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}}
 	buf := httpBody(t, runEndpoint, http.MethodPost, params)
