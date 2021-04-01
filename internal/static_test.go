@@ -95,7 +95,7 @@ func checkServerResponse(t *testing.T, url string, expectedResponseCode int, exp
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.Header.Set("Accept-Encoding", expectedEncoding)
 
-	testServer.ServeHTTP(resp, req)
+	testServer.Handler.ServeHTTP(resp, req)
 
 	if expectedResponseCode != resp.Code {
 		t.Errorf("expected response code %d but got %d", expectedResponseCode, resp.Code)

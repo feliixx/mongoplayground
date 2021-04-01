@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"regexp"
 	"strconv"
@@ -51,16 +52,16 @@ var (
 )
 
 // serve static ressources (css/js/html)
-func (s *Server) staticHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// transform 'static/playground-min-10.css' to 'playground-min.css'
 	// the numeric id is juste used to force the browser to reload the new version
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 	name = reg.ReplaceAllString(name, ".")
 
-	content, ok := s.staticContent[name]
+	content, ok := s.compressedFiles[name]
 	if !ok {
-		s.logger.Printf("static resource %s doesn't exist", name)
+		log.Printf("static resource %s doesn't exist", name)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
@@ -94,6 +95,9 @@ func contentTypeFromName(name string) string {
 }
 
 func fallbackToGzip(w http.ResponseWriter, assetPath string) {
+
+	gzipCounter.Inc()
+
 	w.Header().Set("Content-Encoding", gzipEncoding)
 	zw := gzip.NewWriter(w)
 	content, _ := assets.ReadFile(assetPath)
@@ -101,11 +105,20 @@ func fallbackToGzip(w http.ResponseWriter, assetPath string) {
 	zw.Close()
 }
 
+type staticContent struct {
+	mongodbVersion []byte
+	// map storing static content compressed with brotli
+	compressedFiles map[string][]byte
+}
+
 // load static resources (javascript, css, docs and default page)
 // and compress them once at startup in order to serve them faster
-func compressStaticResources(mongodbVersion []byte) (map[string][]byte, error) {
+func compressStaticResources(mongodbVersion []byte) (*staticContent, error) {
 
-	staticContent := map[string][]byte{}
+	staticContent := &staticContent{
+		mongodbVersion:  mongodbVersion,
+		compressedFiles: map[string][]byte{},
+	}
 
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
 	br := brotli.NewWriterLevel(buf, brotli.BestCompression)
@@ -141,10 +154,10 @@ func compressStaticResources(mongodbVersion []byte) (map[string][]byte, error) {
 	return staticContent, nil
 }
 
-func addCompressedRessource(staticContent map[string][]byte, fileName string, buf *bytes.Buffer) {
+func addCompressedRessource(s *staticContent, fileName string, buf *bytes.Buffer) {
 	c := make([]byte, buf.Len())
 	copy(c, buf.Bytes())
-	staticContent[fileName] = c
+	s.compressedFiles[fileName] = c
 }
 
 func executeHomeTemplate(writer io.WriteCloser, mongoVersion []byte) error {

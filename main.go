@@ -19,7 +19,6 @@ package main
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/feliixx/mongoplayground/internal"
 )
@@ -34,21 +33,19 @@ func redirectTLS(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	l := log.New(os.Stdout, "", log.LstdFlags)
-	s, err := internal.NewServer(l, badgerDir, backupDir)
+	s, err := internal.NewServer(badgerDir, backupDir)
 	if err != nil {
-		l.Fatalf("aborting: %v\n", err)
+		log.Fatalf("aborting: %v\n", err)
 	}
 	go func() {
 		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
-			l.Fatalf("ListenAndServe error: %v", err)
+			log.Fatalf("ListenAndServe error: %v", err)
 		}
 	}()
-	l.Fatal(http.ListenAndServeTLS(
-		":443",
+
+	s.Addr = ":443"
+	log.Fatal(s.ListenAndServeTLS(
 		"/etc/letsencrypt/live/www.mongoplayground.net/fullchain.pem",
 		"/etc/letsencrypt/live/www.mongoplayground.net/privkey.pem",
-		s,
-	),
-	)
+	))
 }

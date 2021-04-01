@@ -44,7 +44,7 @@ const (
 // overwritten
 // upload the last backup to google drive. Previous backup is moved to trash
 // and automatically removed after 30 days
-func (s *Server) backup() {
+func (s *storage) backup() {
 
 	if _, err := os.Stat(s.backupDir); os.IsNotExist(err) {
 		os.Mkdir(s.backupDir, os.ModePerm)
@@ -52,11 +52,11 @@ func (s *Server) backup() {
 
 	fileName := fmt.Sprintf("%s/badger_%d.bak", s.backupDir, time.Now().Weekday())
 
-	localBackup(s.logger, s.storage, fileName)
-	saveBackupToGoogleDrive(s.logger, fileName)
+	localBackup(s.kvStore, fileName)
+	saveBackupToGoogleDrive(fileName)
 }
 
-func localBackup(log *log.Logger, storage *badger.DB, fileName string) {
+func localBackup(storage *badger.DB, fileName string) {
 	f, err := os.Create(fileName)
 	if err != nil {
 		log.Printf("fail to create file %s: %v", fileName, err)
@@ -75,7 +75,7 @@ func localBackup(log *log.Logger, storage *badger.DB, fileName string) {
 	badgerBackup.Set(float64(fileInfo.Size()))
 }
 
-func saveBackupToGoogleDrive(log *log.Logger, fileName string) {
+func saveBackupToGoogleDrive(fileName string) {
 
 	b, err := os.ReadFile("credentials.json")
 	if err != nil {

@@ -17,6 +17,7 @@
 package internal
 
 import (
+	"log"
 	"sort"
 	"time"
 
@@ -42,16 +43,16 @@ func (d *dbMetaInfo) hasCollection(collectionName string) bool {
 }
 
 // remove database not used since the previous cleanup in MongoDB
-func (s *Server) removeExpiredDB() {
+func (s *storage) removeExpiredDB() {
 
 	now := time.Now()
 
 	s.activeDbLock.Lock()
 	for name, infos := range s.activeDB {
 		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
-			err := s.session.Database(name).Drop(context.Background())
+			err := s.mongoSession.Database(name).Drop(context.Background())
 			if err != nil {
-				s.logger.Printf("fail to drop database %v: %v", name, err)
+				log.Printf("fail to drop database %v: %v", name, err)
 			}
 			delete(s.activeDB, name)
 		}

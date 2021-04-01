@@ -18,15 +18,16 @@ package internal
 
 import (
 	"compress/gzip"
+	"log"
 	"net/http"
 	"strings"
 )
 
 // return a playground with the default configuration
-func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
+func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != homeEndpoint {
-		s.logger.Printf("file not found: %s", r.URL.Path)
+		log.Printf("file not found: %s", r.URL.Path)
 		w.WriteHeader(http.StatusNotFound)
 		w.Write(nil)
 		return
@@ -35,6 +36,7 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 
 	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		gzipCounter.Inc()
 		w.Header().Set("Content-Encoding", gzipEncoding)
 		writer := gzip.NewWriter(w)
 		executeHomeTemplate(writer, s.mongodbVersion)
@@ -42,5 +44,5 @@ func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Encoding", brotliEncoding)
-	w.Write(s.staticContent[homeEndpoint])
+	w.Write(s.compressedFiles[homeEndpoint])
 }

@@ -56,6 +56,12 @@ var (
 			Help: "Size of last badger backup in bytes",
 		},
 	)
+	gzipCounter = prometheus.NewGauge(
+		prometheus.GaugeOpts{
+			Name: "request_compressed_with_gzip",
+			Help: "Nb of request compressed with gzip",
+		},
+	)
 )
 
 func initPrometheusCounter(storage *badger.DB) {
@@ -64,6 +70,7 @@ func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(savedPlaygroundSize)
 	prometheus.MustRegister(cleanupDuration)
 	prometheus.MustRegister(badgerBackup)
+	prometheus.MustRegister(gzipCounter)
 
 	computeSavedPlaygroundStats(storage)
 }
