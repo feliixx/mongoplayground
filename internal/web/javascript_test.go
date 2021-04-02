@@ -367,7 +367,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 ])`,
 		},
 		{
-			name:  "trailing comma are alowed",
+			name:  "trailing comma are allowed",
 			eType: "query",
 			input: `db.store.aggregate([
   {

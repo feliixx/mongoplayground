@@ -18,11 +18,12 @@ package internal
 
 import (
 	"compress/gzip"
-	"github.com/andybalholm/brotli"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/andybalholm/brotli"
 )
 
 func TestStaticHandlers(t *testing.T) {
