@@ -19,12 +19,12 @@ package internal
 import (
 	"compress/gzip"
 	"errors"
-	"github.com/andybalholm/brotli"
 	"io"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/andybalholm/brotli"
 	"github.com/dgraph-io/badger/v2"
 )
 
