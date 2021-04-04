@@ -41,6 +41,14 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
   })
   ```
 
+## Developpement
+
+Static ressources are minified with esbuild: 
+
+esbuild --minify internal/web/playground.css > internal/web/static/playground-min.css
+esbuild --minify internal/web/playground.js > internal/web/static/playground-min.js
+esbuild --minify internal/web/mode-mongo.js > internal/web/static/mode-mongo-min.js
+
 ## Credits 
 
 This playground is heavily inspired from [The Go Playground](https://play.golang.org)
