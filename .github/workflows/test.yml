@@ -42,7 +42,7 @@ jobs:
         mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
 
     - name: Run test
-      run: test.sh
+      run: ./test.sh
     
     - name: Export coverage result 
       run: bash <(curl -s https://codecov.io/bash)
