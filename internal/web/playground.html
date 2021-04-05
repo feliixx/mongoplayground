@@ -22,9 +22,8 @@
 
             parser,
 
-            checkSyntax = true,
-            hasChangedSinceLastRun = false,
-            hasChangedSinceLastSave = false,
+            hasChangedSinceLastRun = true,
+            hasChangedSinceLastSave = true,
             isConfigHandlerDragging = false,
             isQueryHandlerDragging = false
 
@@ -123,11 +122,6 @@
         function checkEditorContent(editor, type) {
 
             var errors = []
-            if (!checkSyntax) {
-                editor.getSession().setAnnotations(errors)
-                return
-            }
-
             var err = parser.parse(editor.getValue(), type, comboMode.getValue())
             if (err != null) {
                 var pos = editor.getSession().getDocument().indexToPosition(err.at - 1)
@@ -139,16 +133,12 @@
                 })
             }
             editor.getSession().setAnnotations(errors)
-            changeFunc()
-        }
 
-        function changeFunc() {
-            if (hasChangedSinceLastRun && hasChangedSinceLastSave) {
-                return
+            if (!hasChangedSinceLastRun || !hasChangedSinceLastSave) {
+                hasChangedSinceLastRun = true
+                hasChangedSinceLastSave = true
+                redirect("/", false)
             }
-            hasChangedSinceLastRun = true
-            hasChangedSinceLastSave = true
-            redirect("/", false)
         }
 
         function redirect(url, showLink) {
@@ -159,12 +149,10 @@
         }
 
         function setTemplate(index) {
-            checkSyntax = false
             comboMode.setValue(templates[index].mode)
             configEditor.setValue(parser.indent(templates[index].config, "config", comboMode.getValue()), 1)
             queryEditor.setValue(parser.indent(templates[index].query, "query", comboMode.getValue()), 1)
             resultEditor.setValue("", 1)
-            checkSyntax = true
         }
 
         function showDoc(doShow) {
@@ -278,10 +266,8 @@
             }
 
             if (hasChangedSinceLastRun) {
-                checkSyntax = false
                 configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), 1)
                 queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), 1)
-                checkSyntax = true
             }
             return true
         }
@@ -310,7 +296,7 @@
     <div class="controls">
         <input type="button" value="run" onclick="run()" title="ctrl + enter">
         <input type="button" value="format" onclick="formatAll(true)" title="ctrl + s">
-        <input id="share" type="button" value="share" onclick="save()" disabled="hasChanged">
+        <input id="share" type="button" value="share" onclick="save()" disabled>
         <input id="link" type="text">
         <label class="bold">Mode:</label>
         <select id="mode" onchange="checkEditorContent(configEditor, 'config')">
