@@ -17,7 +17,6 @@
 package internal
 
 import (
-	"bytes"
 	"compress/gzip"
 	"context"
 	"fmt"
@@ -132,7 +131,7 @@ func checkServerResponse(t *testing.T, url string, expectedResponseCode int, exp
 	}
 }
 
-func httpBody(t *testing.T, url string, method string, params url.Values) *bytes.Buffer {
+func httpBody(t *testing.T, url string, method string, params url.Values) string {
 	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
 	if err != nil {
 		t.Error(err)
@@ -140,5 +139,5 @@ func httpBody(t *testing.T, url string, method string, params url.Values) *bytes
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
 	testServer.Handler.ServeHTTP(resp, req)
-	return resp.Body
+	return resp.Body.String()
 }
