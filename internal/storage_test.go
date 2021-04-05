@@ -36,8 +36,9 @@ func TestRemoveOldDB(t *testing.T) {
 	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	buf := httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := templateResult, buf.String(); want != got {
+	want := templateResult
+	got := httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
@@ -54,9 +55,11 @@ func TestRemoveOldDB(t *testing.T) {
 	// this DB should not be removed
 	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
 	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, runEndpoint, http.MethodPost, params)
 
-	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
+	want = `collection "collection" doesn't exist`
+	got = httpBody(t, runEndpoint, http.MethodPost, params)
+
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
