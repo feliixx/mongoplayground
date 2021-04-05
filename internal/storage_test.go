@@ -113,7 +113,7 @@ func clearDatabases(t *testing.T) {
 	}
 
 	// reset prometheus metrics
-	activeDatabases.Set(0)
+	activeDatabasesCounter.Set(0)
 
 	keys := make([][]byte, 0)
 	err = testStorage.kvStore.View(func(txn *badger.Txn) error {
@@ -157,7 +157,7 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	if want, got := nbMongoDatabases, len(testStorage.activeDB); want != got {
 		t.Errorf("expected %d db in map, but got %d", want, got)
 	}
-	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabases)); want != got {
+	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabasesCounter)); want != got {
 		t.Errorf("expected %d active db in prometheus counter, but got %d", want, got)
 	}
 	if want, got := nbBadgerRecords, countSavedPages(testStorage.kvStore); want != got {

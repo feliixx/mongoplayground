@@ -175,7 +175,7 @@ func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, f
 		if (dbInfo.emptyDatabase && !forceCreate) || (exists && forceCreate) {
 			return dbInfo, nil
 		}
-		activeDatabases.Inc()
+		activeDatabasesCounter.Inc()
 	}
 
 	dbInfo.lastUsed = time.Now().Unix()

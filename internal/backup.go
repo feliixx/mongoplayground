@@ -52,8 +52,10 @@ func localBackup(storage *badger.DB, fileName string) {
 	fileInfo, err := f.Stat()
 	if err != nil {
 		log.Printf("fail to get backup stats")
+		badgerBackupSize.Set(-1)
+		return
 	}
-	badgerBackup.Set(float64(fileInfo.Size()))
+	badgerBackupSize.Set(float64(fileInfo.Size()))
 }
 
 func saveBackupToGoogleDrive(fileName string) {
