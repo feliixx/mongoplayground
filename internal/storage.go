@@ -106,7 +106,7 @@ func (s *storage) removeExpiredDB() {
 	s.activeDbLock.Unlock()
 
 	cleanupDuration.Set(time.Since(now).Seconds())
-	activeDatabases.Set(float64(len(s.activeDB)))
+	activeDatabasesCounter.Set(float64(len(s.activeDB)))
 }
 
 // create a backup from the badger db, and store it in backupDir.

@@ -30,7 +30,7 @@ var (
 		},
 		[]string{"handler"},
 	)
-	activeDatabases = prometheus.NewGauge(
+	activeDatabasesCounter = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "active_db_count",
 			Help: "Active databases created on the Server",
@@ -50,7 +50,7 @@ var (
 			Help: "Database cleanup in second",
 		},
 	)
-	badgerBackup = prometheus.NewGauge(
+	badgerBackupSize = prometheus.NewGauge(
 		prometheus.GaugeOpts{
 			Name: "badger_backup_size_bytes",
 			Help: "Size of last badger backup in bytes",
@@ -66,10 +66,10 @@ var (
 
 func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(requestDurations)
-	prometheus.MustRegister(activeDatabases)
+	prometheus.MustRegister(activeDatabasesCounter)
 	prometheus.MustRegister(savedPlaygroundSize)
 	prometheus.MustRegister(cleanupDuration)
-	prometheus.MustRegister(badgerBackup)
+	prometheus.MustRegister(badgerBackupSize)
 	prometheus.MustRegister(gzipCounter)
 
 	computeSavedPlaygroundStats(storage)
