@@ -17,7 +17,7 @@
 package internal
 
 import (
-	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -27,14 +27,10 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"testing"
-	"time"
 
-	"github.com/dgraph-io/badger/v2"
-	"github.com/prometheus/client_golang/prometheus/testutil"
-	"go.mongodb.org/mongo-driver/bson"
+	"github.com/andybalholm/brotli"
 )
 
 const (
@@ -99,164 +95,43 @@ func TestBasePage(t *testing.T) {
 	checkServerResponse(t, "/robots.txt", http.StatusNotFound, "", gzipEncoding)
 }
 
-func TestRemoveOldDB(t *testing.T) {
+func checkServerResponse(t *testing.T, url string, expectedResponseCode int, expectedContentType, expectedEncoding string) {
 
-	defer clearDatabases(t)
+	resp := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, url, nil)
+	req.Header.Set("Accept-Encoding", expectedEncoding)
 
-	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
-	buf := httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := templateResult, buf.String(); want != got {
-		t.Errorf("expected %s but got %s", want, got)
+	testServer.Handler.ServeHTTP(resp, req)
+
+	if expectedResponseCode != resp.Code {
+		t.Errorf("expected response code %d but got %d", expectedResponseCode, resp.Code)
 	}
 
-	p := &page{
-		Mode:   mgodatagenMode,
-		Config: []byte(params.Get("config")),
-	}
+	if expectedResponseCode == http.StatusOK {
 
-	DBHash := p.dbHash()
-	dbInfo := testStorage.activeDB[DBHash]
-	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
-	testStorage.activeDB[DBHash] = dbInfo
+		if want, got := expectedEncoding, resp.Header().Get("Content-Encoding"); want != got {
+			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
+		}
 
-	// this DB should not be removed
-	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
-	params.Set("config", fmt.Sprintf(configFormat, "other"))
-	buf = httpBody(t, runEndpoint, http.MethodPost, params)
+		if want, got := expectedContentType, resp.Header().Get("Content-Type"); want != got {
+			t.Errorf("expected Content-Type: %s, but got %s", want, got)
+		}
 
-	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
-		t.Errorf("expected %s but got %s", want, got)
-	}
+		var reader io.Reader
+		if expectedEncoding == brotliEncoding {
+			reader = brotli.NewReader(resp.Body)
+		} else {
+			reader, _ = gzip.NewReader(resp.Body)
+		}
 
-	testStorage.removeExpiredDB()
-
-	_, ok := testStorage.activeDB[DBHash]
-	if ok {
-		t.Errorf("DB %s should not be present in activeDB", DBHash)
-	}
-
-	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
-	if err != nil {
-		t.Error(err)
-	}
-	if dbNames[0] == DBHash {
-		t.Errorf("%s should have been removed from mongodb", DBHash)
-	}
-
-	testStorageContent(t, 1, 0)
-}
-
-func TestBackup(t *testing.T) {
-
-	dir, _ := os.ReadDir(testStorage.backupDir)
-	for _, d := range dir {
-		os.RemoveAll(path.Join([]string{testStorage.backupDir, d.Name()}...))
-	}
-
-	testStorage.backup()
-
-	dir, _ = os.ReadDir(testStorage.backupDir)
-	if len(dir) != 1 {
-		t.Error("a backup file should have been created, but there was none")
-	}
-}
-
-func clearDatabases(t *testing.T) {
-	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
-	if err != nil {
-		t.Error(err)
-	}
-
-	for _, name := range filterDBNames(dbNames) {
-		err = testStorage.mongoSession.Database(name).Drop(context.Background())
+		_, err := io.Copy(io.Discard, reader)
 		if err != nil {
-			fmt.Printf("fail to drop db: %v", err)
+			t.Errorf("fail to read %s content: %v", expectedEncoding, err)
 		}
-		delete(testStorage.activeDB, name)
-	}
-
-	if len(testStorage.activeDB) > 0 {
-		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", testStorage.activeDB)
-		testStorage.activeDB = map[string]dbMetaInfo{}
-	}
-
-	// reset prometheus metrics
-	activeDatabases.Set(0)
-
-	keys := make([][]byte, 0)
-	err = testStorage.kvStore.View(func(txn *badger.Txn) error {
-		opts := badger.DefaultIteratorOptions
-		opts.PrefetchValues = false
-		it := txn.NewIterator(opts)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			item := it.Item()
-			key := make([]byte, len(item.Key()))
-			copy(key, item.Key())
-			keys = append(keys, key)
-		}
-		return err
-	})
-	if err != nil {
-		t.Error(err)
-	}
-
-	deleteTxn := testStorage.kvStore.NewTransaction(true)
-	for i := 0; i < len(keys); i++ {
-		err = deleteTxn.Delete(keys[i])
-		if err != nil {
-			t.Error(err)
-		}
-	}
-	err = deleteTxn.Commit()
-	if err != nil {
-		t.Errorf("fail to commit delete transcation: %v", err)
 	}
 }
 
-func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
-	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
-	if err != nil {
-		t.Error(err)
-	}
-	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
-		t.Errorf("expected %d DB, but got %d", want, got)
-	}
-	if want, got := nbMongoDatabases, len(testStorage.activeDB); want != got {
-		t.Errorf("expected %d db in map, but got %d", want, got)
-	}
-	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabases)); want != got {
-		t.Errorf("expected %d active db in prometheus counter, but got %d", want, got)
-	}
-	if want, got := nbBadgerRecords, countSavedPages(testStorage.kvStore); want != got {
-		t.Errorf("expected %d page saved, but got %d", want, got)
-	}
-}
-
-// return only created db, and get rid of 'indexes', 'local'
-func filterDBNames(dbNames []string) []string {
-	r := make([]string, 0)
-	for _, n := range dbNames {
-		if len(n) == 32 {
-			r = append(r, n)
-		}
-	}
-	return r
-}
-
-func countSavedPages(kvStore *badger.DB) (count int) {
-	kvStore.View(func(txn *badger.Txn) error {
-		it := txn.NewIterator(badger.DefaultIteratorOptions)
-		defer it.Close()
-		for it.Rewind(); it.Valid(); it.Next() {
-			count++
-		}
-		return nil
-	})
-	return count
-}
-
-func httpBody(t *testing.T, url string, method string, params url.Values) *bytes.Buffer {
+func httpBody(t *testing.T, url string, method string, params url.Values) string {
 	req, err := http.NewRequest(method, url, strings.NewReader(params.Encode()))
 	if err != nil {
 		t.Error(err)
@@ -264,5 +139,5 @@ func httpBody(t *testing.T, url string, method string, params url.Values) *bytes
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp := httptest.NewRecorder()
 	testServer.Handler.ServeHTTP(resp, req)
-	return resp.Body
+	return resp.Body.String()
 }

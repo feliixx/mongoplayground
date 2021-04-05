@@ -745,9 +745,9 @@ func TestRunCreateDB(t *testing.T) {
 
 				t.Parallel()
 
-				buf := httpBody(t, runEndpoint, http.MethodPost, test.params)
+				got := httpBody(t, runEndpoint, http.MethodPost, test.params)
 
-				if want, got := test.result, buf.String(); want != got {
+				if want := test.result; want != got {
 					t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
 				}
 			})
@@ -768,8 +768,9 @@ func TestRunExistingDB(t *testing.T) {
 	defer clearDatabases(t)
 
 	// the first /run request should create the database
-	buf := httpBody(t, runEndpoint, http.MethodPost, templateParams)
-	if want, got := templateResult, buf.String(); want != got {
+	want := templateResult
+	got := httpBody(t, runEndpoint, http.MethodPost, templateParams)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 	p := &page{
@@ -783,8 +784,8 @@ func TestRunExistingDB(t *testing.T) {
 	}
 
 	//  the second /run should produce the same result
-	buf = httpBody(t, runEndpoint, http.MethodPost, templateParams)
-	if want, got := templateResult, buf.String(); want != got {
+	got = httpBody(t, runEndpoint, http.MethodPost, templateParams)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
@@ -796,17 +797,16 @@ func TestRunUpdateTwice(t *testing.T) {
 	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"bson"}, "config": {`[]`}, "query": {`db.collection.update({},{"$set":{"_id":0}},{"upsert":true})`}}
-
-	buf := httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := `[{"_id":0}]`, buf.String(); want != got {
+	want := `[{"_id":0}]`
+	got := httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
-	buf.Reset()
 	// re-run the same run query, activeDatabase counter should not be
 	// incremented because it's the same db, even if we re-create it
 	// every time
-	buf = httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := `[{"_id":0}]`, buf.String(); want != got {
+	got = httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
@@ -817,17 +817,17 @@ func TestRunFindAfterUpdate(t *testing.T) {
 	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"bson"}, "config": {`[{_id:1}]`}, "query": {`db.collection.update({},{"$set":{"updated":true}})`}}
-
-	buf := httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := `[{"_id":1,"updated":true}]`, buf.String(); want != got {
+	want := `[{"_id":1,"updated":true}]`
+	got := httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
-	buf.Reset()
 	// change query to be a find(), but keep mode and config the same as for
 	// the previous update(). This should create a distinct db
 	params.Set("query", "db.collection.find()")
-	buf = httpBody(t, runEndpoint, http.MethodPost, params)
-	if want, got := `[{"_id":1}]`, buf.String(); want != got {
+	want = `[{"_id":1}]`
+	got = httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
@@ -839,17 +839,15 @@ func TestConsistentError(t *testing.T) {
 	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"mgodatagen"}, "config": {`[{}]`}, "query": {templateQuery}}
-	buf := httpBody(t, runEndpoint, http.MethodPost, params)
+	want := "error in configuration:\n  error in configuration file: \n\t'collection' and 'database' fields can't be empty"
+	got := httpBody(t, runEndpoint, http.MethodPost, params)
 
-	errorMsg := "error in configuration:\n  error in configuration file: \n\t'collection' and 'database' fields can't be empty"
-
-	if want, got := errorMsg, buf.String(); want != got {
+	if want != got {
 		t.Errorf("expected\n'%s'\n but got\n'%s'", want, got)
 	}
 
-	buf = httpBody(t, runEndpoint, http.MethodPost, params)
-
-	if want, got := errorMsg, buf.String(); want != got {
+	got = httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
 		t.Errorf("expected\n'%s'\n but got\n'%s'", want, got)
 	}
 }

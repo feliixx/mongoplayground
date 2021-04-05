@@ -25,10 +25,10 @@ import (
 
 func TestHealthCheck(t *testing.T) {
 
-	buf := httpBody(t, healthEndpoint, http.MethodGet, url.Values{})
-
 	want := fmt.Sprintf(`{"Status":"UP","Services":[{"Name":"badger","Status":"UP"},{"Name":"mongodb","Version":"%s","Status":"UP"}],"Version":""}`, testStorage.mongoVersion)
-	if got := buf.String(); want != got {
+	got := httpBody(t, healthEndpoint, http.MethodGet, url.Values{})
+
+	if want != got {
 		t.Errorf("expected\n%s\nbut got\n%s", want, got)
 	}
 }

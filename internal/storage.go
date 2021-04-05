@@ -19,6 +19,9 @@ package internal
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"sort"
 	"sync"
 	"time"
 
@@ -83,6 +86,62 @@ func newStorage(badgerDir, backupDir string) (*storage, error) {
 	}(s)
 
 	return s, nil
+}
+
+// remove database not used since the previous cleanup in MongoDB
+func (s *storage) removeExpiredDB() {
+
+	now := time.Now()
+
+	s.activeDbLock.Lock()
+	for name, infos := range s.activeDB {
+		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
+			err := s.mongoSession.Database(name).Drop(context.Background())
+			if err != nil {
+				log.Printf("fail to drop database %v: %v", name, err)
+			}
+			delete(s.activeDB, name)
+		}
+	}
+	s.activeDbLock.Unlock()
+
+	cleanupDuration.Set(time.Since(now).Seconds())
+	activeDatabasesCounter.Set(float64(len(s.activeDB)))
+}
+
+// create a backup from the badger db, and store it in backupDir.
+// keep a backup of last seven days only. Older backups are
+// overwritten
+// upload the last backup to google drive. Previous backup is moved to trash
+// and automatically removed after 30 days
+func (s *storage) backup() {
+
+	if _, err := os.Stat(s.backupDir); os.IsNotExist(err) {
+		os.Mkdir(s.backupDir, os.ModePerm)
+	}
+
+	fileName := fmt.Sprintf("%s/badger_%d.bak", s.backupDir, time.Now().Weekday())
+
+	localBackup(s.kvStore, fileName)
+	saveBackupToGoogleDrive(fileName)
+}
+
+type dbMetaInfo struct {
+	// list of collections in the database
+	collections sort.StringSlice
+	// last usage of this database, stored as Unix time
+	lastUsed int64
+	// true if all collections of the database are empty
+	emptyDatabase bool
+}
+
+func (d *dbMetaInfo) hasCollection(collectionName string) bool {
+	for _, name := range d.collections {
+		if name == collectionName {
+			return true
+		}
+	}
+	return false
 }
 
 func createMongodbSession() (session *mongo.Client, version []byte, err error) {
