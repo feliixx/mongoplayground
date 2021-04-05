@@ -132,29 +132,12 @@ func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, f
 	dbInfo, exists := s.activeDB[db.Name()]
 	if !exists || forceCreate {
 
-		collections := map[string][]bson.M{}
-		indexes := map[string][]datagen.Index{}
-
 		switch mode {
 		case mgodatagenMode:
-			err = createContentFromMgodatagen(collections, indexes, config)
+			dbInfo, err = createDBFromMgodatagen(db, config)
 		case bsonMode:
-			err = loadContentFromJSON(collections, config)
+			dbInfo, err = createDBFromJSON(db, config)
 		}
-		if err != nil {
-			return dbInfo, err
-		}
-
-		// clean any potentially remaining data
-		err = db.Drop(context.Background())
-		if err != nil {
-			return dbInfo, err
-		}
-		err = createIndexes(db, indexes)
-		if err != nil {
-			return dbInfo, err
-		}
-		dbInfo, err = fillDatabase(db, collections)
 		if err != nil {
 			return dbInfo, err
 		}
@@ -184,6 +167,53 @@ func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, f
 	return dbInfo, nil
 }
 
+func createDBFromMgodatagen(db *mongo.Database, config []byte) (dbInfo dbMetaInfo, err error) {
+
+	collConfigs, err := datagen.ParseConfig(config, true)
+	if err != nil {
+		return dbInfo, err
+	}
+
+	collections := map[string][]bson.M{}
+	indexes := map[string][]datagen.Index{}
+
+	mapRef := map[int][][]byte{}
+	mapRefType := map[int]bsontype.Type{}
+
+	for _, c := range collConfigs {
+
+		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
+		if ci.Count > maxDoc || ci.Count <= 0 {
+			ci.Count = maxDoc
+		}
+		g, err := ci.NewDocumentGenerator(c.Content)
+		if err != nil {
+			return dbInfo, fmt.Errorf("fail to create collection %s: %v", c.Name, err)
+		}
+		docs := make([]bson.M, ci.Count)
+		for i := 0; i < ci.Count; i++ {
+			err := bson.Unmarshal(g.Generate(), &docs[i])
+			if err != nil {
+				return dbInfo, err
+			}
+		}
+		collections[c.Name] = docs
+		if len(c.Indexes) > 0 {
+			indexes[c.Name] = c.Indexes
+		}
+	}
+	// clean any potentially remaining data
+	err = db.Drop(context.Background())
+	if err != nil {
+		return dbInfo, err
+	}
+	err = createIndexes(db, indexes)
+	if err != nil {
+		return dbInfo, err
+	}
+	return fillDatabase(db, collections)
+}
+
 func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error {
 	// see dtg.runMgoCompatCommand @ github.com/feliixx/mgodatagen/datagen
 	mgoRegistry := mgocompat.NewRespectNilValuesRegistryBuilder().Build()
@@ -204,57 +234,34 @@ func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error
 	return nil
 }
 
-func createContentFromMgodatagen(collections map[string][]bson.M, indexes map[string][]datagen.Index, config []byte) error {
+func createDBFromJSON(db *mongo.Database, config []byte) (dbInfo dbMetaInfo, err error) {
 
-	collConfigs, err := datagen.ParseConfig(config, true)
-	if err != nil {
-		return err
-	}
-
-	mapRef := map[int][][]byte{}
-	mapRefType := map[int]bsontype.Type{}
-
-	for _, c := range collConfigs {
-
-		ci := generators.NewCollInfo(c.Count, []int{3, 6}, 1, mapRef, mapRefType)
-		if ci.Count > maxDoc || ci.Count <= 0 {
-			ci.Count = maxDoc
-		}
-		g, err := ci.NewDocumentGenerator(c.Content)
-		if err != nil {
-			return fmt.Errorf("fail to create collection %s: %v", c.Name, err)
-		}
-		docs := make([]bson.M, ci.Count)
-		for i := 0; i < ci.Count; i++ {
-			err := bson.Unmarshal(g.Generate(), &docs[i])
-			if err != nil {
-				return err
-			}
-		}
-		collections[c.Name] = docs
-		if len(c.Indexes) > 0 {
-			indexes[c.Name] = c.Indexes
-		}
-	}
-	return nil
-}
-
-func loadContentFromJSON(collections map[string][]bson.M, config []byte) error {
+	collections := map[string][]bson.M{}
 
 	switch detailBsonMode(config) {
 	case bsonSingleCollection:
 		var docs []bson.M
-		err := mongoextjson.Unmarshal(config, &docs)
+		err = mongoextjson.Unmarshal(config, &docs)
 
 		collections["collection"] = docs
-		return err
 
 	case bsonMultipleCollection:
-		return mongoextjson.Unmarshal(config[3:], &collections)
+		err = mongoextjson.Unmarshal(config[3:], &collections)
 
 	default:
-		return errors.New(errInvalidConfig)
+		err = errors.New(errInvalidConfig)
 	}
+
+	if err != nil {
+		return dbInfo, err
+	}
+
+	// clean any potentially remaining data
+	err = db.Drop(context.Background())
+	if err != nil {
+		return dbInfo, err
+	}
+	return fillDatabase(db, collections)
 }
 
 func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo dbMetaInfo, err error) {
