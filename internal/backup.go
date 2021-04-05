@@ -17,15 +17,13 @@
 package internal
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
-	"time"
 
 	"github.com/dgraph-io/badger/v2"
-	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/drive/v3"
@@ -38,23 +36,6 @@ const (
 	// file holding google drive token
 	tokenFile = "token.json"
 )
-
-// create a backup from the badger db, and store it in backupDir.
-// keep a backup of last seven days only. Older backups are
-// overwritten
-// upload the last backup to google drive. Previous backup is moved to trash
-// and automatically removed after 30 days
-func (s *storage) backup() {
-
-	if _, err := os.Stat(s.backupDir); os.IsNotExist(err) {
-		os.Mkdir(s.backupDir, os.ModePerm)
-	}
-
-	fileName := fmt.Sprintf("%s/badger_%d.bak", s.backupDir, time.Now().Weekday())
-
-	localBackup(s.kvStore, fileName)
-	saveBackupToGoogleDrive(fileName)
-}
 
 func localBackup(storage *badger.DB, fileName string) {
 	f, err := os.Create(fileName)
