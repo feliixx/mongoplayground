@@ -17,13 +17,8 @@
 package internal
 
 import (
-	"compress/gzip"
-	"io"
 	"net/http"
-	"net/http/httptest"
 	"testing"
-
-	"github.com/andybalholm/brotli"
 )
 
 func TestStaticHandlers(t *testing.T) {
@@ -87,41 +82,5 @@ func TestStaticHandlers(t *testing.T) {
 			checkServerResponse(t, test.url, test.responseCode, test.contentType, brotliEncoding)
 			checkServerResponse(t, test.url, test.responseCode, test.contentType, gzipEncoding)
 		})
-	}
-}
-
-func checkServerResponse(t *testing.T, url string, expectedResponseCode int, expectedContentType, expectedEncoding string) {
-
-	resp := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodGet, url, nil)
-	req.Header.Set("Accept-Encoding", expectedEncoding)
-
-	testServer.Handler.ServeHTTP(resp, req)
-
-	if expectedResponseCode != resp.Code {
-		t.Errorf("expected response code %d but got %d", expectedResponseCode, resp.Code)
-	}
-
-	if expectedResponseCode == http.StatusOK {
-
-		if want, got := expectedEncoding, resp.Header().Get("Content-Encoding"); want != got {
-			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
-		}
-
-		if want, got := expectedContentType, resp.Header().Get("Content-Type"); want != got {
-			t.Errorf("expected Content-Type: %s, but got %s", want, got)
-		}
-
-		var reader io.Reader
-		if expectedEncoding == brotliEncoding {
-			reader = brotli.NewReader(resp.Body)
-		} else {
-			reader, _ = gzip.NewReader(resp.Body)
-		}
-
-		_, err := io.Copy(io.Discard, reader)
-		if err != nil {
-			t.Errorf("fail to read %s content: %v", expectedEncoding, err)
-		}
 	}
 }

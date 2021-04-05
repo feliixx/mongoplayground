@@ -1,0 +1,189 @@
+// mongoplayground: a sandbox to test and share MongoDB queries
+// Copyright (C) 2017 Adrien Petel
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as published
+// by the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+package internal
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"path"
+	"testing"
+	"time"
+
+	"github.com/dgraph-io/badger/v2"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+	"go.mongodb.org/mongo-driver/bson"
+)
+
+func TestRemoveOldDB(t *testing.T) {
+
+	defer clearDatabases(t)
+
+	params := url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {templateQuery}}
+	buf := httpBody(t, runEndpoint, http.MethodPost, params)
+	if want, got := templateResult, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+
+	p := &page{
+		Mode:   mgodatagenMode,
+		Config: []byte(params.Get("config")),
+	}
+
+	DBHash := p.dbHash()
+	dbInfo := testStorage.activeDB[DBHash]
+	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
+	testStorage.activeDB[DBHash] = dbInfo
+
+	// this DB should not be removed
+	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
+	params.Set("config", fmt.Sprintf(configFormat, "other"))
+	buf = httpBody(t, runEndpoint, http.MethodPost, params)
+
+	if want, got := `collection "collection" doesn't exist`, buf.String(); want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
+
+	testStorage.removeExpiredDB()
+
+	_, ok := testStorage.activeDB[DBHash]
+	if ok {
+		t.Errorf("DB %s should not be present in activeDB", DBHash)
+	}
+
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
+	if err != nil {
+		t.Error(err)
+	}
+	if dbNames[0] == DBHash {
+		t.Errorf("%s should have been removed from mongodb", DBHash)
+	}
+
+	testStorageContent(t, 1, 0)
+}
+
+func TestBackup(t *testing.T) {
+
+	dir, _ := os.ReadDir(testStorage.backupDir)
+	for _, d := range dir {
+		os.RemoveAll(path.Join([]string{testStorage.backupDir, d.Name()}...))
+	}
+
+	testStorage.backup()
+
+	dir, _ = os.ReadDir(testStorage.backupDir)
+	if len(dir) != 1 {
+		t.Error("a backup file should have been created, but there was none")
+	}
+}
+
+func clearDatabases(t *testing.T) {
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
+	if err != nil {
+		t.Error(err)
+	}
+
+	for _, name := range filterDBNames(dbNames) {
+		err = testStorage.mongoSession.Database(name).Drop(context.Background())
+		if err != nil {
+			fmt.Printf("fail to drop db: %v", err)
+		}
+		delete(testStorage.activeDB, name)
+	}
+
+	if len(testStorage.activeDB) > 0 {
+		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", testStorage.activeDB)
+		testStorage.activeDB = map[string]dbMetaInfo{}
+	}
+
+	// reset prometheus metrics
+	activeDatabases.Set(0)
+
+	keys := make([][]byte, 0)
+	err = testStorage.kvStore.View(func(txn *badger.Txn) error {
+		opts := badger.DefaultIteratorOptions
+		opts.PrefetchValues = false
+		it := txn.NewIterator(opts)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			item := it.Item()
+			key := make([]byte, len(item.Key()))
+			copy(key, item.Key())
+			keys = append(keys, key)
+		}
+		return err
+	})
+	if err != nil {
+		t.Error(err)
+	}
+
+	deleteTxn := testStorage.kvStore.NewTransaction(true)
+	for i := 0; i < len(keys); i++ {
+		err = deleteTxn.Delete(keys[i])
+		if err != nil {
+			t.Error(err)
+		}
+	}
+	err = deleteTxn.Commit()
+	if err != nil {
+		t.Errorf("fail to commit delete transcation: %v", err)
+	}
+}
+
+func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
+	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
+	if err != nil {
+		t.Error(err)
+	}
+	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
+		t.Errorf("expected %d DB, but got %d", want, got)
+	}
+	if want, got := nbMongoDatabases, len(testStorage.activeDB); want != got {
+		t.Errorf("expected %d db in map, but got %d", want, got)
+	}
+	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabases)); want != got {
+		t.Errorf("expected %d active db in prometheus counter, but got %d", want, got)
+	}
+	if want, got := nbBadgerRecords, countSavedPages(testStorage.kvStore); want != got {
+		t.Errorf("expected %d page saved, but got %d", want, got)
+	}
+}
+
+// return only created db, and get rid of 'indexes', 'local'
+func filterDBNames(dbNames []string) []string {
+	r := make([]string, 0)
+	for _, n := range dbNames {
+		if len(n) == 32 {
+			r = append(r, n)
+		}
+	}
+	return r
+}
+
+func countSavedPages(kvStore *badger.DB) (count int) {
+	kvStore.View(func(txn *badger.Txn) error {
+		it := txn.NewIterator(badger.DefaultIteratorOptions)
+		defer it.Close()
+		for it.Rewind(); it.Valid(); it.Next() {
+			count++
+		}
+		return nil
+	})
+	return count
+}
