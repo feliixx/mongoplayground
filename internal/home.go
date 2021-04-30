@@ -17,9 +17,9 @@
 package internal
 
 import (
-	"compress/gzip"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -33,16 +33,15 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-
-	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
-		gzipCounter.Inc()
-		w.Header().Set("Content-Encoding", gzipEncoding)
-		writer := gzip.NewWriter(w)
-		executeHomeTemplate(writer, s.mongodbVersion)
-		return
+	acceptedEncoding := gzipEncoding
+	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		acceptedEncoding = brotliEncoding
 	}
 
-	w.Header().Set("Content-Encoding", brotliEncoding)
-	w.Write(s.compressedFiles[homeEndpoint])
+	resource,_ := s.getResource(homeEndpoint, acceptedEncoding)
+
+	w.Header().Set("Content-Encoding", resource.contentEncoding)
+	w.Header().Set("Content-Type", resource.contentType)
+	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
+	w.Write(resource.content)
 }

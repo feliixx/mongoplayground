@@ -43,7 +43,7 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
 ## Developpement
 
-Static ressources are minified with esbuild: 
+Static resources are minified with esbuild: 
 
 ```
 esbuild --minify internal/web/playground.css > internal/web/static/playground-min.css

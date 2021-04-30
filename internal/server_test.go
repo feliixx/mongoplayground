@@ -59,7 +59,7 @@ var (
 
 func TestMain(m *testing.M) {
 
-	log.SetOutput(io.Discard)
+	log.SetOutput(os.Stdout)
 
 	storageDir, _ := ioutil.TempDir(os.TempDir(), "storage")
 	backupsDir, _ := ioutil.TempDir(os.TempDir(), "backups")
@@ -109,12 +109,21 @@ func checkServerResponse(t *testing.T, url string, expectedResponseCode int, exp
 
 	if expectedResponseCode == http.StatusOK {
 
-		if want, got := expectedEncoding, resp.Header().Get("Content-Encoding"); want != got {
-			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
-		}
-
 		if want, got := expectedContentType, resp.Header().Get("Content-Type"); want != got {
 			t.Errorf("expected Content-Type: %s, but got %s", want, got)
+		}
+
+		// only for favicon
+		encoding := resp.Header().Get("Content-Encoding")
+		if encoding == "" {
+			if resp.Body.Len() == 0 {
+				t.Errorf("invalid empty body")
+			}
+			return
+		}
+
+		if want, got := expectedEncoding, encoding; want != got {
+			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
 		}
 
 		var reader io.Reader

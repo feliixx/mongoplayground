@@ -17,8 +17,9 @@
 package main
 
 import (
-	"github.com/feliixx/mongoplayground/internal"
 	"log"
+
+	"github.com/feliixx/mongoplayground/internal"
 )
 
 const (
