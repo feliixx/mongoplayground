@@ -42,13 +42,13 @@ func TestStaticHandlers(t *testing.T) {
 			responseCode: http.StatusOK,
 		},
 		{
-			name:         "documentation",
+			name:         "about",
 			url:          "/static/about.html",
 			contentType:  "text/html; charset=utf-8",
 			responseCode: http.StatusOK,
 		},
 		{
-			name:         "documentation",
+			name:         "js",
 			url:          "/static/playground-min-11.js",
 			contentType:  "application/javascript; charset=utf-8",
 			responseCode: http.StatusOK,

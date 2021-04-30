@@ -47,7 +47,6 @@ func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Encoding", brotliEncoding)
 		writer = brotli.NewWriter(w)
 	} else {
-		gzipCounter.Inc()
 		w.Header().Set("Content-Encoding", gzipEncoding)
 		writer = gzip.NewWriter(w)
 	}
