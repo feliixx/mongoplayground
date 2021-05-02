@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
-	"fmt"
 	"html/template"
 	"io"
 	"log"
@@ -48,67 +47,84 @@ var (
 	assets embed.FS
 
 	homeTemplate *template.Template
-	reg          = regexp.MustCompile("-[0-9]+.")
+	// regex to strip file id
+	fileIdxReg = regexp.MustCompile("-[0-9]+.")
 )
 
-// serve static ressources (css/js/html)
+// serve static resources (css/js/html)
 func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// transform 'static/playground-min-10.css' to 'playground-min.css'
 	// the numeric id is juste used to force the browser to reload the new version
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
-	name = reg.ReplaceAllString(name, ".")
+	name = fileIdxReg.ReplaceAllString(name, ".")
 
-	content, ok := s.compressedFiles[name]
+	acceptedEncoding := gzipEncoding
+	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
+		acceptedEncoding = brotliEncoding
+	}
+
+	resource, ok := s.getResource(name, acceptedEncoding)
 	if !ok {
 		log.Printf("static resource %s doesn't exist", name)
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", contentTypeFromName(name))
+	w.Header().Set("Content-Type", resource.contentType)
 	w.Header().Set("Cache-Control", "public, max-age=31536000")
+	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
 
-	if !strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
-		fallbackToGzip(w, fmt.Sprintf("%s/%s", staticDir, name))
-		return
+	if resource.contentEncoding != "" {
+		w.Header().Set("Content-Encoding", resource.contentEncoding)
 	}
 
-	w.Header().Set("Content-Length", strconv.Itoa(len(content)))
-	w.Header().Set("Content-Encoding", brotliEncoding)
-
-	w.Write(content)
+	w.Write(resource.content)
 }
 
-func contentTypeFromName(name string) string {
-
-	if strings.HasSuffix(name, ".css") {
-		return "text/css; charset=utf-8"
-	}
-	if strings.HasSuffix(name, ".js") {
-		return "application/javascript; charset=utf-8"
-	}
-	if strings.HasSuffix(name, ".png") {
-		return "image/png"
-	}
-	return "text/html; charset=utf-8"
-}
-
-func fallbackToGzip(w http.ResponseWriter, assetPath string) {
-
-	gzipCounter.Inc()
-
-	w.Header().Set("Content-Encoding", gzipEncoding)
-	zw := gzip.NewWriter(w)
-	content, _ := assets.ReadFile(assetPath)
-	zw.Write(content)
-	zw.Close()
+type staticResource struct {
+	content         []byte
+	contentType     string
+	contentEncoding string
 }
 
 type staticContent struct {
-	mongodbVersion []byte
-	// map storing static content compressed with brotli
-	compressedFiles map[string][]byte
+	mongodbVersion  []byte
+	compressedFiles map[string]staticResource
+}
+
+func (s *staticContent) addResource(content []byte, name, contentType, contentEncoding string) {
+
+	b := make([]byte, len(content))
+	copy(b, content)
+
+	s.compressedFiles[name] = staticResource{
+		content:         b,
+		contentType:     contentType,
+		contentEncoding: contentEncoding,
+	}
+}
+
+func (s *staticContent) addResourceFromFile(fileName, contentType, contentEncoding string) {
+	var content []byte
+	if contentEncoding == brotliEncoding {
+		content = compressFileWithBrotli(fileName)
+	} else {
+		content = compressFileWithGzip(fileName)
+	}
+	s.addResource(content, contentEncoding+"_"+fileName, contentType, contentEncoding)
+}
+
+func (s *staticContent) getResource(name, acceptedEncoding string) (staticResource, bool) {
+
+	key := acceptedEncoding + "_" + name
+	// favicon is not compressedy
+	if name == "favicon.png" {
+		key = name
+	}
+	resource, ok := s.compressedFiles[key]
+
+	return resource, ok
 }
 
 // load static resources (javascript, css, docs and default page)
@@ -117,55 +133,73 @@ func compressStaticResources(mongodbVersion []byte) (*staticContent, error) {
 
 	staticContent := &staticContent{
 		mongodbVersion:  mongodbVersion,
-		compressedFiles: map[string][]byte{},
+		compressedFiles: map[string]staticResource{},
 	}
 
-	buf := bytes.NewBuffer(make([]byte, 0, 1024))
-	br := brotli.NewWriterLevel(buf, brotli.BestCompression)
-
-	homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
-	err := executeHomeTemplate(br, mongodbVersion)
+	content, err := assets.ReadFile(staticDir + "/favicon.png")
 	if err != nil {
 		return nil, err
 	}
-	addCompressedRessource(staticContent, homeEndpoint, buf)
+	staticContent.addResource(content, "favicon.png", "image/png", "")
 
-	files, err := assets.ReadDir(staticDir)
+	content, err = executeHomeTemplate(mongodbVersion)
 	if err != nil {
 		return nil, err
 	}
-	for _, f := range files {
+	staticContent.addResource(compressContent(content, gzipEncoding), gzipEncoding+"_"+homeEndpoint, "text/html; charset=utf-8", gzipEncoding)
+	staticContent.addResource(compressContent(content, brotliEncoding), brotliEncoding+"_"+homeEndpoint, "text/html; charset=utf-8", brotliEncoding)
 
-		buf.Reset()
-		br.Reset(buf)
+	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", gzipEncoding)
+	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", brotliEncoding)
 
-		b, err := assets.ReadFile(staticDir + "/" + f.Name())
-		if err != nil {
-			return nil, err
-		}
-		if _, err = br.Write(b); err != nil {
-			return nil, err
-		}
-		if err := br.Close(); err != nil {
-			return nil, err
-		}
-		addCompressedRessource(staticContent, f.Name(), buf)
-	}
+	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", gzipEncoding)
+	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", brotliEncoding)
+	staticContent.addResourceFromFile("mode-mongo-min.js", "application/javascript; charset=utf-8", gzipEncoding)
+	staticContent.addResourceFromFile("mode-mongo-min.js", "application/javascript; charset=utf-8", brotliEncoding)
+
+	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", gzipEncoding)
+	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", brotliEncoding)
+	staticContent.addResourceFromFile("about.html", "text/html; charset=utf-8", gzipEncoding)
+	staticContent.addResourceFromFile("about.html", "text/html; charset=utf-8", brotliEncoding)
+
 	return staticContent, nil
 }
 
-func addCompressedRessource(s *staticContent, fileName string, buf *bytes.Buffer) {
-	c := make([]byte, buf.Len())
-	copy(c, buf.Bytes())
-	s.compressedFiles[fileName] = c
+func compressFileWithGzip(fileName string) []byte {
+	b, _ := assets.ReadFile(staticDir + "/" + fileName)
+	return compressContent(b, gzipEncoding)
 }
 
-func executeHomeTemplate(writer io.WriteCloser, mongoVersion []byte) error {
+func compressFileWithBrotli(fileName string) []byte {
+	b, _ := assets.ReadFile(staticDir + "/" + fileName)
+	return compressContent(b, brotliEncoding)
+}
+
+func compressContent(content []byte, encoding string) []byte {
+
+	buf := bytes.NewBuffer(make([]byte, 0, 1024))
+	var wc io.WriteCloser
+
+	if encoding == brotliEncoding {
+		wc = brotli.NewWriterLevel(buf, brotli.BestCompression)
+	} else {
+		wc, _ = gzip.NewWriterLevel(buf, gzip.BestCompression)
+	}
+
+	wc.Write(content)
+	wc.Close()
+	return buf.Bytes()
+}
+
+func executeHomeTemplate(mongoVersion []byte) ([]byte, error) {
+	w := bytes.NewBuffer(nil)
+	homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
+
 	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
 	p.MongoVersion = mongoVersion
 
-	if err := homeTemplate.Execute(writer, p); err != nil {
-		return err
+	if err := homeTemplate.Execute(w, p); err != nil {
+		return nil, err
 	}
-	return writer.Close()
+	return w.Bytes(), nil
 }
