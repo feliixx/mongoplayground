@@ -41,14 +41,14 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
   })
   ```
 
+
 ## Developpement
 
-Static resources are minified with esbuild: 
+create to directory: `storage` and `backups`, and then run the playground with docker compose: 
+
 
 ```
-esbuild --minify internal/web/playground.css > internal/web/static/playground-min.css
-esbuild --minify internal/web/playground.js > internal/web/static/playground-min.js
-esbuild --minify internal/web/mode-mongo.js > internal/web/static/mode-mongo-min.js
+docker-compose up --build
 ```
 
 ## Credits 
