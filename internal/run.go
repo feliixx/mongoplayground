@@ -464,7 +464,7 @@ func runQuery(context context.Context, collection *mongo.Collection, method stri
 
 		cmd = bson.D{
 			{Key: aggregateMethod, Value: collection.Name()},
-			{Key: "pipeline", Value: stages},
+			{Key: "pipeline", Value: sanitize(stages)},
 			{Key: "cursor", Value: bson.M{"batchSize": 1000}},
 		}
 
@@ -560,4 +560,19 @@ func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
 		SetArrayFilters(options.ArrayFilters{
 			Filters: arrayFilters,
 		})
+}
+
+// remove any stages that might write to another db/collection, 
+// to avoid leaking databases, or or other playground contamination
+func sanitize(stages []interface{}) []interface{} {
+	for i := range stages {
+		stage := stages[i].(map[string]interface{})
+		if _, ok := stage["$out"]; ok {
+			stages = append(stages[:i], stages[i+1:]...)
+		}
+		if _, ok := stage["$merge"]; ok {
+			stages = append(stages[:i], stages[i+1:]...)
+		}
+	}
+	return stages
 }
