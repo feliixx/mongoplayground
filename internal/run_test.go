@@ -735,6 +735,36 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `{"queryPlanner":{"indexFilterSet":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{},"planCacheKey":"8B3D4AB8","plannerVersion":1,"queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
 			createdDB: 1,
 		},
+		{
+			name: `aggregation with $out`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":"yellow"}]`},
+				"query":  {`db.collection.aggregate([{$out: "ouptut"}])`},
+			},
+			result:    `[{"_id":"yellow"}]`,
+			createdDB: 1,
+		},
+		{
+			name: `aggregation with "$out" quoted`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1},{"_id":2},{"_id":3}]`},
+				"query":  {`db.collection.aggregate([{"$match":{"_id":1}},{"$out": {db: "ouptut", collection: "y"}}])`},
+			},
+			result:    `[{"_id":1}]`,
+			createdDB: 1,
+		},
+		{
+			name: `aggregation with $merge`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":"abcde"}]`},
+				"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"}])`},
+			},
+			result:    `[{"_id":"abcde"}]`,
+			createdDB: 1,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
