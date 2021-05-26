@@ -765,6 +765,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `[{"_id":"abcde"}]`,
 			createdDB: 1,
 		},
+		{
+			name: `aggregation invalid pipeline`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":0.000122}]`},
+				"query":  {`db.collection.aggregate([1,2])`},
+			},
+			result:    `query failed: (TypeMismatch) Each element of the 'pipeline' array must be an object`,
+			createdDB: 1,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
