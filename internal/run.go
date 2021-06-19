@@ -565,13 +565,16 @@ func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
 // remove any stages that might write to another db/collection,
 // to avoid leaking databases, or or other playground contamination
 func sanitize(stages []interface{}) []interface{} {
-	for i := range stages {
+
+	for i := 0; i <  len(stages); i++ {
 		stage,_ := stages[i].(map[string]interface{})
 		if _, ok := stage["$out"]; ok {
 			stages = append(stages[:i], stages[i+1:]...)
+			i--
 		}
 		if _, ok := stage["$merge"]; ok {
 			stages = append(stages[:i], stages[i+1:]...)
+			i--
 		}
 	}
 	return stages

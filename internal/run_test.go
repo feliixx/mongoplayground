@@ -775,6 +775,26 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `query failed: (TypeMismatch) Each element of the 'pipeline' array must be an object`,
 			createdDB: 1,
 		},
+		{
+			name: `aggregation with $merge in first pos`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1}]`},
+				"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"},{$match:{_id:1}},{$project:{_id:0}}])`},
+			},
+			result:    `[{}]`,
+			createdDB: 1,
+		},
+		{
+			name: `aggregation with $out and $merge`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[{"_id":1},{"_id":2},{"_id":3},{"_id":38294834}]`},
+				"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"},{"$match":{"_id":1}},{"$out": {db: "ouptut", collection: "y"}}])`},
+			},
+			result:    `[{"_id":1}]`,
+			createdDB: 1,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
