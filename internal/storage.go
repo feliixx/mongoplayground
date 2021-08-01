@@ -43,7 +43,8 @@ type storage struct {
 
 	kvStore *badger.DB
 	// local dir to store badger backups
-	backupDir string
+	backupDir             string
+	backupServiceStatus   serviceInfo
 
 	// activeDB holds info of the database created / used during
 	// the last cleanupInterval. Its access is garded by activeDbLock
@@ -69,6 +70,10 @@ func newStorage(badgerDir, backupDir string) (*storage, error) {
 		kvStore:      kvStore,
 		activeDB:     map[string]dbMetaInfo{},
 		backupDir:    backupDir,
+		backupServiceStatus: serviceInfo{
+			Name:   "backup",
+			Status: statusUp,
+		},
 	}
 
 	initPrometheusCounter(s.kvStore)
@@ -122,8 +127,21 @@ func (s *storage) backup() {
 
 	fileName := fmt.Sprintf("%s/badger_%d.bak", s.backupDir, time.Now().Weekday())
 
-	localBackup(s.kvStore, fileName)
-	saveBackupToGoogleDrive(fileName)
+	err := localBackup(s.kvStore, fileName)
+	if err != nil {
+		s.backupServiceStatus.Status = statusDegrade
+		s.backupServiceStatus.Cause = fmt.Sprintf("error in local backup: %v", err)
+		return
+	}
+	err = saveBackupToGoogleDrive(fileName)
+	if err != nil {
+		s.backupServiceStatus.Status = statusDegrade
+		s.backupServiceStatus.Cause = fmt.Sprintf("error while saving backup: %v", err)
+		return
+	}
+
+	s.backupServiceStatus.Status = statusUp
+	s.backupServiceStatus.Cause = ""
 }
 
 type dbMetaInfo struct {
