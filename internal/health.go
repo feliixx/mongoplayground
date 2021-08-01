@@ -37,7 +37,7 @@ const (
 	statusDown = "DOWN"
 )
 
-type service struct {
+type serviceInfo struct {
 	Name    string
 	Version string `json:",omitempty"`
 	Status  string
@@ -46,7 +46,7 @@ type service struct {
 
 type healthResponse struct {
 	Status   string
-	Services []service
+	Services []serviceInfo
 	Version  string
 }
 
@@ -61,7 +61,7 @@ func (s *storage) healthCheck() []byte {
 		Status: statusUp,
 	}
 
-	badger := service{
+	badger := serviceInfo{
 		Name:   "badger",
 		Status: "UP",
 	}
@@ -72,7 +72,7 @@ func (s *storage) healthCheck() []byte {
 		response.Status = statusDegrade
 	}
 
-	mongodb := service{
+	mongodb := serviceInfo{
 		Name:    "mongodb",
 		Version: string(s.mongoVersion),
 		Status:  statusUp,
@@ -85,9 +85,14 @@ func (s *storage) healthCheck() []byte {
 		response.Status = statusDegrade
 	}
 
-	response.Services = []service{
+	if s.backupServiceStatus.Status != statusUp {
+		response.Status = statusDegrade
+	}
+
+	response.Services = []serviceInfo{
 		badger,
 		mongodb,
+		s.backupServiceStatus,
 	}
 
 	if moduleInfo, ok := debug.ReadBuildInfo(); ok {

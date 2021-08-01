@@ -19,6 +19,7 @@ package internal
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -37,73 +38,69 @@ const (
 	tokenFile = "token.json"
 )
 
-func localBackup(storage *badger.DB, fileName string) {
+func localBackup(storage *badger.DB, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
-		log.Printf("fail to create file %s: %v", fileName, err)
+		return fmt.Errorf("fail to create file %s: %v", fileName, err)
 	}
 	defer f.Close()
 
 	_, err = storage.Backup(f, 1)
 	if err != nil {
-		log.Printf("backup failed: %v", err)
+		return fmt.Errorf("backup failed: %v", err)
 	}
 
 	fileInfo, err := f.Stat()
 	if err != nil {
-		log.Printf("fail to get backup stats")
 		badgerBackupSize.Set(-1)
-		return
+		return fmt.Errorf("fail to get backup stats: %v", err)
 	}
 	badgerBackupSize.Set(float64(fileInfo.Size()))
+
+	return nil
 }
 
-func saveBackupToGoogleDrive(fileName string) {
+func saveBackupToGoogleDrive(fileName string) error {
 
 	b, err := os.ReadFile("credentials.json")
 	if err != nil {
-		log.Printf("Unable to read client secret file: %v", err)
-		return
+		return fmt.Errorf("unable to read client secret file: %v", err)
 	}
 
 	config, err := google.ConfigFromJSON(b, drive.DriveFileScope)
 	if err != nil {
-		log.Printf("Unable to parse client secret file to config: %v", err)
-		return
+		return fmt.Errorf("unable to parse client secret file to config: %v", err)
+
 	}
 	token, err := tokenFromFile(tokenFile)
 	if err != nil {
-		log.Printf("Fail to read token file: %v", err)
-		return
+		return fmt.Errorf("fail to read token file: %v", err)
 	}
 	client := config.Client(context.Background(), token)
 
 	service, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
-		log.Printf("Unable to retrieve Drive client: %v", err)
-		return
+		return fmt.Errorf("unable to retrieve Drive client: %v", err)
 	}
 
 	dir, err := getDriveBackupDir(service)
 	if err != nil {
-		log.Printf("Unable to create dir: %v", err)
-		return
+		return fmt.Errorf("unable to create dir: %v", err)
 	}
 
 	backup, err := os.Open(fileName)
 	if err != nil {
-		log.Printf("Fail to open backup file: %v", err)
-		return
+		return fmt.Errorf("fail to open backup file: %v", err)
 	}
 	defer backup.Close()
 
 	file, err := uploadNewBackup(service, "backup.bak", "application/data", backup, dir.Id)
 	if err != nil {
-		log.Printf("Fail to write backup in drive: %v", err)
-		return
+		return fmt.Errorf("fail to write backup in drive: %v", err)
 	}
 
 	log.Printf("Successfully uploaded %s to drive", file.Name)
+	return nil
 }
 
 func tokenFromFile(file string) (*oauth2.Token, error) {
