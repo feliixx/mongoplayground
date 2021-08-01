@@ -1084,7 +1084,49 @@ var aggregationSnippet = [
         caption: "$zip",
         value: '$zip: {\n "inputs": [ "array expression1" ],\n "useLongestLength": "boolean",\n "defaults":  "array expression"\n}',
         meta: "array operator"
-    }]
+    },
+    // new in v5.0
+    {
+        caption: "$dateAdd",
+        value: '$dateAdd: {\n "startDate": "dateExpression",\n "unit": "Unit",\n "amount": "int",\n "timezone": "tzExpression"\n}',
+        meta: "date operator"
+    },
+    {
+        caption: "$dateDiff",
+        value: '$dateDiff: {\n "startDate": "dateExpression",\n "unit": "Unit",\n" amount": "int",\n "timezone": "tzExpression",\n "startOfWeek": "day"\n}',
+        meta: "date operator"
+    },
+    {
+        caption: "$dateSubtract",
+        value: '$dateSubtract: {\n "startDate": "dateExpression",\n "unit": "Unit",\n "amount": "int",\n "timezone": "tzExpression"\n}',
+        meta: "date operator"
+    },
+    {
+        caption: "$getField",
+        value: '$getField: { "fields": "string", "input": "object" }',
+        meta: "aggregation operator"
+    },
+    {
+        caption: "$setField",
+        value: '$setField: { "fields": "string", "input": "object", "value": "expression" }',
+        meta: "aggregation operator"
+    },
+    {
+        caption: "$sampleRate",
+        value: '$sampleRate: "non negative float"',
+        meta: "aggregation operator"
+    },
+    {
+        caption: "$rand",
+        value: '$rand: {}',
+        meta: "aggregation operator"
+    },
+    {
+        caption: "$setWindowFields",
+        value: '$setWindowFields: {\n "partitionBy": "$state",\n "sortBy": { "field": "order" },\n "output": {\n  "field": {\n  "window operator": "window operator param",\n  "window": {\n   "documents": [ "lower boundary", "upper bondary" ],\n   "range": [ "lower boundary", "upper bondary" ],\n   "unit": "time unit"\n  }\n  }\n }\n}',
+        meta: "aggregation stage"
+    },
+]
 
 
 var updateSnippet = [
@@ -1471,7 +1513,7 @@ var Parser = function () {
         } catch (err) {
             // if there's an error, keep indenting so it's easyer to
             // see where the error is
-            while(ch) {
+            while (ch) {
                 next()
             }
             return err
@@ -1658,7 +1700,7 @@ var Parser = function () {
         while (ch && ((ch >= "0" && ch <= "9") || (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || ch === "$" || ch === "_")) {
             next()
         }
-        return input.substring(start, at-1)
+        return input.substring(start, at - 1)
     }
 
     function config(mode) {
@@ -2191,7 +2233,7 @@ var Parser = function () {
             case "[":
                 array()
                 break
-            case "{" :
+            case "{":
                 nObject(-1)
                 break
         }
@@ -2228,7 +2270,7 @@ var Parser = function () {
         white()
         next(",")
         white()
-        if (ch === "[" ) {
+        if (ch === "[") {
             array()
         } else {
             object()

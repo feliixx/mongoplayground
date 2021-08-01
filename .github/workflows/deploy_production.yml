@@ -6,7 +6,7 @@ on:
       - "production" 
 
 env: 
-  MONGO_VERSION: 4.4.6
+  MONGO_VERSION: 5.0.1
   # name of the binary, the service and the user running the 
   # service 
   APP_NAME: mongoplayground
@@ -32,7 +32,7 @@ jobs:
 
     - name: Download MongoDB and setup standalone db
       run: |
-        wget http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION.tgz
+        wget --quiet http://downloads.mongodb.org/linux/mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION.tgz
         tar xzvf mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION.tgz
         echo "$PWD/mongodb-linux-x86_64-ubuntu2004-$MONGO_VERSION/bin" >> $GITHUB_PATH
         mkdir $PWD/db
@@ -47,7 +47,7 @@ jobs:
 
     - name: Register SSH key
       continue-on-error: true
-      uses: webfactory/ssh-agent@v0.4.1
+      uses: webfactory/ssh-agent@v0.5.3
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
 

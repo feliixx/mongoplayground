@@ -178,7 +178,7 @@ func TestRunCreateDB(t *testing.T) {
 					}
 				}]`},
 				"query": {`db.collection.find({"$set": 12})`}},
-			result:    "query failed: (BadValue) unknown top level operator: $set",
+			result:    "query failed: (BadValue) unknown top level operator: $set. If you have a field name that starts with a '$' symbol, consider using $getField or $setField.",
 			createdDB: 1,
 		},
 		{
@@ -377,7 +377,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1},{"_id":1}]`},
 				"query":  {`db.collection.find()`},
 			},
-			result:    "error in configuration:\n  bulk write error: [{[{E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { _id: 1.0 }}]}, {<nil>}]",
+			result:    "error in configuration:\n  bulk write exception: write errors: [E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { _id: 1.0 }]",
 			createdDB: 0, // the config is incorrect, no db should be created
 		},
 		{
@@ -427,7 +427,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id": ObjectId("5a9")}]`},
 				"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 			},
-			result:    "error in configuration:\n  encoding/hex: odd length hex string",
+			result:    "error in configuration:\n  the provided hex string is not a valid ObjectID",
 			createdDB: 0,
 		},
 		{
@@ -597,7 +597,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1,"username":"greta"}]`},
 				"query":  {`db.collection.find().explain()`},
 			},
-			result:    `{"queryPlanner":{"indexFilterSet":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{},"planCacheKey":"8B3D4AB8","plannerVersion":1,"queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			result:    `{"command":{"$db":"433c2ef8cb26c90dd962d047dea315de","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{},"planCacheKey":"D542626C","queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
 			createdDB: 1,
 		},
 		{
@@ -607,7 +607,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1,"username":"tim"}]`},
 				"query":  {`db.collection.find().explain("executionStats")`},
 			},
-			result:    `{"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			result:    `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
 			createdDB: 1,
 		},
 		{
@@ -617,7 +617,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1,"username":"tim"}]`},
 				"query":  {`db.collection.explain("executionStats").find()`},
 			},
-			result:    `{"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			result:    `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
 			createdDB: 0, // same config as above
 		},
 		{
@@ -627,7 +627,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1,"username":"TP"}]`},
 				"query":  {`db.collection.explain("allPlansExecution").find()`},
 			},
-			result:    `{"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"queryPlanner":{"indexFilterSet":false,"namespace":"40dd3ef1cd82a6d68d98fdcd3ddf4242.collection","parsedQuery":{},"plannerVersion":1,"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			result:    `{"command":{"$db":"40dd3ef1cd82a6d68d98fdcd3ddf4242","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"40dd3ef1cd82a6d68d98fdcd3ddf4242.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
 			createdDB: 1,
 		},
 		{
@@ -732,7 +732,7 @@ func TestRunCreateDB(t *testing.T) {
 				"config": {`[{"_id":1,"username":"singleQuote"}]`},
 				"query":  {`db.collection.find().explain(")`},
 			},
-			result:    `{"queryPlanner":{"indexFilterSet":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{},"planCacheKey":"8B3D4AB8","plannerVersion":1,"queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}}}`,
+			result:    `{"command":{"$db":"7fb2bc41534140cadc0bb68d1377cc2a","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{},"planCacheKey":"D542626C","queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
 			createdDB: 1,
 		},
 		{
