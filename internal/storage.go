@@ -43,8 +43,8 @@ type storage struct {
 
 	kvStore *badger.DB
 	// local dir to store badger backups
-	backupDir             string
-	backupServiceStatus   serviceInfo
+	backupDir           string
+	backupServiceStatus serviceInfo
 
 	// activeDB holds info of the database created / used during
 	// the last cleanupInterval. Its access is garded by activeDbLock
@@ -52,9 +52,9 @@ type storage struct {
 	activeDB     map[string]dbMetaInfo
 }
 
-func newStorage(badgerDir, backupDir string) (*storage, error) {
+func newStorage(mongoUri, badgerDir, backupDir string) (*storage, error) {
 
-	session, mongodbVersion, err := createMongodbSession()
+	session, mongodbVersion, err := createMongodbSession(mongoUri)
 	if err != nil {
 		return nil, err
 	}
@@ -162,8 +162,9 @@ func (d *dbMetaInfo) hasCollection(collectionName string) bool {
 	return false
 }
 
-func createMongodbSession() (session *mongo.Client, version []byte, err error) {
-	session, err = mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
+func createMongodbSession(mongoUri string) (session *mongo.Client, version []byte, err error) {
+
+	session, err = mongo.NewClient(options.Client().ApplyURI(mongoUri))
 	if err != nil {
 		return nil, nil, fmt.Errorf("fail to create mongodb client: %v", err)
 	}

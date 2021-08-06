@@ -21,6 +21,7 @@ import (
 	"net/http"
 
 	"github.com/feliixx/mongoplayground/internal"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -28,15 +29,36 @@ const (
 	backupDir = "backups"
 )
 
+func loadConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yml")
+	viper.SetDefault("https.enabled", false)
+	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Printf("error while loading conf: %v", err)
+	}
+}
+
 func redirectTLS(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
 }
 
 func main() {
-	s, err := internal.NewServer(badgerDir, backupDir)
+
+	loadConfig()
+
+	s, err := internal.NewServer(viper.GetString("mongo.uri"), badgerDir, backupDir)
 	if err != nil {
 		log.Fatalf("aborting: %v\n", err)
 	}
+
+	if !viper.GetBool("https.enabled") {
+		log.Fatal(s.ListenAndServe())
+		return
+	}
+
 	go func() {
 		if err := http.ListenAndServe(":80", http.HandlerFunc(redirectTLS)); err != nil {
 			log.Fatalf("ListenAndServe error: %v", err)
@@ -45,7 +67,7 @@ func main() {
 
 	s.Addr = ":443"
 	log.Fatal(s.ListenAndServeTLS(
-		"/etc/letsencrypt/live/www.mongoplayground.net/fullchain.pem",
-		"/etc/letsencrypt/live/www.mongoplayground.net/privkey.pem",
+		viper.GetString("https.fullchain"),
+		viper.GetString("https.privkey"),
 	))
 }
