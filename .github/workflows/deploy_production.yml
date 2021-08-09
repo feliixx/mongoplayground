@@ -6,7 +6,7 @@ on:
       - "production" 
 
 env: 
-  MONGO_VERSION: 5.0.1
+  MONGO_VERSION: 5.0.2
   # name of the binary, the service and the user running the 
   # service 
   APP_NAME: mongoplayground
@@ -60,7 +60,6 @@ jobs:
     - name: Deploy on first node
       run: |
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} sudo systemctl stop $APP_NAME
-        ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} mongo dropAll.js
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} mv /home/$APP_NAME/$APP_NAME /home/$APP_NAME/${APP_NAME}_old || true
         scp $APP_NAME $APP_NAME@${{ secrets.HOST_PRODUCTION }}:/home/$APP_NAME
         ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} sudo setcap CAP_NET_BIND_SERVICE=+ep $APP_NAME
