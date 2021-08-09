@@ -1,0 +1,4 @@
+https:
+  enabled: false
+mongo: 
+  uri: "mongodb://localhost:27017"
