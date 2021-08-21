@@ -29,27 +29,16 @@ const (
 	backupDir = "backups"
 )
 
-func loadConfig() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yml")
-	viper.SetDefault("https.enabled", false)
-	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Printf("error while loading conf: %v", err)
-	}
-}
-
-func redirectTLS(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
-}
-
 func main() {
 
 	loadConfig()
 
-	s, err := internal.NewServer(viper.GetString("mongo.uri"), badgerDir, backupDir)
+	s, err := internal.NewServer(
+		viper.GetString("mongo.uri"),
+		viper.GetBool("mongo.dropFirst"),
+		badgerDir,
+		backupDir,
+	)
 	if err != nil {
 		log.Fatalf("aborting: %v\n", err)
 	}
@@ -71,3 +60,21 @@ func main() {
 		viper.GetString("https.privkey"),
 	))
 }
+
+func loadConfig() {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yml")
+	viper.SetDefault("https.enabled", false)
+	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
+	viper.SetDefault("mongo.dropFirst", false)
+	viper.AddConfigPath(".")
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Printf("error while loading conf: %v", err)
+	}
+}
+
+func redirectTLS(w http.ResponseWriter, r *http.Request) {
+	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
+}
+

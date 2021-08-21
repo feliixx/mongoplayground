@@ -1,4 +1,5 @@
 https:
   enabled: false
 mongo: 
+  dropFirst: false
   uri: "mongodb://localhost:27017"

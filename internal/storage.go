@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/dgraph-io/badger/v2"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,7 +53,7 @@ type storage struct {
 	activeDB     map[string]dbMetaInfo
 }
 
-func newStorage(mongoUri, badgerDir, backupDir string) (*storage, error) {
+func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*storage, error) {
 
 	session, mongodbVersion, err := createMongodbSession(mongoUri)
 	if err != nil {
@@ -76,6 +77,10 @@ func newStorage(mongoUri, badgerDir, backupDir string) (*storage, error) {
 		},
 	}
 
+	if dropFirst {
+		s.deleteExistingDB()
+	}
+
 	initPrometheusCounter(s.kvStore)
 
 	go func(s *storage) {
@@ -91,6 +96,26 @@ func newStorage(mongoUri, badgerDir, backupDir string) (*storage, error) {
 	}(s)
 
 	return s, nil
+}
+
+// delete all database having a name with 32 char
+func (s *storage) deleteExistingDB() error {
+
+	dbNames, err := s.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
+	if err != nil {
+		return err
+	}
+
+	for _, name := range dbNames {
+		if len(name) == 32 {
+			log.Printf("Deleting db '%s'", name)
+			err = s.mongoSession.Database(name).Drop(context.Background())
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // remove database not used since the previous cleanup in MongoDB
