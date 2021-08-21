@@ -31,7 +31,22 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func TestRemoveOldDB(t *testing.T) {
+func TestDeleteExistingDB(t *testing.T) {
+
+	defer clearDatabases(t)
+
+	p, _ := newPage("", "", "")
+	testStorage.mongoSession.
+		Database(p.dbHash()).
+		Collection("c").
+		InsertOne(context.Background(), bson.M{"_id": 1})
+
+	testStorage.deleteExistingDB()
+
+	testStorageContent(t, 0, 0)
+}
+
+func TestRemoveExpiredDB(t *testing.T) {
 
 	defer clearDatabases(t)
 

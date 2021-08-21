@@ -41,9 +41,9 @@ const (
 
 // NewServer initialize a badger and a mongodb connection,
 // and return an http server
-func NewServer(mongoUri, badgerDir, backupDir string) (*http.Server, error) {
+func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*http.Server, error) {
 
-	storage, err := newStorage(mongoUri, badgerDir, backupDir)
+	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir)
 	if err != nil {
 		return nil, err
 	}
