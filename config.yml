@@ -1,5 +1,7 @@
 https:
   enabled: false
+  fullchain: 
+  privkey:   
 mongo: 
   dropFirst: false
   uri: "mongodb://localhost:27017"
