@@ -57,6 +57,8 @@ func localBackup(storage *badger.DB, fileName string) error {
 	}
 	badgerBackupSize.Set(float64(fileInfo.Size()))
 
+	log.Print("local backup successfully created")
+
 	return nil
 }
 

@@ -146,6 +146,8 @@ func (s *storage) removeExpiredDB() {
 // and automatically removed after 30 days
 func (s *storage) backup() {
 
+	log.Print("starting backup...")
+
 	if _, err := os.Stat(s.backupDir); os.IsNotExist(err) {
 		os.Mkdir(s.backupDir, os.ModePerm)
 	}

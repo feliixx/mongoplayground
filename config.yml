@@ -3,3 +3,7 @@ https:
 mongo: 
   dropFirst: false
   uri: "mongodb://localhost:27017"
+logging: 
+  loki: 
+    host: 
+    port: 
