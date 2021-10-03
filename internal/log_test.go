@@ -25,15 +25,15 @@ func TestSendLogsToLoki(t *testing.T) {
 	l := NewLokiLogger("localhost", lokiPort)
 
 	l.Write([]byte("first log message"))
-	l.Write([]byte("second log message"))
-	l.Write([]byte("third log message"))
+	l.Write([]byte("second log message with line return\n\n"))
+	l.Write([]byte("third log message with an IP: 172.0.0.1:65112"))
 
 	err := l.Send()
 	if err != nil {
 		t.Errorf("fail to send logs: %v", err)
 	}
 
-	want := `{"streams": [{ "stream": { "app": "mongoplayground" }, "values": [ ["0000000000000000000","first log message"],["0000000000000000000","second log message"],["0000000000000000000","third log message"]]}]}`
+	want := `{"streams": [{ "stream": { "app": "mongoplayground" }, "values": [ ["0000000000000000000","first log message"],["0000000000000000000","second log message with line return"],["0000000000000000000","third log message with an IP: x.x.x.x"]]}]}`
 	got := string(regTimestamp.ReplaceAll(reqBody, []byte("0000000000000000000")))
 
 	if want != got {
