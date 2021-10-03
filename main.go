@@ -19,8 +19,10 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/feliixx/mongoplayground/internal"
+
 	"github.com/spf13/viper"
 )
 
@@ -32,6 +34,24 @@ const (
 func main() {
 
 	loadConfig()
+
+	if viper.GetString("logging.loki.host") != "" {
+
+		logger := internal.NewLokiLogger(
+			viper.GetString("logging.loki.host"),
+			viper.GetInt("logging.loki.port"),
+		)
+		log.SetOutput(logger)
+
+		go func(l *internal.LokiLogger) {
+			for range time.Tick(5 * time.Minute) {
+				err := l.Send()
+				if err != nil {
+					log.Printf("fail to send to loki: %v", err)
+				}
+			}
+		}(logger)
+	}
 
 	s, err := internal.NewServer(
 		viper.GetString("mongo.uri"),
@@ -67,6 +87,7 @@ func loadConfig() {
 	viper.SetDefault("https.enabled", false)
 	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
 	viper.SetDefault("mongo.dropFirst", false)
+	viper.SetDefault("logging.loki.host", "")
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -77,4 +98,3 @@ func loadConfig() {
 func redirectTLS(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "https://"+r.Host+r.RequestURI, http.StatusMovedPermanently)
 }
-
