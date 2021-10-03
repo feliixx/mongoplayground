@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-var regIPV4 = regexp.MustCompile(`(\\d+\\.){3}(\\d+):\\d+`)
+var regIPV4 = regexp.MustCompile(`(\d+\.){3}(\d+):\d+`)
 
 type LokiLogger struct {
 	url      string
@@ -60,23 +60,16 @@ func (l *LokiLogger) Write(msg []byte) (int, error) {
 	// anonymise any IP adress
 	msg = regIPV4.ReplaceAll(msg, []byte("x.x.x.x"))
 
-	l.payload.WriteByte('[')
-	l.payload.WriteByte('"')
+	l.payload.WriteString(`["`)
 	l.payload.WriteString(strconv.Itoa(int(time.Now().Unix())))
-	l.payload.WriteString("000000000")
-	l.payload.WriteByte('"')
-	l.payload.WriteByte(',')
-	l.payload.WriteByte('"')
+	l.payload.WriteString(`000000000","`)
 	// if the message starts with a datetime like 2021/10/12 10:11:00,
 	// remove it
 	if bytes.HasPrefix(msg, []byte("202")) {
-		l.payload.Write(msg[20:])
-	} else {
-		l.payload.Write(msg)
+		msg = msg[20:]
 	}
-	l.payload.WriteByte('"')
-	l.payload.WriteByte(']')
-	l.payload.WriteByte(',')
+	l.payload.Write(msg)
+	l.payload.WriteString(`"],`)
 
 	return len(msg), nil
 }
