@@ -35,23 +35,7 @@ func main() {
 
 	loadConfig()
 
-	if viper.GetString("logging.loki.host") != "" {
-
-		logger := internal.NewLokiLogger(
-			viper.GetString("logging.loki.host"),
-			viper.GetInt("logging.loki.port"),
-		)
-		log.SetOutput(logger)
-
-		go func(l *internal.LokiLogger) {
-			for range time.Tick(5 * time.Minute) {
-				err := l.Send()
-				if err != nil {
-					log.Printf("fail to send to loki: %v", err)
-				}
-			}
-		}(logger)
-	}
+	configLogger()
 
 	s, err := internal.NewServer(
 		viper.GetString("mongo.uri"),
@@ -92,6 +76,27 @@ func loadConfig() {
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Printf("error while loading conf: %v", err)
+	}
+}
+
+func configLogger() {
+
+	if viper.GetString("logging.loki.host") != "" {
+
+		logger := internal.NewLokiLogger(
+			viper.GetString("logging.loki.host"),
+			viper.GetInt("logging.loki.port"),
+		)
+		log.SetOutput(logger)
+
+		go func(l *internal.LokiLogger) {
+			for range time.Tick(5 * time.Minute) {
+				err := l.Send()
+				if err != nil {
+					log.Printf("fail to send to loki: %v", err)
+				}
+			}
+		}(logger)
 	}
 }
 
