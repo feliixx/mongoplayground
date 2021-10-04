@@ -9,3 +9,12 @@ logging:
   loki: 
     host: 
     port: 
+mail: 
+  enabled: false
+  smtp: 
+    host: 
+    port: 
+    from: 
+    pwd: 
+  sendTo: 
+  

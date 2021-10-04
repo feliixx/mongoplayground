@@ -71,7 +71,7 @@ func TestMain(m *testing.M) {
 	}
 	testStorage = ts
 
-	s, err := newHttpServerWithStorage(testStorage)
+	s, err := newHttpServerWithStorage(testStorage, nil)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)

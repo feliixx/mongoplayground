@@ -566,8 +566,8 @@ func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
 // to avoid leaking databases, or or other playground contamination
 func sanitize(stages []interface{}) []interface{} {
 
-	for i := 0; i <  len(stages); i++ {
-		stage,_ := stages[i].(map[string]interface{})
+	for i := 0; i < len(stages); i++ {
+		stage, _ := stages[i].(map[string]interface{})
 		if _, ok := stage["$out"]; ok {
 			stages = append(stages[:i], stages[i+1:]...)
 			i--
