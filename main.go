@@ -37,11 +37,14 @@ func main() {
 
 	configLogger()
 
+	mailInfo := configSmtp()
+
 	s, err := internal.NewServer(
 		viper.GetString("mongo.uri"),
 		viper.GetBool("mongo.dropFirst"),
 		badgerDir,
 		backupDir,
+		mailInfo,
 	)
 	if err != nil {
 		log.Fatalf("aborting: %v\n", err)
@@ -72,6 +75,7 @@ func loadConfig() {
 	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
 	viper.SetDefault("mongo.dropFirst", false)
 	viper.SetDefault("logging.loki.host", "")
+	viper.SetDefault("mail.enabled", false)
 	viper.AddConfigPath(".")
 	err := viper.ReadInConfig()
 	if err != nil {
@@ -97,6 +101,22 @@ func configLogger() {
 				}
 			}
 		}(logger)
+	}
+}
+
+func configSmtp() *internal.MailInfo {
+
+	if viper.GetBool("mail.enabled") {
+
+		return internal.NewMailInfo(
+			viper.GetString("mail.smtp.host"),
+			viper.GetInt("mail.smtp.port"),
+			viper.GetString("mail.smtp.from"),
+			viper.GetString("mail.smtp.pwd"),
+			viper.GetString("mail.sendTo"),
+		)
+	} else {
+		return nil
 	}
 }
 

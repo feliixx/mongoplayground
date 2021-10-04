@@ -39,20 +39,22 @@ const (
 	readTimeout  = 10 * time.Second
 	writeTimeout = 30 * time.Second
 	idleTimeout  = 3 * time.Minute
+
+	errInternalServerError = "Internal server error.\n  Please file an issue here:\n\n  https://github.com/feliixx/mongoplayground/issues"
 )
 
 // NewServer initialize a badger and a mongodb connection,
 // and return an http server
-func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*http.Server, error) {
+func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string, mailInfo *MailInfo) (*http.Server, error) {
 
 	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir)
 	if err != nil {
 		return nil, err
 	}
-	return newHttpServerWithStorage(storage)
+	return newHttpServerWithStorage(storage, mailInfo)
 }
 
-func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
+func newHttpServerWithStorage(storage *storage, mailInfo *MailInfo) (*http.Server, error) {
 
 	staticContent, err := compressStaticResources(storage.mongoVersion)
 	if err != nil {
@@ -71,19 +73,34 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 
 	return &http.Server{
 		Addr:         ":8080",
-		Handler:      latencyObserver(mux),
+		Handler:      latencyAndPanicObserver(mux, mailInfo),
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 		IdleTimeout:  idleTimeout,
 	}, nil
 }
 
-func latencyObserver(handler http.Handler) http.Handler {
+// Wrapper for each http request.
+// Monitors latency of each endpoint, and explicitely
+// logs panic stack trace so they can be send to loki.
+// If smtp info are configured, also send the stack trace
+// by email
+func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Handler {
+
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 		defer func() {
+
 			if r := recover(); r != nil {
-				log.Print(string(debug.Stack()))
+
+				stackTrace := string(debug.Stack())
+				log.Print(stackTrace)
+
+				if mailInfo != nil {
+					go mailInfo.sendStackTraceByEmail(stackTrace)
+				}
+				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+				w.Write([]byte(errInternalServerError))
 			}
 		}()
 
