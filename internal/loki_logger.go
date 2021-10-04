@@ -50,7 +50,7 @@ func (l *LokiLogger) Write(msg []byte) (int, error) {
 	l.nbToSend++
 	// Print the message to stdout just in case there is a problem
 	// with the loki server
-	fmt.Printf("%s", msg)
+	fmt.Print(string(msg))
 
 	l.pLock.Lock()
 	defer l.pLock.Unlock()
@@ -62,14 +62,14 @@ func (l *LokiLogger) Write(msg []byte) (int, error) {
 
 	l.payload.WriteString(`["`)
 	l.payload.WriteString(strconv.Itoa(int(time.Now().Unix())))
-	l.payload.WriteString(`000000000","`)
+	l.payload.WriteString(`000000000",`)
 	// if the message starts with a datetime like 2021/10/12 10:11:00,
 	// remove it
 	if bytes.HasPrefix(msg, []byte("202")) {
 		msg = msg[20:]
 	}
-	l.payload.Write(msg)
-	l.payload.WriteString(`"],`)
+	l.payload.WriteString(strconv.Quote(string(msg)))
+	l.payload.WriteString(`],`)
 
 	return len(msg), nil
 }

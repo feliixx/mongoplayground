@@ -18,7 +18,9 @@ package internal
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -78,6 +80,12 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 
 func latencyObserver(handler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+		defer func() {
+			if r := recover(); r != nil {
+				log.Print(string(debug.Stack()))
+			}
+		}()
 
 		start := time.Now()
 		handler.ServeHTTP(w, r)
