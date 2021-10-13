@@ -89,20 +89,7 @@ func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Hand
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		defer func() {
-
-			if r := recover(); r != nil {
-
-				stackTrace := string(debug.Stack())
-				log.Print(stackTrace)
-
-				if mailInfo != nil {
-					go mailInfo.sendStackTraceByEmail(stackTrace)
-				}
-				w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-				w.Write([]byte(errInternalServerError))
-			}
-		}()
+		defer handleAnyPanic(w, r, mailInfo)
 
 		start := time.Now()
 		handler.ServeHTTP(w, r)
@@ -126,4 +113,19 @@ func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Hand
 		}
 		requestDurations.WithLabelValues(label).Observe(float64(time.Since(start)) / float64(time.Second))
 	})
+}
+
+func handleAnyPanic(w http.ResponseWriter, r *http.Request, mailInfo *MailInfo) {
+
+	if panic := recover(); panic != nil {
+
+		stackTrace := string(debug.Stack())
+		log.Print(stackTrace)
+
+		if mailInfo != nil {
+			go mailInfo.sendRequestAndStackTraceByEmail(r, stackTrace)
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Write([]byte(errInternalServerError))
+	}
 }

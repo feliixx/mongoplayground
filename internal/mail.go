@@ -19,6 +19,7 @@ package internal
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"net/smtp"
 	"strings"
 )
@@ -41,11 +42,15 @@ func NewMailInfo(smtpHost string, smtpPort int, from, pwd, sendTo string) *MailI
 	}
 }
 
-func (m *MailInfo) sendStackTraceByEmail(stackTrace string) {
+func (m *MailInfo) sendRequestAndStackTraceByEmail(r *http.Request, stackTrace string) {
 
 	message := []byte("Subject: [Mongoplayground] New server error\r\n" +
 		"\r\n" +
-		stackTrace + "\r\n")
+		stackTrace +
+		"\r\n" +
+		"\r\n" +
+		prettyPrintRequest(r) +
+		"\r\n")
 
 	err := smtp.SendMail(
 		fmt.Sprintf("%v:%d", m.smtpHost, m.smtpPort),
@@ -55,6 +60,26 @@ func (m *MailInfo) sendStackTraceByEmail(stackTrace string) {
 		message,
 	)
 	if err != nil {
-		log.Printf("fail to send mail: %v", err)
+		log.Printf("fail to send mail: %v\n, message was: %s", err, message)
 	}
+}
+
+func prettyPrintRequest(r *http.Request) string {
+
+	result := fmt.Sprintf("request: %s\n\n", r.URL.RequestURI())
+
+	for name, values := range r.Header {
+		for _, value := range values {
+			result += fmt.Sprintf("[%s]: %s\n", name, value)
+		}
+	}
+	
+	result += "\nbody\n"
+
+	for name, values := range r.PostForm {
+		for _, value := range values {
+			result += fmt.Sprintf("[%s]: %s\n", name, value)
+		}
+	}
+	return result
 }
