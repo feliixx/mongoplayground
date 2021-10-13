@@ -44,5 +44,8 @@ jobs:
     - name: Run test
       run: ./test.sh
     
-    - name: Export coverage result 
-      run: bash <(curl -s https://codecov.io/bash)
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        files: ./coverage.txt
+        path_to_write_report: ./codecov_report.txt
