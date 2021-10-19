@@ -47,14 +47,14 @@ const (
 // and return an http server
 func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string, mailInfo *MailInfo) (*http.Server, error) {
 
-	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir)
+	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir, mailInfo)
 	if err != nil {
 		return nil, err
 	}
-	return newHttpServerWithStorage(storage, mailInfo)
+	return newHttpServerWithStorage(storage)
 }
 
-func newHttpServerWithStorage(storage *storage, mailInfo *MailInfo) (*http.Server, error) {
+func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 
 	staticContent, err := compressStaticResources(storage.mongoVersion)
 	if err != nil {
@@ -73,7 +73,7 @@ func newHttpServerWithStorage(storage *storage, mailInfo *MailInfo) (*http.Serve
 
 	return &http.Server{
 		Addr:         ":8080",
-		Handler:      latencyAndPanicObserver(mux, mailInfo),
+		Handler:      latencyAndPanicObserver(mux, storage.mailInfo),
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 		IdleTimeout:  idleTimeout,

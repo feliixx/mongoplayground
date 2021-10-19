@@ -64,14 +64,14 @@ func TestMain(m *testing.M) {
 	storageDir, _ := ioutil.TempDir(os.TempDir(), "storage")
 	backupsDir, _ := ioutil.TempDir(os.TempDir(), "backups")
 
-	ts, err := newStorage("mongodb://localhost:27017", true, storageDir, backupsDir)
+	ts, err := newStorage("mongodb://localhost:27017", true, storageDir, backupsDir, nil)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
 	testStorage = ts
 
-	s, err := newHttpServerWithStorage(testStorage, nil)
+	s, err := newHttpServerWithStorage(testStorage)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
