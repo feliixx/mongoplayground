@@ -154,8 +154,6 @@ func compressStaticResources(mongodbVersion []byte) (*staticContent, error) {
 
 	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", gzipEncoding)
 	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", brotliEncoding)
-	staticContent.addResourceFromFile("mode-mongo-min.js", "application/javascript; charset=utf-8", gzipEncoding)
-	staticContent.addResourceFromFile("mode-mongo-min.js", "application/javascript; charset=utf-8", brotliEncoding)
 
 	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", gzipEncoding)
 	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", brotliEncoding)
