@@ -22,9 +22,6 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strconv"
-
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -101,18 +98,4 @@ func (s *storage) healthCheck() []byte {
 
 	b, _ := json.Marshal(response)
 	return b
-}
-
-func getMongodVersion(client *mongo.Client) []byte {
-
-	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
-
-	var buildInfo struct {
-		Version []byte
-	}
-	err := result.Decode(&buildInfo)
-	if err != nil {
-		return []byte("unknown")
-	}
-	return buildInfo.Version
 }

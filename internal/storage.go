@@ -55,7 +55,7 @@ type storage struct {
 
 func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*storage, error) {
 
-	session, mongodbVersion, err := createMongodbSession(mongoUri)
+	session, err := createMongodbSession(mongoUri)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*
 
 	s := &storage{
 		mongoSession: session,
-		mongoVersion: mongodbVersion,
+		mongoVersion: getMongodVersion(session),
 		kvStore:      kvStore,
 		activeDB:     map[string]dbMetaInfo{},
 		backupDir:    backupDir,
@@ -169,6 +169,11 @@ func (s *storage) backup() {
 
 	s.backupServiceStatus.Status = statusUp
 	s.backupServiceStatus.Cause = ""
+
+	// as backup() run once a day, also update the mongodb
+	// server version ( in case the cluster has automatically
+	// been upgraded )
+	s.mongoVersion = getMongodVersion(s.mongoSession)
 }
 
 type dbMetaInfo struct {
@@ -189,15 +194,29 @@ func (d *dbMetaInfo) hasCollection(collectionName string) bool {
 	return false
 }
 
-func createMongodbSession(mongoUri string) (session *mongo.Client, version []byte, err error) {
+func createMongodbSession(mongoUri string) (*mongo.Client, error) {
 
-	session, err = mongo.NewClient(options.Client().ApplyURI(mongoUri))
+	session, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
 	if err != nil {
-		return nil, nil, fmt.Errorf("fail to create mongodb client: %v", err)
+		return nil, fmt.Errorf("fail to create mongodb client: %v", err)
 	}
 	err = session.Connect(context.Background())
 	if err != nil {
-		return nil, nil, fmt.Errorf("fail to connect to mongodb: %v", err)
+		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
 	}
-	return session, getMongodVersion(session), nil
+	return session, nil
+}
+
+func getMongodVersion(client *mongo.Client) []byte {
+
+	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
+
+	var buildInfo struct {
+		Version []byte
+	}
+	err := result.Decode(&buildInfo)
+	if err != nil {
+		return []byte("unknown")
+	}
+	return buildInfo.Version
 }
