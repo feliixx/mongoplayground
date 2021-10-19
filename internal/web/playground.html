@@ -5,12 +5,9 @@
     <title>Mongo playground</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
-    <link rel="icon" type="image/png" href="/static/favicon.png"/>
+    <link rel="icon" type="image/png" href="/static/favicon.png" />
     <link href="/static/playground-min-14.css" rel="stylesheet" type="text/css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ace.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.12/ext-language_tools.js" type="text/javascript"></script>
-    <script src="/static/playground-min-14.js" type="text/javascript"></script>
-    <script src="/static/mode-mongo-min.js" type="text/javascript"></script>
+    <script src="/static/playground-min-15.js" type="text/javascript"></script>
     <script type="text/javascript">
 
         var configEditor,
@@ -32,8 +29,6 @@
             comboMode = new CustomSelect({ elem: 'mode' })
             comboTemplate = new CustomSelect({ elem: 'template' })
             parser = new Parser()
-
-            ace.config.setModuleUrl("ace/mode/mongo", "/static/mode-mongo-min.js")
 
             var commonOpts = {
                 "mode": "ace/mode/mongo",
