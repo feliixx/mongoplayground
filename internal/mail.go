@@ -42,9 +42,28 @@ func NewMailInfo(smtpHost string, smtpPort int, from, pwd, sendTo string) *MailI
 	}
 }
 
+func (m *MailInfo) sendErrorByEmail(errorMsg string) {
+
+	message := []byte("Subject: [Mongoplayground] Error\r\n" +
+		"\r\n" +
+		errorMsg +
+		"\r\n")
+
+	err := smtp.SendMail(
+		fmt.Sprintf("%v:%d", m.smtpHost, m.smtpPort),
+		smtp.PlainAuth("", m.from, m.pwd, m.smtpHost),
+		m.from,
+		m.sendTo,
+		message,
+	)
+	if err != nil {
+		log.Printf("fail to send mail: %v\n, message was: %s", err, message)
+	}
+}
+
 func (m *MailInfo) sendRequestAndStackTraceByEmail(r *http.Request, stackTrace string) {
 
-	message := []byte("Subject: [Mongoplayground] New server error\r\n" +
+	message := []byte("Subject: [Mongoplayground] Panic\r\n" +
 		"\r\n" +
 		stackTrace +
 		"\r\n" +
@@ -73,7 +92,7 @@ func prettyPrintRequest(r *http.Request) string {
 			result += fmt.Sprintf("[%s]: %s\n", name, value)
 		}
 	}
-	
+
 	result += "\nbody\n"
 
 	for name, values := range r.PostForm {

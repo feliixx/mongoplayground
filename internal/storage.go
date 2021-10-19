@@ -51,9 +51,11 @@ type storage struct {
 	// the last cleanupInterval. Its access is garded by activeDbLock
 	activeDbLock sync.RWMutex
 	activeDB     map[string]dbMetaInfo
+
+	mailInfo *MailInfo
 }
 
-func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*storage, error) {
+func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, mailInfo *MailInfo) (*storage, error) {
 
 	session, err := createMongodbSession(mongoUri)
 	if err != nil {
@@ -75,6 +77,7 @@ func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string) (*
 			Name:   "backup",
 			Status: statusUp,
 		},
+		mailInfo: mailInfo,
 	}
 
 	if dropFirst {
@@ -156,14 +159,12 @@ func (s *storage) backup() {
 
 	err := localBackup(s.kvStore, fileName)
 	if err != nil {
-		s.backupServiceStatus.Status = statusDegrade
-		s.backupServiceStatus.Cause = fmt.Sprintf("error in local backup: %v", err)
+		s.handleBackupError("error in local backup", err)
 		return
 	}
 	err = saveBackupToGoogleDrive(fileName)
 	if err != nil {
-		s.backupServiceStatus.Status = statusDegrade
-		s.backupServiceStatus.Cause = fmt.Sprintf("error while saving backup: %v", err)
+		s.handleBackupError("error while saving backup", err)
 		return
 	}
 
@@ -174,6 +175,19 @@ func (s *storage) backup() {
 	// server version ( in case the cluster has automatically
 	// been upgraded )
 	s.mongoVersion = getMongodVersion(s.mongoSession)
+}
+
+func (s *storage) handleBackupError(message string, err error) {
+
+	errorMsg := fmt.Sprintf("%s: %v", message, err)
+
+	log.Print(errorMsg)
+
+	s.backupServiceStatus.Status = statusDegrade
+	s.backupServiceStatus.Cause = errorMsg
+	if s.mailInfo != nil {
+		s.mailInfo.sendErrorByEmail(errorMsg)
+	}
 }
 
 type dbMetaInfo struct {
