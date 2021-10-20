@@ -95,15 +95,13 @@ func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Hand
 		handler.ServeHTTP(w, r)
 
 		label := r.URL.Path
-		if strings.HasPrefix(label, viewEndpoint) {
+		if label == homeEndpoint || strings.HasPrefix(label, staticEndpoint) {
+			label = staticEndpoint
+		} else if strings.HasPrefix(label, viewEndpoint) {
 			label = viewEndpoint
 		}
-		if strings.HasPrefix(label, staticEndpoint) {
-			label = staticEndpoint
-		}
 
-		if label != homeEndpoint &&
-			label != viewEndpoint &&
+		if label != viewEndpoint &&
 			label != runEndpoint &&
 			label != saveEndpoint &&
 			label != staticEndpoint &&
