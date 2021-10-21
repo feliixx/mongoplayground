@@ -180,7 +180,6 @@ func (s *storage) backup() {
 func (s *storage) handleBackupError(message string, err error) {
 
 	errorMsg := fmt.Sprintf("%s: %v", message, err)
-
 	log.Print(errorMsg)
 
 	s.backupServiceStatus.Status = statusDegrade
