@@ -43,34 +43,21 @@ func NewMailInfo(smtpHost string, smtpPort int, from, pwd, sendTo string) *MailI
 }
 
 func (m *MailInfo) sendErrorByEmail(errorMsg string) {
-
-	message := []byte("Subject: [Mongoplayground] Error\r\n" +
-		"\r\n" +
-		errorMsg +
-		"\r\n")
-
-	err := smtp.SendMail(
-		fmt.Sprintf("%v:%d", m.smtpHost, m.smtpPort),
-		smtp.PlainAuth("", m.from, m.pwd, m.smtpHost),
-		m.from,
-		m.sendTo,
-		message,
-	)
-	if err != nil {
-		log.Printf("fail to send mail: %v\n, message was: %s", err, message)
-	}
+	m.sendEmail(createMessage("Error", errorMsg))
 }
 
 func (m *MailInfo) sendRequestAndStackTraceByEmail(r *http.Request, stackTrace string) {
+	m.sendEmail(createMessage("Panic", prettyPrintRequest(r)+"\r\n\r\n"+stackTrace))
+}
 
-	message := []byte("Subject: [Mongoplayground] Panic\r\n" +
+func createMessage(subject, content string) []byte {
+	return []byte("Subject: [Mongoplayground] " + subject + "\r\n" +
 		"\r\n" +
-		stackTrace +
-		"\r\n" +
-		"\r\n" +
-		prettyPrintRequest(r) +
+		content +
 		"\r\n")
+}
 
+func (m *MailInfo) sendEmail(message []byte) {
 	err := smtp.SendMail(
 		fmt.Sprintf("%v:%d", m.smtpHost, m.smtpPort),
 		smtp.PlainAuth("", m.from, m.pwd, m.smtpHost),
