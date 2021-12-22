@@ -93,7 +93,11 @@ func (s *storage) healthCheck() []byte {
 	}
 
 	if moduleInfo, ok := debug.ReadBuildInfo(); ok {
-		response.Version = moduleInfo.Main.Version
+		for _, s := range moduleInfo.Settings {
+			if s.Key == "vcs.revision" {
+				response.Version = "production@" + s.Value
+			}
+		}
 	}
 
 	b, _ := json.Marshal(response)
