@@ -392,7 +392,7 @@ func parseQuery(query []byte) (collectionName, method string, stages []interface
 	queryBytes := p[2]
 	start, end := bytes.IndexByte(queryBytes, '('), bytes.LastIndexByte(queryBytes, ')')
 
-	if start == -1 || end == -1 {
+	if start == -1 || end == -1 || start > end {
 		return "", "", nil, "", errors.New(errInvalidQuery)
 	}
 
