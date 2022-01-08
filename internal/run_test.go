@@ -19,6 +19,7 @@ package internal
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -796,6 +797,16 @@ func TestRunCreateDB(t *testing.T) {
 			result:    `[{"_id":1}]`,
 			createdDB: 1,
 		},
+		{
+			name: `fuzz entry 1`,
+			params: url.Values{
+				"mode":   {"bson"},
+				"config": {`[]`},
+				"query":  {`..)(`},
+			},
+			result:    "error in query:\n  query must match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()",
+			createdDB: 0,
+		},
 	}
 
 	t.Run("parallel run", func(t *testing.T) {
@@ -893,6 +904,22 @@ func TestRunFindAfterUpdate(t *testing.T) {
 	}
 
 	testStorageContent(t, 2, 0)
+}
+
+func FuzzRun(f *testing.F) {
+
+	f.Add(bsonLabel, templateConfig, templateQuery)
+
+	f.Fuzz(func(t *testing.T, mode, config, query string) {
+
+		params := url.Values{"mode": {mode}, "config": {config}, "query": {query}}
+		req, err := http.NewRequest(http.MethodPost, runEndpoint, strings.NewReader(params.Encode()))
+		if err != nil {
+			t.Errorf("fail to create request with params %+v", params)
+		}
+		resp := httptest.NewRecorder()
+		testStorage.runHandler(resp, req)
+	})
 }
 
 func TestConsistentError(t *testing.T) {
