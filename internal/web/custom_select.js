@@ -3,6 +3,7 @@
  *
  * @class
  * @param {(string)} options.elem - HTML id of the select.
+ * @param {(function)} options.onChange - custom code to execute when an option is selected
  */
 var CustomSelect = function (options) {
 
@@ -80,6 +81,10 @@ var CustomSelect = function (options) {
             }
             t.classList.add(selectedClass)
             close()
+
+            if (typeof options.onChange === 'function') {
+                options.onChange()
+            }
         }
     }
 
@@ -93,6 +98,10 @@ var CustomSelect = function (options) {
 
     function close() {
         ul.classList.remove(openClass)
+    }
+
+    function getSelectedIndex() {
+        return elem.options.selectedIndex
     }
 
     function getValue() {
@@ -114,6 +123,7 @@ var CustomSelect = function (options) {
         toggle: toggle,
         close: close,
         open: open,
+        getSelectedIndex: getSelectedIndex,
         getValue: getValue,
         setValue: setValue
     }

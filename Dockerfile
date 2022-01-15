@@ -2,7 +2,7 @@ FROM golang:latest as esbuild
 
 WORKDIR /tools
 
-RUN go install github.com/evanw/esbuild/cmd/esbuild@v0.13.8
+RUN go install github.com/evanw/esbuild/cmd/esbuild@v0.14.11
 RUN mv ${GOPATH}/bin/esbuild . 
 
 FROM golang:latest as builder
@@ -17,15 +17,8 @@ COPY go.sum .
 RUN go mod download
 
 COPY internal/web ./internal/web
-
-RUN touch bundle.js
-RUN cat internal/web/ace.js > bundle.js
-RUN cat internal/web/ext-language_tools.js >> bundle.js
-RUN cat internal/web/mode-mongo.js >> bundle.js
-RUN cat internal/web/playground.js >> bundle.js
-
-RUN esbuild --minify internal/web/playground.css > internal/web/static/playground-min.css
-RUN esbuild --minify bundle.js > internal/web/static/playground-min.js
+COPY bundle.sh . 
+RUN ./bundle.sh
 
 COPY main.go . 
 COPY internal/*.go ./internal/
