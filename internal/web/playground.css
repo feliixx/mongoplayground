@@ -14,7 +14,8 @@ body {
     background-color: #353535
 }
 
-.toolbar>.title {
+.toolbar>.title,
+.toolbar>a>.title {
     width: 220px;
     font-family: var(--main-font-family);
     float: left;
@@ -30,7 +31,7 @@ body {
 }
 
 .toolbar>.controls>:last-child {
-    float: right!important
+    float: right !important
 }
 
 .toolbar>.controls>label {
@@ -66,7 +67,7 @@ body {
 }
 
 .toolbar>.controls>input[type=button]:hover, input[type=button]:disabled {
-    background: #1f3663!important
+    background: #1f3663 !important
 }
 
 .content {
@@ -90,7 +91,7 @@ body {
     flex: 2 1 67%;
     margin-top: 1%;
     margin-left: 50px;
-    height: 98%!important;
+    height: 98% !important;
     display: none;
     overflow-x: hidden;
     overflow-y: scroll
@@ -136,54 +137,57 @@ body {
 }
 
 .ace_editor {
-    background-color: #f6f8fa!important;
-    height: 93%!important;
+    background-color: #f6f8fa !important;
+    height: 93% !important;
     width: 100%
 }
 
 .ace_string {
-    color: #032f62!important
+    color: #032f62 !important
 }
 
 .ace_numeric {
-    color: #005cc5!important
+    color: #005cc5 !important
 }
 
 .ace_function {
-    color: #6f42c1!important
+    color: #6f42c1 !important
 }
 
 .ace_error {
-    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==)!important
+    background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAACVBMVEUAAAD/AAD///9nGWQeAAAAAXRSTlMAQObYZgAAAAFiS0dEAmYLfGQAAAAHdElNRQfiAxAENwweWXmlAAAAEUlEQVQI12NgwAlEQ/AROAAAYgMCd2Bgqi4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMTgtMDMtMTZUMDQ6NTU6MTItMDQ6MDDhkjWsAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE4LTAzLTE2VDA0OjU1OjEyLTA0OjAwkM+NEAAAAABJRU5ErkJggg==) !important
 }
 
 .ace_comment {
-    color: #9299a2!important
+    color: #9299a2 !important
 }
 
 .text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line {
-    color: darkred!important
+    color: darkred !important
 }
 
 .ace_variable {
-    color: black!important
+    color: black !important
 }
 
 .ace_autocomplete {
-    height: 200px!important
+    height: 200px !important
 }
 
 @media only screen and (max-width:999px) {
     body {
         overflow: visible
     }
+
     .toolbar {
         height: 40px
     }
+
     .toolbar>.controls {
         padding: 3px 3px;
         margin: 0
     }
+
     .toolbar>.controls>:nth-child(2),
     .toolbar>.controls>:nth-child(5),
     .toolbar>.controls>:nth-child(6),
@@ -195,33 +199,40 @@ body {
     .toolbar>.title {
         display: none
     }
+
     .content {
         display: inline
     }
+
     .content>div {
-        width: 100%!important;
+        width: 100% !important;
         height: 100%;
         padding: 0
     }
+
     .content>div:last-child {
-        width: 100%!important
+        width: 100% !important
     }
+
     .content>div>.resizable_editor>.handler, .handler::before {
         display: none
     }
+
     .ace_editor {
-        height: 90%!important
+        height: 90% !important
     }
+
     .footer {
         display: none
     }
 }
 
 @media only screen and (min-width:1000px) and (max-width:1450px) {
+
     .toolbar>.controls>:nth-child(2),
     .toolbar>.controls>:nth-child(7),
     .toolbar>.controls>:nth-child(8),
-    .toolbar>.controls>:nth-child(9){
+    .toolbar>.controls>:nth-child(9) {
         display: none
     }
 }
@@ -421,31 +432,31 @@ body {
 }
 
 .markdown-body .pl-0 {
-    padding-left: 0!important
+    padding-left: 0 !important
 }
 
 .markdown-body .pl-1 {
-    padding-left: 4px!important
+    padding-left: 4px !important
 }
 
 .markdown-body .pl-2 {
-    padding-left: 8px!important
+    padding-left: 8px !important
 }
 
 .markdown-body .pl-3 {
-    padding-left: 16px!important
+    padding-left: 16px !important
 }
 
 .markdown-body .pl-4 {
-    padding-left: 24px!important
+    padding-left: 24px !important
 }
 
 .markdown-body .pl-5 {
-    padding-left: 32px!important
+    padding-left: 32px !important
 }
 
 .markdown-body .pl-6 {
-    padding-left: 40px!important
+    padding-left: 40px !important
 }
 
 .markdown-body::before {
@@ -460,11 +471,11 @@ body {
 }
 
 .markdown-body>:first-child {
-    margin-top: 0!important
+    margin-top: 0 !important
 }
 
 .markdown-body>:last-child {
-    margin-bottom: 0!important
+    margin-bottom: 0 !important
 }
 
 .markdown-body a:not([href]) {
