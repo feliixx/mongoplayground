@@ -413,7 +413,7 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 		},
 	}
 
-	buffer := loadPlaygroundJs(t)
+	buffer := loadJsParser(t)
 
 	testFormat := `
 	{
@@ -573,7 +573,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 		},
 	}
 
-	buffer := loadPlaygroundJs(t)
+	buffer := loadJsParser(t)
 
 	testFormat := `
 	{
@@ -654,7 +654,7 @@ func TestValidConfig(t *testing.T) {
 		},
 	}
 
-	buffer := loadPlaygroundJs(t)
+	buffer := loadJsParser(t)
 
 	testFormat := `
 	{
@@ -869,7 +869,7 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		},
 	}
 
-	buffer := loadPlaygroundJs(t)
+	buffer := loadJsParser(t)
 
 	testFormat := `
 	{
@@ -1003,7 +1003,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 		},
 	}
 
-	buffer := loadPlaygroundJs(t)
+	buffer := loadJsParser(t)
 
 	testFormat := `
 	{
@@ -1052,12 +1052,12 @@ func TestExtractAvailableCollections(t *testing.T) {
 	runJsTest(t, buffer, "testExtractCollections.js")
 }
 
-func loadPlaygroundJs(t *testing.T) *bytes.Buffer {
-	playgroundjs, err := os.ReadFile("playground.js")
+func loadJsParser(t *testing.T) *bytes.Buffer {
+	parserjs, err := os.ReadFile("parser.js")
 	if err != nil {
 		t.Error(err)
 	}
-	buffer := bytes.NewBuffer(playgroundjs)
+	buffer := bytes.NewBuffer(parserjs)
 	buffer.WriteString("\n")
 	return buffer
 }
