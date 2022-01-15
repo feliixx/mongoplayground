@@ -80,18 +80,25 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 	}, nil
 }
 
-// Wrapper for each http request.
-// Monitors latency of each endpoint, and explicitely
-// logs panic stack trace so they can be send to loki.
-// If smtp info are configured, also send the stack trace
-// by email
+// Middleware handler, with several roles: 
+//
+//   * set security headers for all responses 
+//   * monitor latency of each endpoint
+//   * send stack trace to loki if a panic occurs
+//   * send stack trace by email if a panic occurs 
 func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
+		start := time.Now()
+
 		defer handleAnyPanic(w, r, mailInfo)
 
-		start := time.Now()
+		// unsafe-inline is needed for style-src because of ace.js
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
+		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+
 		handler.ServeHTTP(w, r)
 
 		label := r.URL.Path
