@@ -136,7 +136,7 @@ func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, f
 		case mgodatagenMode:
 			dbInfo, err = createDBFromMgodatagen(db, config)
 		case bsonMode:
-			dbInfo, err = createDBFromJSON(db, config)
+			dbInfo, err = createDBFromBSON(db, config)
 		}
 		if err != nil {
 			return dbInfo, err
@@ -225,7 +225,6 @@ func createDBFromMgodatagen(db *mongo.Database, config []byte) (dbInfo dbMetaInf
 }
 
 func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error {
-	// see dtg.runMgoCompatCommand @ github.com/feliixx/mgodatagen/datagen
 	mgoRegistry := mgocompat.NewRespectNilValuesRegistryBuilder().Build()
 	for collName, idx := range indexes {
 		cmd := bson.D{
@@ -244,7 +243,7 @@ func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error
 	return nil
 }
 
-func createDBFromJSON(db *mongo.Database, config []byte) (dbInfo dbMetaInfo, err error) {
+func createDBFromBSON(db *mongo.Database, config []byte) (dbInfo dbMetaInfo, err error) {
 
 	collections := map[string][]bson.M{}
 
@@ -307,7 +306,7 @@ func fillDatabase(db *mongo.Database, collections map[string][]bson.M) (dbInfo d
 		// guaranteed to be the same from one run to another, so the
 		// output of a specific config is guaranteed to always be the
 		// same, at least in bson mode
-		var toInsert = make([]interface{}, len(docs))
+		var toInsert = make([]any, len(docs))
 		for i, doc := range docs {
 
 			// in production logs, it appears that some docs can be
@@ -377,7 +376,7 @@ func seededObjectID(n int32) primitive.ObjectID {
 //
 // input is filtered from front-end side, but this should
 // not panic on pathological/malformatted input
-func parseQuery(query []byte) (collectionName, method string, stages []interface{}, explainMode string, err error) {
+func parseQuery(query []byte) (collectionName, method string, stages []any, explainMode string, err error) {
 
 	query, explainMode = stripExplain(query)
 
@@ -443,10 +442,10 @@ func stripExplain(query []byte) (strippedQuery []byte, explainMode string) {
 //
 //   cf https://docs.mongodb.com/manual/tutorial/update-documents-with-aggregation-pipeline/
 //
-func unmarshalStages(queryBytes []byte) (stages []interface{}, err error) {
+func unmarshalStages(queryBytes []byte) (stages []any, err error) {
 
 	if len(queryBytes) == 0 {
-		return []interface{}{bson.M{}, bson.M{}}, nil
+		return []any{bson.M{}, bson.M{}}, nil
 	}
 
 	// because projections are allowed, transform
@@ -465,7 +464,7 @@ func unmarshalStages(queryBytes []byte) (stages []interface{}, err error) {
 	return stages, err
 }
 
-func runQuery(context context.Context, collection *mongo.Collection, method string, stages []interface{}, explainMode string) ([]byte, error) {
+func runQuery(context context.Context, collection *mongo.Collection, method string, stages []any, explainMode string) ([]byte, error) {
 
 	var cmd bson.D
 
@@ -474,7 +473,7 @@ func runQuery(context context.Context, collection *mongo.Collection, method stri
 
 		cmd = bson.D{
 			{Key: aggregateMethod, Value: collection.Name()},
-			{Key: "pipeline", Value: sanitize(stages)},
+			{Key: "pipeline", Value: sanitizeAggregationStages(stages)},
 			{Key: "cursor", Value: bson.M{"batchSize": 1000}},
 		}
 
@@ -557,13 +556,13 @@ func runQuery(context context.Context, collection *mongo.Collection, method stri
 	return mongoextjson.Marshal(docs)
 }
 
-func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
+func parseUpdateOpts(opts any) (bool, *options.UpdateOptions) {
 
-	optsDoc, _ := opts.(map[string]interface{})
+	optsDoc, _ := opts.(map[string]any)
 
 	multi, _ := optsDoc["multi"].(bool)
 	upsert, _ := optsDoc["upsert"].(bool)
-	arrayFilters, _ := optsDoc["arrayFilters"].([]interface{})
+	arrayFilters, _ := optsDoc["arrayFilters"].([]any)
 
 	return multi, options.Update().
 		SetUpsert(upsert).
@@ -572,12 +571,17 @@ func parseUpdateOpts(opts interface{}) (bool, *options.UpdateOptions) {
 		})
 }
 
-// remove any stages that might write to another db/collection,
+// remove any aggregation stages that might write to another db/collection,
 // to avoid leaking databases, or or other playground contamination
-func sanitize(stages []interface{}) []interface{} {
+func sanitizeAggregationStages(stages []any) []any {
 
 	for i := 0; i < len(stages); i++ {
-		stage, _ := stages[i].(map[string]interface{})
+		
+		stage, ok := stages[i].(map[string]any)
+		if !ok || len(stage) == 0 {
+			continue
+		}
+
 		if _, ok := stage["$out"]; ok {
 			stages = append(stages[:i], stages[i+1:]...)
 			i--
