@@ -1052,6 +1052,88 @@ func TestExtractAvailableCollections(t *testing.T) {
 	runJsTest(t, buffer, "testExtractCollections.js")
 }
 
+func TestGetAggregationStages(t *testing.T) {
+
+	t.Parallel()
+
+	formatTests := []struct {
+		name              string
+		query             string
+		aggregationStages string
+	}{
+		{
+			name:              "empty pipeline",
+			query:             `db.collection.aggregate([])`,
+			aggregationStages: "",
+		},
+		{
+			name:              "single stage pipeline",
+			query:             `db.collection.aggregate([{"$match":{"k":1}}])`,
+			aggregationStages: "$match",
+		},
+		{
+			name:              "unquoted stages name",
+			query:             `db.collection.aggregate([{$match:{"k":1}}, {$project:{_id:0}}])`,
+			aggregationStages: "$match,$project",
+		},
+		{
+			name:              "unfinished pipeline",
+			query:             `db.collection.aggregate([{$match`,
+			aggregationStages: "$match",
+		},
+		{
+			name: "complex query",
+			query: `db.orders.aggregate( [
+				{ $match: { ord_date: { $gte: new Date("2020-03-01") } } },
+				{ $unwind: "$items" },
+				{ $group: { _id: "$items.sku", qty: { $sum: "$items.qty" }, orders_ids: { $addToSet: "$_id" } }  },
+				{ $project: { value: { count: { $size: "$orders_ids" }, qty: "$qty", avg: { $divide: [ "$qty", { $size: "$orders_ids" } ] } } } },
+				{ $merge: { into: "agg_alternative_3", on: "_id", whenMatched: "replace",  whenNotMatched: "insert" } }
+			 ])`,
+			aggregationStages: "$match,$unwind,$group,$project,$merge",
+		},
+	}
+
+	buffer := loadJsParser(t)
+
+	testFormat := `
+	{
+		"name": %s,
+		"input": %s, 
+		"expected": %s, 
+	}
+	`
+
+	buffer.Write([]byte("var tests = ["))
+	for _, tt := range formatTests {
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.query), strconv.Quote(tt.aggregationStages))
+		buffer.WriteByte(',')
+	}
+	buffer.Write([]byte(`
+	]
+	
+	`))
+
+	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
+	for (let i in tests) {
+		let tt = tests[i]
+
+		parser.parse(tt.input, "query", "bson")
+
+		let want = tt.expected
+		let got = parser.getAggregationStages().join(",") 
+		if (want != got) {
+			print("got wrong aggregation names for test '" + tt.name + "', expected: " + want +  " but got: " + got)
+		}
+	}	
+	`))
+
+	runJsTest(t, buffer, "testGetAggregationStages.js")
+}
+
 func loadJsParser(t *testing.T) *bytes.Buffer {
 	parserjs, err := os.ReadFile("parser.js")
 	if err != nil {
