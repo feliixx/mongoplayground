@@ -1103,12 +1103,12 @@ var aggregationSnippet = [
     },
     {
         caption: "$getField",
-        value: '$getField: { "fields": "string", "input": "object" }',
+        value: '$getField: { "field": "string", "input": "object" }',
         meta: "aggregation operator"
     },
     {
         caption: "$setField",
-        value: '$setField: { "fields": "string", "input": "object", "value": "expression" }',
+        value: '$setField: { "field": "string", "input": "object", "value": "expression" }',
         meta: "aggregation operator"
     },
     {
