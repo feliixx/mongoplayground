@@ -12,8 +12,10 @@ var Parser = function () {
         inParenthesis,
         inNewDate,
 
-        input, // the string to parse
-        output // formatted result
+        input,  // the string to parse
+        output, // formatted result
+
+        aggregationStages = [] // list of stages name for aggregation queries
 
     function indent(src, type, mode) {
         doIndent = true
@@ -46,6 +48,8 @@ var Parser = function () {
         inParenthesis = false
         inNewDate = false
         needNewLine = false
+
+        aggregationStages = []
 
         try {
             switch (type) {
@@ -789,7 +793,7 @@ var Parser = function () {
         white()
         switch (ch) {
             case "[":
-                array()
+                pipeline()
                 break
             case "{":
                 nObject(-1)
@@ -813,6 +817,85 @@ var Parser = function () {
                 white()
             }
         }
+    }
+
+    // a pipeline is an array of object 
+    function pipeline() {
+
+        if (ch !== "[") {
+            error("Expected an array")
+        }
+        next()
+        white()
+        if (ch === "]") {
+            return next()
+        }
+        while (ch) {
+
+            stage()
+
+            white()
+            if (ch === "]") {
+                return next()
+            }
+            if (ch !== ",") {
+                error("Invalid array: missing closing bracket")
+            }
+            next()
+            white()
+            if (ch === "]") {
+                // trailing comma are allowed
+                return next()
+            }
+        }
+        error("Invalid array: missing closing bracket")
+    }
+
+    function stage() {
+        if (ch !== "{") {
+            error("Expected an object")
+        }
+        next()
+        white()
+
+        var keys = []
+        var stageNamePushed = false
+
+        if (ch === "}") {
+            return next()
+        }
+        while (ch) {
+
+            var key = anyWord()
+
+            if (!stageNamePushed) {
+                aggregationStages.push(key)
+                stageNamePushed = true
+            }
+
+            white()
+            next(":")
+            if (keys.includes(key)) {
+                error("Duplicate key '" + key + "'")
+            }
+            keys.push(key)
+            value()
+
+            white()
+            if (ch === "}") {
+                return next()
+            }
+            if (ch !== ",") {
+                error("Invalid object: missing closing bracket")
+            }
+            next()
+            white()
+            if (ch === "}") {
+                // trailing comma are allowed
+                return next()
+            }
+        }
+        error("Invalid object: missing closing bracket")
     }
 
     function update() {
@@ -873,11 +956,16 @@ var Parser = function () {
         }
     }
 
+    function getAggregationStages() {
+        return aggregationStages
+    }
+
     return {
         indent: indent,
         compact: compact,
         compactAndRemoveComment: compactAndRemoveComment,
-        parse: parse
+        parse: parse,
+        getAggregationStages: getAggregationStages
     }
 }
 
