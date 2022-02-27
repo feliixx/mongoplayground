@@ -602,7 +602,7 @@ func TestCompactAndRemoveComment(t *testing.T) {
 		let tt = tests[i]
 
 		let want = tt.expected
-		let got = parser.compactAndRemoveComment(tt.input, tt.type, "bson") 
+		let got = parser.compactAndRemoveComment(tt.input, tt.type, "bson", 0) 
 		if (want !== got) {
 			print("test " + tt.name + " compact and remove comment failed, expected: \n" + want +  "\nbut got: \n" + got)
 		}
@@ -610,6 +610,80 @@ func TestCompactAndRemoveComment(t *testing.T) {
 	`))
 
 	runJsTest(t, buffer, "testCompactAndRemoveComment.js")
+}
+
+func TestCompactAndRemoveCommentWithStagesUpTo(t *testing.T) {
+
+	t.Parallel()
+
+	removeCommentTests := []struct {
+		name           string
+		keepStagesUpTo int
+		input          string
+		expected       string
+	}{
+		{
+			name:           "keep 2 stages ",
+			keepStagesUpTo: 2,
+			input: `db.orders.aggregate( [
+				{ $match: { ord_date: { $gte: new Date("2020-03-01") } } },
+				{ $unwind: "$items" },
+				{ $group: { _id: "$items.sku", qty: { $sum: "$items.qty" } }  },
+				{ $project: { value: { count: { $size: "$orders_ids" } } } }
+			 ])`,
+			expected: `db.orders.aggregate([{$match:{ord_date:{$gte:new Date("2020-03-01")}}},{$unwind:"$items"}])`,
+		},
+		{
+			name:           "Limit higher than nb of stages",
+			keepStagesUpTo: 2,
+			input:          `db.c.aggregate( [{ $match: { "k": 1.908463674 } }])`,
+			expected:       `db.c.aggregate([{$match:{"k":1.908463674}}])`,
+		},
+		{
+			name:           "Limit to 0 should have no effect",
+			keepStagesUpTo: 0,
+			input:          `db.c.aggregate( [{ $match: { "k": 1.908463674 } }])`,
+			expected:       `db.c.aggregate([{$match:{"k":1.908463674}}])`,
+		},
+	}
+
+	buffer := loadJsParser(t)
+
+	testFormat := `
+	{
+		"name": %s,
+		"keepStagesUpTo": %d,
+		"input": %s, 
+		"expected": %s
+	}
+	`
+
+	buffer.Write([]byte("var tests = ["))
+	for _, tt := range removeCommentTests {
+		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), tt.keepStagesUpTo, strconv.Quote(tt.input), strconv.Quote(tt.expected))
+		buffer.WriteByte(',')
+	}
+	buffer.Write([]byte(`
+	]
+	
+	`))
+
+	buffer.Write([]byte(`
+
+    var parser = new Parser()
+
+	for (let i in tests) {
+		let tt = tests[i]
+
+		let want = tt.expected
+		let got = parser.compactAndRemoveComment(tt.input, "query", "bson", tt.keepStagesUpTo) 
+		if (want !== got) {
+			print("test '" + tt.name + "' compact and remove comment with stages up to failed, expected: \n" + want +  "\nbut got: \n" + got)
+		}
+	}	
+	`))
+
+	runJsTest(t, buffer, "testCompactAndRemoveCommentWithStagesUpTo.js")
 }
 
 func TestValidConfig(t *testing.T) {
@@ -1091,6 +1165,11 @@ func TestGetAggregationStages(t *testing.T) {
 				{ $merge: { into: "agg_alternative_3", on: "_id", whenMatched: "replace",  whenNotMatched: "insert" } }
 			 ])`,
 			aggregationStages: "$match,$unwind,$group,$project,$merge",
+		},
+		{
+			name:              "find query",
+			query:             `db.collection.find({"k": 1})`,
+			aggregationStages: "",
 		},
 	}
 

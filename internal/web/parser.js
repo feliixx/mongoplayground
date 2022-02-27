@@ -15,6 +15,7 @@ var Parser = function () {
         input,  // the string to parse
         output, // formatted result
 
+        aggregationStagesLimit = 0,
         aggregationStages = [] // list of stages name for aggregation queries
 
     function indent(src, type, mode) {
@@ -31,9 +32,10 @@ var Parser = function () {
         return output
     }
 
-    function compactAndRemoveComment(src, type, mode) {
+    function compactAndRemoveComment(src, type, mode, nbStagesToKeep) {
         doIndent = false
         keepComment = false
+        aggregationStagesLimit = nbStagesToKeep
         parse(src, type, mode)
         return output
     }
@@ -819,7 +821,7 @@ var Parser = function () {
         }
     }
 
-    // a pipeline is an array of object 
+    // a pipeline is an array of stages, which are objects 
     function pipeline() {
 
         if (ch !== "[") {
@@ -830,12 +832,25 @@ var Parser = function () {
         if (ch === "]") {
             return next()
         }
+
+        var stagesNb = 0
+        var indexEndLastWantedStages = output.length
+
         while (ch) {
 
             stage()
+            stagesNb++
+
+            if (stagesNb === aggregationStagesLimit) {
+                indexEndLastWantedStages = output.length - 1
+            }
 
             white()
             if (ch === "]") {
+                if (aggregationStagesLimit !== 0 && stagesNb > aggregationStagesLimit) {
+                    output = output.slice(0, indexEndLastWantedStages)
+                    output += "]"
+                }
                 return next()
             }
             if (ch !== ",") {
@@ -844,6 +859,10 @@ var Parser = function () {
             next()
             white()
             if (ch === "]") {
+                if (aggregationStagesLimit !== 0 && stagesNb > aggregationStagesLimit) {
+                    output = output.slice(0, indexEndLastWantedStages)
+                    output += "]"
+                }
                 // trailing comma are allowed
                 return next()
             }
