@@ -21,17 +21,17 @@
             <input id="link" type="text">
             <label class="bold">Mode:</label>
             <select id="mode">
-                <option value=0 {{if eq .Mode 1 }} selected {{end}}>bson</option>
-                <option value=2 {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
+                <option {{if eq .Mode 1 }} selected {{end}}>bson</option>
+                <option {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
             </select>
             <label class="bold">Template:</label>
             <select id="template">
-                <option value=0>bson single collection</option>
-                <option value=1>bson multiple collections</option>
-                <option value=2>mgodatagen</option>
-                <option value=3>update</option>
-                <option value=4>indexe</option>
-                <option value=5>explain</option>
+                <option>bson single collection</option>
+                <option>bson multiple collections</option>
+                <option>mgodatagen</option>
+                <option>update</option>
+                <option>indexe</option>
+                <option>explain</option>
             </select>
             <label class="bold">Stages:</label>
             <select id="aggregation_stages"></select>

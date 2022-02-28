@@ -978,11 +978,7 @@ var Parser = function () {
     }
 
     function getAggregationStages() {
-        var mapOptions = {}
-        for (var i = 0; i < aggregationStages.length; i++) {
-            mapOptions[aggregationStages[i]] = i + 1
-        }
-        return mapOptions
+        return aggregationStages
     }
 
     return {
