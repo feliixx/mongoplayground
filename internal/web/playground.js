@@ -7,7 +7,7 @@ var configEditor,
     comboTemplate,
     comboStages,
 
-    parser,
+    parser = new Parser(),
 
     hasChangedSinceLastRun = true,
     hasChangedSinceLastSave = true,
@@ -16,18 +16,19 @@ var configEditor,
 
 window.onload = function () {
 
-    parser = new Parser()
-
     comboStages = new CustomSelect({
         selectId: "aggregation_stages",
+        width: "170px",
         onChange: function () { run() }
     })
     comboMode = new CustomSelect({
         selectId: "mode",
+        width: "130px",
         onChange: function () { checkEditorContent(configEditor, "config") }
     })
     comboTemplate = new CustomSelect({
         selectId: "template",
+        width: "210px",
         onChange: function () { setTemplate(comboTemplate.getSelectedIndex()) }
     })
 
@@ -143,8 +144,12 @@ function checkEditorContent(editor, type) {
         })
     }
     editor.getSession().setAnnotations(errors)
-    if (type === "query") {
+
+    if (type === "query" && parser.getQueryType() === "aggregate") {
+        document.getElementById("stages").style.display = "inline"
         comboStages.setOptions(parser.getAggregationStages())
+    } else {
+        document.getElementById("stages").style.display = "none"
     }
 
     if (!hasChangedSinceLastRun || !hasChangedSinceLastSave) {
