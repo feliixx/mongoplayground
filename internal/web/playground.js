@@ -5,6 +5,7 @@ var configEditor,
 
     comboMode,
     comboTemplate,
+    comboStages,
 
     parser,
 
@@ -17,12 +18,16 @@ window.onload = function () {
 
     parser = new Parser()
 
+    comboStages = new CustomSelect({
+        selectId: 'aggregation_stages',
+        onChange: function () { run() }
+    })
     comboMode = new CustomSelect({
-        elem: 'mode',
+        selectId: 'mode',
         onChange: function () { checkEditorContent(configEditor, 'config') }
     })
     comboTemplate = new CustomSelect({
-        elem: 'template',
+        selectId: 'template',
         onChange: function () { setTemplate(comboTemplate.getSelectedIndex()) }
     })
 
@@ -124,10 +129,6 @@ function addButtonClickListener() {
     document.getElementById("doc").addEventListener("click", function (e) { showDoc(true) })
 }
 
-function addSelectChangeListener() {
-
-}
-
 function checkEditorContent(editor, type) {
 
     var errors = []
@@ -142,6 +143,7 @@ function checkEditorContent(editor, type) {
         })
     }
     editor.getSession().setAnnotations(errors)
+    comboStages.setOptions(parser.getAggregationStages())
 
     if (!hasChangedSinceLastRun || !hasChangedSinceLastSave) {
         hasChangedSinceLastRun = true
@@ -249,8 +251,8 @@ function encodePlayground(keepComment) {
         result += "&config=" + encodeURIComponent(parser.compact(configEditor.getValue(), "config", comboMode.getValue()))
             + "&query=" + encodeURIComponent(parser.compact(queryEditor.getValue(), "query", comboMode.getValue()))
     } else {
-        result += "&config=" + encodeURIComponent(parser.compactAndRemoveComment(configEditor.getValue(), "config", comboMode.getValue()))
-            + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue()))
+        result += "&config=" + encodeURIComponent(parser.compactAndRemoveComment(configEditor.getValue(), "config", comboMode.getValue(), 0))
+            + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue(), comboStages.getSelectedIndex() + 1))
     }
     return result
 }

@@ -15,12 +15,13 @@ var Parser = function () {
         input,  // the string to parse
         output, // formatted result
 
-        aggregationStagesLimit = 0,
-        aggregationStages = [] // list of stages name for aggregation queries
+        aggregationStagesLimit = -1, // -1 means keep all stages 
+        aggregationStages = []       // list of stages name for aggregation queries
 
     function indent(src, type, mode) {
         doIndent = true
         keepComment = true
+        aggregationStagesLimit = -1
         parse(src, type, mode)
         return output
     }
@@ -28,6 +29,7 @@ var Parser = function () {
     function compact(src, type, mode) {
         doIndent = false
         keepComment = true
+        aggregationStagesLimit = -1
         parse(src, type, mode)
         return output
     }
@@ -847,7 +849,7 @@ var Parser = function () {
 
             white()
             if (ch === "]") {
-                if (aggregationStagesLimit !== 0 && stagesNb > aggregationStagesLimit) {
+                if (aggregationStagesLimit > 0 && stagesNb > aggregationStagesLimit) {
                     output = output.slice(0, indexEndLastWantedStages)
                     output += "]"
                 }
@@ -859,7 +861,7 @@ var Parser = function () {
             next()
             white()
             if (ch === "]") {
-                if (aggregationStagesLimit !== 0 && stagesNb > aggregationStagesLimit) {
+                if (aggregationStagesLimit > 0 && stagesNb > aggregationStagesLimit) {
                     output = output.slice(0, indexEndLastWantedStages)
                     output += "]"
                 }
@@ -976,7 +978,11 @@ var Parser = function () {
     }
 
     function getAggregationStages() {
-        return aggregationStages
+        var mapOptions = {}
+        for (var i = 0; i < aggregationStages.length; i++) {
+            mapOptions[aggregationStages[i]] = i + 1
+        }
+        return mapOptions
     }
 
     return {
