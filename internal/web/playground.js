@@ -19,15 +19,15 @@ window.onload = function () {
     parser = new Parser()
 
     comboStages = new CustomSelect({
-        selectId: 'aggregation_stages',
+        selectId: "aggregation_stages",
         onChange: function () { run() }
     })
     comboMode = new CustomSelect({
-        selectId: 'mode',
-        onChange: function () { checkEditorContent(configEditor, 'config') }
+        selectId: "mode",
+        onChange: function () { checkEditorContent(configEditor, "config") }
     })
     comboTemplate = new CustomSelect({
-        selectId: 'template',
+        selectId: "template",
         onChange: function () { setTemplate(comboTemplate.getSelectedIndex()) }
     })
 
@@ -62,8 +62,8 @@ window.onload = function () {
     configEditor.completers = [configWordCompleter]
     queryEditor.completers = [queryWordCompleter]
 
-    configEditor.getSession().on('change', checkEditorContent.bind(null, configEditor, "config"))
-    queryEditor.getSession().on('change', checkEditorContent.bind(null, queryEditor, "query"))
+    configEditor.getSession().on("change", checkEditorContent.bind(null, configEditor, "config"))
+    queryEditor.getSession().on("change", checkEditorContent.bind(null, queryEditor, "query"))
 
     configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), -1)
     queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), -1)
@@ -80,7 +80,7 @@ window.onload = function () {
 }
 
 function addKeyDownListener() {
-    document.addEventListener('keydown', function (event) {
+    document.addEventListener("keydown", function (event) {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault()
             run()
@@ -143,7 +143,9 @@ function checkEditorContent(editor, type) {
         })
     }
     editor.getSession().setAnnotations(errors)
-    comboStages.setOptions(parser.getAggregationStages())
+    if (type === "query") {
+        comboStages.setOptions(parser.getAggregationStages())
+    }
 
     if (!hasChangedSinceLastRun || !hasChangedSinceLastSave) {
         hasChangedSinceLastRun = true
