@@ -774,22 +774,17 @@ body {
     color: var(--dropdown-list-color);
 }
 
-#mode {
-    visibility: hidden;
-    width: 130px;
-}
-
 #custom-mode>.js-Dropdown-title,
 #custom-mode>.js-Dropdown-list {
-    width: 130px;
-}
-
-#template {
-    visibility: hidden;
     width: 130px;
 }
 
 #custom-template>.js-Dropdown-title,
 #custom-template>.js-Dropdown-list {
     width: 210px;
+}
+
+#custom-aggregation_stages>.js-Dropdown-title,
+#custom-aggregation_stages>.js-Dropdown-list {
+    width: 160px;
 }

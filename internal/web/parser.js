@@ -1,3 +1,9 @@
+/**
+ * a simple config / query parser and formatter 
+ * 
+ * @class
+ * 
+ */
 var Parser = function () {
 
     var at,     // The index of the current character
@@ -16,7 +22,9 @@ var Parser = function () {
         output, // formatted result
 
         aggregationStagesLimit = -1, // -1 means keep all stages 
-        aggregationStages = []       // list of stages name for aggregation queries
+        aggregationStages = [],      // list of stages name for aggregation queries
+
+        queryType // type of query, can be one of ["find", "aggregate", "update", "unknown"]
 
     function indent(src, type, mode) {
         doIndent = true
@@ -54,6 +62,7 @@ var Parser = function () {
         needNewLine = false
 
         aggregationStages = []
+        queryType = "unknown"
 
         try {
             switch (type) {
@@ -334,19 +343,6 @@ var Parser = function () {
         white()
         array()
         addCollectionSnippet(collName)
-    }
-
-    function query() {
-
-        white()
-        next("d")
-        next("b")
-        next(".")
-        anyWord()
-        method()
-        if (ch === ".") {
-            return method()
-        }
     }
 
     function number() {
@@ -750,6 +746,35 @@ var Parser = function () {
         }
     }
 
+    function query() {
+
+        white()
+        next("d")
+        next("b")
+        next(".")
+        anyWord()
+        method()
+        if (ch === ".") {
+            return method()
+        }
+    }
+
+    function method() {
+        next(".")
+        switch (ch) {
+            case "f":
+                return find()
+            case "a":
+                return aggregate()
+            case "u":
+                return update()
+            case "e":
+                return explain()
+            default:
+                error("Unsupported method: only find(), aggregate(), update() and explain() are supported")
+        }
+    }
+
     function explain() {
         next("e")
         next("x")
@@ -772,6 +797,9 @@ var Parser = function () {
     }
 
     function find() {
+
+        queryType = "find"
+
         next("f")
         next("i")
         next("n")
@@ -784,6 +812,9 @@ var Parser = function () {
     }
 
     function aggregate() {
+
+        queryType = "aggregate"
+
         next("a")
         next("g")
         next("g")
@@ -920,6 +951,9 @@ var Parser = function () {
     }
 
     function update() {
+
+        queryType = "update"
+
         next("u")
         next("p")
         next("d")
@@ -954,22 +988,6 @@ var Parser = function () {
         next(")")
     }
 
-    function method() {
-        next(".")
-        switch (ch) {
-            case "f":
-                return find()
-            case "a":
-                return aggregate()
-            case "u":
-                return update()
-            case "e":
-                return explain()
-            default:
-                error("Unsupported method: only find(), aggregate(), update() and explain() are supported")
-        }
-    }
-
     function error(m) {
         throw {
             message: m,
@@ -981,12 +999,17 @@ var Parser = function () {
         return aggregationStages
     }
 
+    function getQueryType() {
+        return queryType
+    }
+
     return {
         indent: indent,
         compact: compact,
         compactAndRemoveComment: compactAndRemoveComment,
         parse: parse,
-        getAggregationStages: getAggregationStages
+        getAggregationStages: getAggregationStages,
+        getQueryType: getQueryType
     }
 }
 

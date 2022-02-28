@@ -4,6 +4,7 @@
  * @class
  * @param {(string)} config.selectId - HTML id of the select.
  * @param {(function)} config.onChange - custom code to execute when an option is selected
+ * @param {(string)} config.width - the desired width of the elem, in px, like "120px"
  */
 var CustomSelect = function (config) {
 
@@ -20,9 +21,11 @@ var CustomSelect = function (config) {
 
     var button = document.createElement("button")
     button.className = titleClass
+    button.style.width = config.width 
 
     var ul = document.createElement("ul")
     ul.className = listClass
+    ul.style.width = config.width
 
     generateOptions(select.options)
 
@@ -45,6 +48,8 @@ var CustomSelect = function (config) {
      * @param {([]<option>)} options - a list of HTML <option> 
      */
     function generateOptions(options) {
+
+        button.textContent = ""
 
         for (var i = 0; i < options.length; i++) {
 
