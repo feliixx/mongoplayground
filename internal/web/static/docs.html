@@ -130,7 +130,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre></div>
 <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of <code>&lt;generator&gt;</code> types</a></div>
-    <h3><a id="mgodatagen-unique-string"></a>Unique String</h3>
+    <h3 id="mgodatagen-unique-string">Unique String</h3>
     <p>If <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
         have a <strong>fixed length</strong>, <code>minLength</code> is taken as length for the string.
         There is <code>64^x</code> possible unique string for strings of length <code>x</code>. This number has to
@@ -400,7 +400,7 @@
     <div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">1</span><span class="pl-kos">}</span></pre></div>
 <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of <code>&lt;generator&gt;</code> types</a></div>
-    <h3><a id="mgodatagen-valueAggregator"></a>ValueAggregator</h3>
+    <h3 id="mgodatagen-valueAggregator">ValueAggregator</h3>
     <p>Get distinct values for a specific field for documents from
         <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
         the document in the query, prefix it with "$$".</p>
@@ -444,7 +444,7 @@
     <div class="highlight highlight-source-js"><pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"a"</span><span class="pl-kos">,</span> <span class="pl-s">"b"</span><span class="pl-kos">]</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"c"</span><span class="pl-kos">]</span><span class="pl-kos">}</span></pre></div>
 <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of <code>&lt;generator&gt;</code> types</a></div>
-    <h3><a id="mgodatagen-boundAggregator"></a>BoundAggregator</h3>
+    <h3 id="mgodatagen-boundAggregator">BoundAggregator</h3>
     <p>Get the lowest and highest value for a specific field of documents in
         <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
         the document in the query, prefix it with "$$"</p>
