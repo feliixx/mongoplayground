@@ -1,18 +1,14 @@
 :root {
     --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-    
     --white: #fff;
-
     --toolbar-background: #353535;
     --toolbar-color: #d3d3d3;
     --ctr-input-border: #808080;
     --ctr-input-background: #ececec;
     --btn: #375eab;
     --btn-hover: #1f3663;
-    
     --h3-color: #24292e;
     --window-border: #e5e7e8;
-
     --ace-background: #f6f8fa;
     --ace-string: #032f62;
     --ace-numeric: #005cc5;
@@ -20,7 +16,6 @@
     --ace-comment: #9299a2;
     --ace-line: #8b0000;
     --ace-variable: #000;
-
     --dropdown-title-color: #c9d1d9;
     --dropdown-title-background: #0d1117;
     --dropdown-list-color: #fff;
@@ -28,16 +23,13 @@
     --dropdown-border: #a5a5a5;
     --dropdown-hover-background: #375eab;
     --dropdown-selected-background: #1f3663;
-
     --footer-color: #646262;
 }
 
-@media (prefers-color-scheme: dark){
-    :root {
-        --toolbar: #000;
+@media (prefers-color-scheme: dark) {
+     :root {
         --h3-color: #fdfdfd;
         --window-border: #555;
-
         /*
         GitHub Dark dimmed theme: https://themes.vivaldi.net/themes/nV6vpgDldN2
             --colorAccentBg: #2d333b;
@@ -46,7 +38,6 @@
             --colorHighlightBg: #316dca;
             --colorWindowBg: #22272e;
         */
-
         --footer-color: #ddd;
     }
 }
@@ -115,7 +106,8 @@ body {
     border-radius: 5px;
 }
 
-.toolbar>.controls>input[type=button]:hover, input[type=button]:disabled {
+.toolbar>.controls>input[type=button]:hover,
+input[type=button]:disabled {
     background: var(--btn-hover) !important;
 }
 
@@ -227,16 +219,13 @@ body {
     body {
         overflow: visible;
     }
-
     .toolbar {
         height: 40px;
     }
-
     .toolbar>.controls {
         padding: 3px 3px;
         margin: 0;
     }
-
     .toolbar>.controls>:nth-child(2),
     .toolbar>.controls>:nth-child(5),
     .toolbar>.controls>:nth-child(6),
@@ -248,36 +237,30 @@ body {
     .toolbar>.title {
         display: none;
     }
-
     .content {
         display: inline;
     }
-
     .content>div {
         width: 100% !important;
         height: 100%;
         padding: 0;
     }
-
     .content>div:last-child {
         width: 100% !important;
     }
-
-    .content>div>.resizable_editor>.handler, .handler::before {
+    .content>div>.resizable_editor>.handler,
+    .handler::before {
         display: none;
     }
-
     .ace_editor {
         height: 90% !important;
     }
-
     .footer {
         display: none;
     }
 }
 
 @media only screen and (min-width:1000px) and (max-width:1450px) {
-
     .toolbar>.controls>:nth-child(2),
     .toolbar>.controls>:nth-child(7),
     .toolbar>.controls>:nth-child(8),
@@ -285,6 +268,7 @@ body {
         display: none;
     }
 }
+
 
 /* styles for documentation */
 
@@ -340,12 +324,6 @@ body {
 
 .markdown-body .pl-c2::before {
     content: "^M";
-}
-
-.markdown-body .octicon {
-    display: inline-block;
-    vertical-align: text-top;
-    fill: currentColor;
 }
 
 .markdown-body a {
@@ -476,10 +454,6 @@ body {
     font-size: 12px;
 }
 
-.markdown-body .octicon {
-    vertical-align: text-bottom;
-}
-
 .markdown-body .pl-0 {
     padding-left: 0 !important;
 }
@@ -560,35 +534,6 @@ body {
     margin-bottom: 16px;
     font-weight: 600;
     line-height: 1.25;
-}
-
-.markdown-body h1 .octicon-link,
-.markdown-body h2 .octicon-link,
-.markdown-body h3 .octicon-link,
-.markdown-body h4 .octicon-link,
-.markdown-body h5 .octicon-link,
-.markdown-body h6 .octicon-link {
-    color: #1b1f23;
-    vertical-align: middle;
-    visibility: hidden;
-}
-
-.markdown-body h1:hover .anchor,
-.markdown-body h2:hover .anchor,
-.markdown-body h3:hover .anchor,
-.markdown-body h4:hover .anchor,
-.markdown-body h5:hover .anchor,
-.markdown-body h6:hover .anchor {
-    text-decoration: none;
-}
-
-.markdown-body h1:hover .anchor .octicon-link,
-.markdown-body h2:hover .anchor .octicon-link,
-.markdown-body h3:hover .anchor .octicon-link,
-.markdown-body h4:hover .anchor .octicon-link,
-.markdown-body h5:hover .anchor .octicon-link,
-.markdown-body h6:hover .anchor .octicon-link {
-    visibility: visible;
 }
 
 .markdown-body h1 {
@@ -700,6 +645,7 @@ body {
     border-color: #0366d6;
 }
 
+
 /** Style for custom combobox, adapatation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
 
 .js-Dropdown {
@@ -772,19 +718,4 @@ body {
 .js-Dropdown-list li.is-selected {
     background-color: var(--dropdown-selected-background);
     color: var(--dropdown-list-color);
-}
-
-#custom-mode>.js-Dropdown-title,
-#custom-mode>.js-Dropdown-list {
-    width: 130px;
-}
-
-#custom-template>.js-Dropdown-title,
-#custom-template>.js-Dropdown-list {
-    width: 210px;
-}
-
-#custom-aggregation_stages>.js-Dropdown-title,
-#custom-aggregation_stages>.js-Dropdown-list {
-    width: 160px;
 }
