@@ -48,7 +48,7 @@ type storage struct {
 	backupServiceStatus serviceInfo
 
 	// activeDB holds info of the database created / used during
-	// the last cleanupInterval. Its access is garded by activeDbLock
+	// the last cleanupInterval. Its access is guarded by activeDbLock
 	activeDbLock sync.RWMutex
 	activeDB     map[string]dbMetaInfo
 

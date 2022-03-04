@@ -80,12 +80,12 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 	}, nil
 }
 
-// Middleware handler, with several roles: 
+// Middleware handler, with several roles:
 //
-//   * set security headers for all responses 
+//   * set security headers for all responses
 //   * monitor latency of each endpoint
 //   * send stack trace to loki if a panic occurs
-//   * send stack trace by email if a panic occurs 
+//   * send stack trace by email if a panic occurs
 func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

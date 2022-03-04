@@ -27,7 +27,7 @@ func TestPrettyPrintRequest(t *testing.T) {
 	r, _ := http.NewRequest("POST", "/run", nil)
 	r.Header.Set("Content-encoding", "br")
 	r.PostForm = url.Values{
-		"mode":   {"bson"},
+		"mode": {"bson"},
 	}
 
 	want := "request: /run\n\n[Content-Encoding]: br\n\nbody\n[mode]: bson\n"

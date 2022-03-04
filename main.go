@@ -112,9 +112,8 @@ func loadSmtp() *internal.MailInfo {
 			viper.GetString("mail.smtp.pwd"),
 			viper.GetString("mail.sendTo"),
 		)
-	} else {
-		return nil
 	}
+	return nil
 }
 
 func redirectTLS(w http.ResponseWriter, r *http.Request) {

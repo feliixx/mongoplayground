@@ -38,7 +38,7 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		acceptedEncoding = brotliEncoding
 	}
 
-	resource,_ := s.getResource(homeEndpoint, acceptedEncoding)
+	resource, _ := s.getResource(homeEndpoint, acceptedEncoding)
 
 	w.Header().Set("Content-Encoding", resource.contentEncoding)
 	w.Header().Set("Content-Type", resource.contentType)
