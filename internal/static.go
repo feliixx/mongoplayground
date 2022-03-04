@@ -55,7 +55,7 @@ var (
 func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// transform 'static/playground-min-10.css' to 'playground-min.css'
-	// the numeric id is juste used to force the browser to reload the new version
+	// the numeric id is just used to force the browser to reload the new version
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 	name = fileIdxReg.ReplaceAllString(name, ".")
 
@@ -118,7 +118,7 @@ func (s *staticContent) addResourceFromFile(fileName, contentType, contentEncodi
 func (s *staticContent) getResource(name, acceptedEncoding string) (staticResource, bool) {
 
 	key := acceptedEncoding + "_" + name
-	// favicon is not compressedy
+	// favicon is not compressed
 	if name == "favicon.png" {
 		key = name
 	}

@@ -36,7 +36,7 @@ type LokiLogger struct {
 
 	httpClient *http.Client
 
-	// pLock guards the payload bufffer
+	// pLock guards the payload buffer
 	pLock sync.Mutex
 	// hold the message that will be send to loki
 	payload *bytes.Buffer
@@ -73,7 +73,7 @@ func (l *LokiLogger) Write(msg []byte) (int, error) {
 
 	// loki requires that logs doesn't end with trailing newline
 	msg = bytes.TrimRight(msg, "\n")
-	// anonymise any IP adress
+	// anonymise any IP address
 	msg = regIPV4.ReplaceAll(msg, []byte("x.x.x.x"))
 
 	l.payload.WriteString(`["`)

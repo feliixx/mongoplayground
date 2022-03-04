@@ -30,7 +30,7 @@ const (
 	// application is up, but at least one service it depends on
 	// is down
 	statusDegrade = "DEGRADE"
-	// service is unavalaible
+	// service is unavailable
 	statusDown = "DOWN"
 )
 

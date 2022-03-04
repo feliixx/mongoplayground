@@ -357,7 +357,7 @@ func seededObjectID(n int32) primitive.ObjectID {
 // regex:
 //           /^db\..(\w*)\.(find|aggregate|update)\([\s\S]*\)$/
 //
-// for example, thoses queries are valid:
+// for example, those queries are valid:
 //
 //   db.collection.find({k:1})
 //   db.collection.aggregate([{$project:{_id:0}}])
