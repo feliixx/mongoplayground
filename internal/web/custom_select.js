@@ -30,12 +30,19 @@
  */
 var CustomSelect = function (config) {
 
-    var select = document.getElementById(config.selectId)
     var mainClass = "js-Dropdown"
     var titleClass = "js-Dropdown-title"
     var listClass = "js-Dropdown-list"
     var selectedClass = "is-selected"
     var openClass = "is-open"
+
+    var select = document.getElementById(config.selectId)
+    var selectedIndex = select.selectedIndex
+
+    var options = []
+    for (var i = 0; i < select.options.length; i++) {
+        options.push(select.options[i].textContent)
+    }
 
     var selectContainer = document.createElement("div")
     selectContainer.className = mainClass
@@ -43,21 +50,21 @@ var CustomSelect = function (config) {
 
     var button = document.createElement("button")
     button.className = titleClass
-    button.style.width = config.width 
+    button.style.width = config.width
 
     var ul = document.createElement("ul")
     ul.className = listClass
     ul.style.width = config.width
 
-    generateOptions(select.options)
+    generateOptions()
 
     selectContainer.appendChild(button)
     selectContainer.appendChild(ul)
     selectContainer.addEventListener("click", onClick)
 
-    // pseudo-select is ready - append it and hide the original
+    // pseudo-select is ready - append it and remove the original
     select.parentNode.insertBefore(selectContainer, select)
-    select.style.display = "none"
+    select.parentNode.removeChild(select)
 
     document.addEventListener("click", function (e) {
         if (!selectContainer.contains(e.target)) {
@@ -65,21 +72,16 @@ var CustomSelect = function (config) {
         }
     })
 
-    /**
-     * 
-     * @param {([]<option>)} options - a list of HTML <option> 
-     */
-    function generateOptions(options) {
+    function generateOptions() {
 
         button.textContent = ""
 
         for (var i = 0; i < options.length; i++) {
 
             var li = document.createElement("li")
-            li.innerText = options[i].textContent
-            li.setAttribute("data-index", i)
+            li.innerText = options[i]
 
-            if (i === select.selectedIndex) {
+            if (i === selectedIndex) {
                 li.classList.add(selectedClass)
                 button.textContent = li.innerText
             }
@@ -87,40 +89,22 @@ var CustomSelect = function (config) {
         }
     }
 
-    function onClick(e) {
-        e.preventDefault()
+    function onClick(event) {
 
-        var t = e.target
+        event.preventDefault()
 
-        if (t.className === titleClass) {
-            toggle()
-        }
-
-        if (t.tagName === "LI") {
-
-            selectContainer.querySelector("." + titleClass).innerText = t.innerText
-            select.selectedIndex = t.getAttribute("data-index")
-            select.dispatchEvent(new CustomEvent("change"))
-
-            var liElem = ul.querySelectorAll("li")
-            for (var i = 0; i < liElem.length; i++) {
-                liElem[i].classList.remove(selectedClass)
-            }
-            t.classList.add(selectedClass)
-            close()
+        if (event.target.tagName === "LI") {
+            setValue(event.target.innerText)
 
             if (typeof config.onChange === "function") {
                 config.onChange()
             }
         }
+        toggle()
     }
 
     function toggle() {
         ul.classList.toggle(openClass)
-    }
-
-    function open() {
-        ul.classList.add(openClass)
     }
 
     function close() {
@@ -128,14 +112,11 @@ var CustomSelect = function (config) {
     }
 
     function getSelectedIndex() {
-        if (select.options.length === 0) {
-            return -1
-        }
-        return select.selectedIndex
+        return selectedIndex
     }
 
     function getValue() {
-        return selectContainer.querySelector("." + titleClass).innerText
+        return button.textContent
     }
 
     /**
@@ -143,17 +124,21 @@ var CustomSelect = function (config) {
      * @param {(string)} value - the option to select 
      */
     function setValue(value) {
+
+        button.textContent = value
+
         var liElem = ul.querySelectorAll("li")
         for (var i = 0; i < liElem.length; i++) {
             liElem[i].classList.remove(selectedClass)
             if (liElem[i].innerText == value) {
+                selectedIndex = i
                 liElem[i].classList.add(selectedClass)
             }
         }
-        selectContainer.querySelector("." + titleClass).innerText = value
     }
 
     /**
+     * Set the options for the select. The last option is selected
      * 
      * @param {([]string)} optionList - a list of string
      */
@@ -161,24 +146,19 @@ var CustomSelect = function (config) {
 
         while (ul.firstChild) {
             ul.firstChild.remove()
-            select.firstChild.remove()
         }
-        for (var i = 0; i < optionList.length; i++) {
-            var opt = document.createElement("option")
-            opt.textContent = optionList[i]
-            select.appendChild(opt)
-        }
+        options = optionList
 
-        if (optionList.length > 0) {
-            select.selectedIndex = optionList.length - 1
+        if (options.length === 0) {
+            selectedIndex = -1
+        } else {
+            selectedIndex = options.length - 1
         }
-        generateOptions(select.options)
+        generateOptions()
     }
 
     return {
         toggle: toggle,
-        close: close,
-        open: open,
         getSelectedIndex: getSelectedIndex,
         getValue: getValue,
         setValue: setValue,
