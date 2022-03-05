@@ -24,9 +24,9 @@
  * by Zoltan Toth
  *
  * @class
- * @param {(string)} config.selectId - HTML id of the select.
- * @param {(function)} config.onChange - custom code to execute when an option is selected
- * @param {(string)} config.width - the desired width of the elem, in px, like "120px"
+ * @param {string} config.selectId - HTML id of the select.
+ * @param {function} config.onChange - custom code to execute when an option is selected
+ * @param {string} config.width - the desired width of the elem, in px, like "120px"
  */
 var CustomSelect = function (config) {
 
@@ -121,7 +121,7 @@ var CustomSelect = function (config) {
 
     /**
      * 
-     * @param {(string)} value - the option to select 
+     * @param {string} value - the option to select 
      */
     function setValue(value) {
 
@@ -140,7 +140,7 @@ var CustomSelect = function (config) {
     /**
      * Set the options for the select. The last option is selected
      * 
-     * @param {([]string)} optionList - a list of string
+     * @param {string[]} optionList - a list of string
      */
     function setOptions(optionList) {
 

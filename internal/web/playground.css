@@ -648,7 +648,7 @@ input[type=button]:disabled {
 }
 
 
-/** Style for custom combobox, adapatation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
+/** Style for custom combobox, adaptation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
 
 .js-Dropdown {
     display: inline-block;

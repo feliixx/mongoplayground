@@ -45,6 +45,15 @@ var Parser = function () {
 
         queryType // type of query, can be one of ["find", "aggregate", "update", "unknown"]
 
+    /**
+     * Indent a bson content, comments are kept
+     * 
+     * @param {string} src - the text to indent
+     * @param {string} type - type of content, must be one of ["config", "query", "result"]
+     * @param {string} mode - playground mode, must be one of ["bson", "mgodatagen"]
+     * 
+     * @returns {string} the indented result
+     */
     function indent(src, type, mode) {
         doIndent = true
         keepComment = true
@@ -53,6 +62,15 @@ var Parser = function () {
         return output
     }
 
+    /**
+     * Compact a bson content, comments are kept
+     * 
+     * @param {string} src - the text to compact
+     * @param {string} type - type of content, must be one of ["config", "query", "result"]
+     * @param {string} mode - playground mode, must be one of ["bson", "mgodatagen"]
+     * 
+     * @returns {string} the compacted result
+     */
     function compact(src, type, mode) {
         doIndent = false
         keepComment = true
@@ -61,6 +79,16 @@ var Parser = function () {
         return output
     }
 
+    /**
+     * Compact a bson content, comments are removed
+     * 
+     * @param {string} src - the text to compact
+     * @param {string} type - type of content, must be one of ["config", "query", "result"]
+     * @param {string} mode - playground mode, must be one of ["bson", "mgodatagen"]
+     * @param {int} nbStagesToKeep - the number of stages to keep for an aggregation pipeline if applicable
+     * 
+     * @returns {string} the compacted result without comments
+     */
     function compactAndRemoveComment(src, type, mode, nbStagesToKeep) {
         doIndent = false
         keepComment = false
@@ -69,6 +97,15 @@ var Parser = function () {
         return output
     }
 
+    /**
+     * Check a bson content for any syntax error 
+     * 
+     * @param {string} src - the text to parse
+     * @param {string} type - type of content, must be one of ["config", "query", "result"]
+     * @param {string} mode - playground mode, must be one of ["bson", "mgodatagen"] 
+     * 
+     * @returns {object} 'null' if there's no syntax error, an error with 'message' and 'at' otherwise
+     */
     function parse(src, type, mode) {
 
         input = src
@@ -105,7 +142,7 @@ var Parser = function () {
                 error("Unexpected remaining char after end of " + type)
             }
         } catch (err) {
-            // if there's an error, keep indenting so it's easyer to
+            // if there's an error, keep indenting so it's easier to
             // see where the error is
             while (ch) {
                 next()
@@ -1014,10 +1051,20 @@ var Parser = function () {
         }
     }
 
+    /**
+     * get list of aggregations stages in the pipeline if applicable
+     * 
+     * @returns {string[]} the list of stages or an empty array 
+     */
     function getAggregationStages() {
         return aggregationStages
     }
 
+    /**
+     * Get the type of query if applicable
+     * 
+     * @returns {string} one of ["find", "aggregate", "update"] or "" if not applicable
+     */
     function getQueryType() {
         return queryType
     }
