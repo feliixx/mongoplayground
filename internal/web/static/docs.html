@@ -1,32 +1,31 @@
-<div class="markdown-body">
-  <h2 id="summary">Summary</h2>
-  <ul>
-    <li><a href="#shortcuts">Shortcuts</a></li>
-    <li><a href="#supported-methods">Supported methods</a></li>
-    <li>
-      <a href="#create-a-database">Create a database</a>
-      <ul>
-        <li><a href="#from-an-array-of-bson-documents">BSON mode</a></li>
-        <li><a href="#from-mgodatagen">Mgodatagen mode</a></li>
-      </ul>
-    </li>
-    <li><a href="#limitations">Limitations</a></li>
-  </ul>
-  <h1 id="shortcuts">Shortcuts</h1>
-  <ul>
-    <li>Use <code>Ctrl</code> + <code>Enter</code> to run a query (<code>Cmd</code> + <code>Enter</code> on mac)</li>
-    <li>Use <code>Ctrl</code> + <code>s</code> to format the configuration and query editor (<code>Cmd</code> +
-      <code>s</code> on mac)
-    </li>
-  </ul>
-  <h1 id="supported-methods">Supported methods</h1>
-  <p>Only <code>find()</code>, <code>aggregate()</code> and <code>update()</code> are supported</p>
-  <h1 id="create-a-database">Create a database</h1>
-  <h2 id="from-an-array-of-bson-documents">From an array of BSON documents</h2>
-  <p>It is possible to create a collection from an array of BSON documents. If no collection name is specified,
-    documents will be inserted in a collection named <strong><code>collection</code></strong>, for example</p>
-  <div class="highlight highlight-source-js">
-    <pre>[
+<h2 id="summary">Summary</h2>
+<ul>
+  <li><a href="#shortcuts">Shortcuts</a></li>
+  <li><a href="#supported-methods">Supported methods</a></li>
+  <li>
+    <a href="#create-a-database">Create a database</a>
+    <ul>
+      <li><a href="#from-an-array-of-bson-documents">BSON mode</a></li>
+      <li><a href="#from-mgodatagen">Mgodatagen mode</a></li>
+    </ul>
+  </li>
+  <li><a href="#limitations">Limitations</a></li>
+</ul>
+<h1 id="shortcuts">Shortcuts</h1>
+<ul>
+  <li>Use <code>Ctrl</code> + <code>Enter</code> to run a query (<code>Cmd</code> + <code>Enter</code> on mac)</li>
+  <li>Use <code>Ctrl</code> + <code>s</code> to format the configuration and query editor (<code>Cmd</code> +
+    <code>s</code> on mac)
+  </li>
+</ul>
+<h1 id="supported-methods">Supported methods</h1>
+<p>Only <code>find()</code>, <code>aggregate()</code> and <code>update()</code> are supported</p>
+<h1 id="create-a-database">Create a database</h1>
+<h2 id="from-an-array-of-bson-documents">From an array of BSON documents</h2>
+<p>It is possible to create a collection from an array of BSON documents. If no collection name is specified,
+  documents will be inserted in a collection named <strong><code>collection</code></strong>, for example</p>
+<div class="highlight highlight-source-js">
+  <pre>[
     {
       <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, 
       <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>value<span class="pl-pds">"</span></span>
@@ -36,10 +35,10 @@
       <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>someOtherValue<span class="pl-pds">"</span></span>
     }
   ]</pre>
-  </div>
-  <p>It is possible to create <strong>multiple collections</strong> in <code>bson</code> mode with custom names:</p>
-  <div class="highlight highlight-source-js">
-    <pre>db<span class="pl-k">=</span>{
+</div>
+<p>It is possible to create <strong>multiple collections</strong> in <code>bson</code> mode with custom names:</p>
+<div class="highlight highlight-source-js">
+  <pre>db<span class="pl-k">=</span>{
     <span class="pl-s"><span class="pl-pds">"</span>coll1<span class="pl-pds">"</span></span><span class="pl-k">:</span> [
       {
         <span class="pl-s"><span class="pl-pds">"</span>_id<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-c1">1</span>, 
@@ -57,16 +56,16 @@
       }
     ]
   }</pre>
-  </div>
-  <p>This will create two collections named <code>coll1</code> and <code>coll2</code></p>
-  <h2 id="from-mgodatagen">From mgodatagen</h2>
-  <p>You can create random documents using <strong><a
-        href="https://github.com/feliixx/mgodatagen">mgodatagen</a></strong>. Select <code>mgodatagen</code> mode and
-    create a custom configuration file.</p>
-  <p>The config file is an array of JSON documents, where each documents holds the configuration
-    for a collection to create.</p>
-  <div class="highlight highlight-source-js">
-    <pre>[
+</div>
+<p>This will create two collections named <code>coll1</code> and <code>coll2</code></p>
+<h2 id="from-mgodatagen">From mgodatagen</h2>
+<p>You can create random documents using <strong><a
+      href="https://github.com/feliixx/mgodatagen">mgodatagen</a></strong>. Select <code>mgodatagen</code> mode and
+  create a custom configuration file.</p>
+<p>The config file is an array of JSON documents, where each documents holds the configuration
+  for a collection to create.</p>
+<div class="highlight highlight-source-js">
+  <pre>[
     <span class="pl-c"><span class="pl-c">//</span> first collection to create </span>
     {  
      <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,            <span class="pl-c"><span class="pl-c">//</span> required, collection name</span>
@@ -82,11 +81,11 @@
       <span class="pl-k">...</span>
     }
   ]</pre>
-  </div>
-  <h2>Generator types</h2>
-  <p>Generators have a common structure:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, field name in generated document</span>
+</div>
+<h2>Generator types</h2>
+<p>Generators have a common structure:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, field name in generated document</span>
   <span class="pl-s">"type"</span>:             <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, type of the field</span>
   <span class="pl-s">"typeParam"</span>:        ...<span class="pl-kos">,</span>      <span class="pl-c">// specific parameters for this type</span>
 
@@ -94,41 +93,41 @@
   <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span>     <span class="pl-c">// optional, int between 0 and 100. Percentage of documents</span>
                                 <span class="pl-c">// that will have this field</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p id="mgodatagen-list-top">List of basic <code>&lt;generator&gt;</code> types:</p>
-  <ul>
-    <li><a href="#mgodatagen-string">string</a></li>
-    <li><a href="#mgodatagen-int">int</a></li>
-    <li><a href="#mgodatagen-long">long</a></li>
-    <li><a href="#mgodatagen-double">double</a></li>
-    <li><a href="#mgodatagen-decimal">decimal</a></li>
-    <li><a href="#mgodatagen-autoincrement">autoincrement</a></li>
-    <li><a href="#mgodatagen-boolean">boolean</a></li>
-    <li><a href="#mgodatagen-objectid">objectId</a></li>
-    <li><a href="#mgodatagen-binary">binary</a></li>
-    <li><a href="#mgodatagen-date">date</a></li>
-    <li><a href="#mgodatagen-uuid">UUID</a></li>
-    <li><a href="#mgodatagen-position">position</a></li>
-    <li><a href="#mgodatagen-faker">faker</a></li>
-  </ul>
-  <p>List of composite <code>&lt;generator&gt;</code> types:</p>
-  <ul>
-    <li><a href="#mgodatagen-array">array</a></li>
-    <li><a href="#mgodatagen-object">object</a></li>
-    <li><a href="#mgodatagen-constant">constant</a></li>
-    <li><a href="#mgodatagen-ref">reference</a></li>
-    <li><a href="#mgodatagen-fromarray">fromArray</a></li>
-    <li><a href="#mgodatagen-stringFromParts">stringFromParts</a></li>
-    <li><a href="#mgodatagen-countAggregator">countAggregator</a></li>
-    <li><a href="#mgodatagen-valueAggregator">valueAggregator</a></li>
-    <li><a href="#mgodatagen-boundAggregator">boundAggregator</a></li>
-  </ul>
-  <h3 id="mgodatagen-string">String</h3>
-  <p>Generates a random string of a certain length. String is composed of char within this list:
-    <code>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_</code>
-  </p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<p id="mgodatagen-list-top">List of basic <code>&lt;generator&gt;</code> types:</p>
+<ul>
+  <li><a href="#mgodatagen-string">string</a></li>
+  <li><a href="#mgodatagen-int">int</a></li>
+  <li><a href="#mgodatagen-long">long</a></li>
+  <li><a href="#mgodatagen-double">double</a></li>
+  <li><a href="#mgodatagen-decimal">decimal</a></li>
+  <li><a href="#mgodatagen-autoincrement">autoincrement</a></li>
+  <li><a href="#mgodatagen-boolean">boolean</a></li>
+  <li><a href="#mgodatagen-objectid">objectId</a></li>
+  <li><a href="#mgodatagen-binary">binary</a></li>
+  <li><a href="#mgodatagen-date">date</a></li>
+  <li><a href="#mgodatagen-uuid">UUID</a></li>
+  <li><a href="#mgodatagen-position">position</a></li>
+  <li><a href="#mgodatagen-faker">faker</a></li>
+</ul>
+<p>List of composite <code>&lt;generator&gt;</code> types:</p>
+<ul>
+  <li><a href="#mgodatagen-array">array</a></li>
+  <li><a href="#mgodatagen-object">object</a></li>
+  <li><a href="#mgodatagen-constant">constant</a></li>
+  <li><a href="#mgodatagen-ref">reference</a></li>
+  <li><a href="#mgodatagen-fromarray">fromArray</a></li>
+  <li><a href="#mgodatagen-stringFromParts">stringFromParts</a></li>
+  <li><a href="#mgodatagen-countAggregator">countAggregator</a></li>
+  <li><a href="#mgodatagen-valueAggregator">valueAggregator</a></li>
+  <li><a href="#mgodatagen-boundAggregator">boundAggregator</a></li>
+</ul>
+<h3 id="mgodatagen-string">String</h3>
+<p>Generates a random string of a certain length. String is composed of char within this list:
+  <code>abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_</code>
+</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"string"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
     <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
@@ -136,101 +135,101 @@
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-unique-string">Unique String</h3>
-  <p>If <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
-    have a <strong>fixed length</strong>, <code>minLength</code> is taken as length for the string.
-    There is <code>64^x</code> possible unique string for strings of length <code>x</code>. This number has to
-    be inferior or equal to the number of documents you want to generate.
-    For example, if you want unique strings of length 3, there is <code>64 * 64 * 64 = 262144</code> possible
-    strings</p>
-  <p>They will look like</p>
-  <pre><code>"aaa",
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-unique-string">Unique String</h3>
+<p>If <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
+  have a <strong>fixed length</strong>, <code>minLength</code> is taken as length for the string.
+  There is <code>64^x</code> possible unique string for strings of length <code>x</code>. This number has to
+  be inferior or equal to the number of documents you want to generate.
+  For example, if you want unique strings of length 3, there is <code>64 * 64 * 64 = 262144</code> possible
+  strings</p>
+<p>They will look like</p>
+<pre><code>"aaa",
 "aab",
 "aac",
 "aad",
 ...
 </code></pre>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-int">Int</h3>
-  <p>Generates a random <code>int</code> within bounds.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-int">Int</h3>
+<p>Generates a random <code>int</code> within bounds.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"int"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"minInt"</span>:           <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxInt"</span>:           <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minInt</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-long">Long</h3>
-  <p>Generates a random <code>long</code> within bounds.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-long">Long</h3>
+<p>Generates a random <code>long</code> within bounds.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"long"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"minLong"</span>:          <span class="pl-s">`long`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxLong"</span>:          <span class="pl-s">`long`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minLong</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>  <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>   <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-double">Double</h3>
-  <p>Generates a random <code>double</code> within bounds.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-double">Double</h3>
+<p>Generates a random <code>double</code> within bounds.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"double"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"minDouble"</span>:        <span class="pl-s">`double`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDouble"</span>:        <span class="pl-s">`double`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minDouble</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-decimal">Decimal</h3>
-  <p>Generates a random <code>decimal128</code>.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-decimal">Decimal</h3>
+<p>Generates a random <code>decimal128</code>.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"decimal"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-boolean">Boolean</h3>
-  <p>Generates a random <code>boolean</code>.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-boolean">Boolean</h3>
+<p>Generates a random <code>boolean</code>.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"boolean"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>      <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-objectid">ObjectId</h3>
-  <p>Generates a random <code>objectId</code>.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-objectid">ObjectId</h3>
+<p>Generates a random <code>objectId</code>.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"objectId"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-array">Array</h3>
-  <p>Generates a random array of bson object.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-array">Array</h3>
+<p>Generates a random array of bson object.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"array"</span><span class="pl-kos">,</span>     <span class="pl-c">// required</span>
     <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= 0</span>
     <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= minLength</span>
@@ -239,13 +238,13 @@
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-object">Object</h3>
-  <p>Generates random nested object.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-object">Object</h3>
+<p>Generates random nested object.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:                <span class="pl-s">"object"</span><span class="pl-kos">,</span>    <span class="pl-c">// required</span>
     <span class="pl-s">"objectContent"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, list of generator used to</span>
        <span class="pl-s">"nestedFieldName1"</span>: <span class="pl-s">`generator`</span><span class="pl-kos">,</span> <span class="pl-c">// generate the nested document</span>
@@ -255,80 +254,80 @@
     <span class="pl-s">"nullPercentage"</span>:      <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>:    <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-binary">Binary</h3>
-  <p>Generates random binary data of length within bounds.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-binary">Binary</h3>
+<p>Generates random binary data of length within bounds.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"binary"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
     <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-date">Date</h3>
-  <p>Generates a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/"
-      rel="nofollow"><code>ISODate</code></a> ).</p>
-  <p><code>startDate</code> and <code>endDate</code> are string representation of a Date following RFC3339:</p>
-  <p><strong>format</strong>: "yyyy-MM-ddThh:mm:ss+00:00"</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-date">Date</h3>
+<p>Generates a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/"
+    rel="nofollow"><code>ISODate</code></a> ).</p>
+<p><code>startDate</code> and <code>endDate</code> are string representation of a Date following RFC3339:</p>
+<p><strong>format</strong>: "yyyy-MM-ddThh:mm:ss+00:00"</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"date"</span><span class="pl-kos">,</span>   <span class="pl-c">// required</span>
     <span class="pl-s">"startDate"</span>:        <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"endDate"</span>:          <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, must be &gt;= startDate</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-position">Position</h3>
-  <p>Generates a random GPS position in Decimal Degrees ( WGS 84),
-    eg : [40.741895, -73.989308]</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-position">Position</h3>
+<p>Generates a random GPS position in Decimal Degrees ( WGS 84),
+  eg : [40.741895, -73.989308]</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"position"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-constant">Constant</h3>
-  <p>Add the same value to each document.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-constant">Constant</h3>
+<p>Add the same value to each document.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"constant"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"constVal"</span>:       <span class="pl-s">`object`</span><span class="pl-kos">,</span>   <span class="pl-c">// required, can be of any type including object and array</span>
                                   <span class="pl-c">// eg: {"k": 1, "v": "val"}</span>
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-autoincrement">Autoincrement</h3>
-  <p>Generates an autoincremented value (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>).</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-autoincrement">Autoincrement</h3>
+<p>Generates an autoincremented value (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>).</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"autoincrement"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"autoType"</span>:       <span class="pl-s">`string`</span><span class="pl-kos">,</span>        <span class="pl-c">// required, can be `int` or `long`</span>
     <span class="pl-s">"startLong"</span>:      <span class="pl-s">`long`</span><span class="pl-kos">,</span>          <span class="pl-c">// optional, start value if autoType = long</span>
     <span class="pl-s">"startInt"</span>:       <span class="pl-s">`int`</span><span class="pl-kos">,</span>           <span class="pl-c">// optional, start value if autoType = int</span>
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>            <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-ref">Ref</h3>
-  <p>If a field reference an other field in a different collection, you can use a ref generator.</p>
-  <p>generator in first collection:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>:<span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-ref">Ref</h3>
+<p>If a field reference an other field in a different collection, you can use a ref generator.</p>
+<p>generator in first collection:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>:<span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"ref"</span><span class="pl-kos">,</span>       <span class="pl-c">// required</span>
     <span class="pl-s">"id"</span>:               <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, generator id used to link</span>
                                      <span class="pl-c">// field between collections</span>
@@ -336,24 +335,24 @@
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>generator in other collections:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<p>generator in other collections:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"ref"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"id"</span>:               <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// required, same id as previous generator</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-fromarray">FromArray</h3>
-  <p>Pick an object from an array as value for the field. Currently, objects in the
-    array have to be of the same type. By default, items are picked from the array
-    in the order where they appear.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-fromarray">FromArray</h3>
+<p>Pick an object from an array as value for the field. Currently, objects in the
+  array have to be of the same type. By default, items are picked from the array
+  in the order where they appear.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"fromArray"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"in"</span>: <span class="pl-kos">[</span>                        <span class="pl-c">// required. Can't be empty. An array of object of</span>
       <span class="pl-s">`object`</span><span class="pl-kos">,</span>                    <span class="pl-c">// any type, including object and array.</span>
@@ -365,32 +364,32 @@
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>   <span class="pl-c">// optional</span>
 
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-uuid">UUID</h3>
-  <p>Generate a random UUID ( using <a href="https://godoc.org/github.com/satori/go.uuid#NewV4"
-      rel="nofollow">satori/go.uuid NewV4()</a>).</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-uuid">UUID</h3>
+<p>Generate a random UUID ( using <a href="https://godoc.org/github.com/satori/go.uuid#NewV4"
+    rel="nofollow">satori/go.uuid NewV4()</a>).</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"uuid"</span><span class="pl-kos">,</span>   <span class="pl-c">// required</span>
     <span class="pl-s">"format"</span>:         <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, either "string" or "binary".</span>
                                 <span class="pl-c">// default is "string"</span>
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>If <code>format</code> is "string", the field will be a simple string like "f1b9b567-9b34-45af-9d9c-35f565d57716".
-  </p>
-  <p>If <code>format</code> is "binary", the field will be stored as a bson UUID (see <a
-      href="https://bsonspec.org/spec.html" rel="nofollow">bsonspec.org/spec.html</a>) like
-    <code>BinData(4,"8bm1Z5s0Ra+dnDX1ZdV3Fg==")</code>.
-  </p>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-stringFromParts">StringFromParts</h3>
-  <p>Generate a random string from several generators</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<p>If <code>format</code> is "string", the field will be a simple string like "f1b9b567-9b34-45af-9d9c-35f565d57716".
+</p>
+<p>If <code>format</code> is "binary", the field will be stored as a bson UUID (see <a
+    href="https://bsonspec.org/spec.html" rel="nofollow">bsonspec.org/spec.html</a>) like
+  <code>BinData(4,"8bm1Z5s0Ra+dnDX1ZdV3Fg==")</code>.
+</p>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-stringFromParts">StringFromParts</h3>
+<p>Generate a random string from several generators</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"stringFromParts"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"parts"</span>: <span class="pl-kos">[</span>                           <span class="pl-c">// required. Can't be empty. An array </span>
       <span class="pl-s">`generator`</span><span class="pl-kos">,</span>                       <span class="pl-c">// of generators of any basic type</span>
@@ -399,12 +398,12 @@
     <span class="pl-kos">]</span><span class="pl-kos">,</span>
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>              <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p><strong>Example:</strong></p>
-  <p>To generate phone number like <code>'(555) 565-2431'</code>, you can combine several generators
-    like this:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"phone"</span>: <span class="pl-kos">{</span>
+</div>
+<p><strong>Example:</strong></p>
+<p>To generate phone number like <code>'(555) 565-2431'</code>, you can combine several generators
+  like this:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"phone"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"stringFromParts"</span><span class="pl-kos">,</span>
   <span class="pl-s">"parts"</span>: <span class="pl-kos">[</span>
     <span class="pl-kos">{</span>
@@ -427,32 +426,32 @@
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
   <span class="pl-kos">]</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-countAggregator">CountAggregator</h3>
-  <p>Count documents from <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a
-    variable of the document in the query, prefix it with "$$".</p>
-  <p>The query can't be empty or null.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-countAggregator">CountAggregator</h3>
+<p>Count documents from <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a
+  variable of the document in the query, prefix it with "$$".</p>
+<p>The query can't be empty or null.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"countAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
   <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
   <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that selects which documents to count in</span>
                              <span class="pl-c">// the collection</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p><strong>Example:</strong></p>
-  <p>Assuming that the collection <code>first</code> contains:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"a"</span> <span class="pl-kos">}</span>
+</div>
+<p><strong>Example:</strong></p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"a"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"b"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"c"</span> <span class="pl-kos">}</span></pre>
-  </div>
-  <p>and that the generator for collection <code>second</code> is:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span>
+</div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span>
   <span class="pl-s">"database"</span>: <span class="pl-s">"test"</span><span class="pl-kos">,</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">"second"</span><span class="pl-kos">,</span>
   <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span>
@@ -472,22 +471,22 @@
     <span class="pl-kos">}</span>
   <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>The collection <code>second</code> will contain:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">}</span>
+</div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">1</span><span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-valueAggregator">ValueAggregator</h3>
-  <p>Get distinct values for a specific field for documents from
-    <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
-    the document in the query, prefix it with "$$".
-  </p>
-  <p>The query can't be empty or null.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-valueAggregator">ValueAggregator</h3>
+<p>Get distinct values for a specific field for documents from
+  <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
+  the document in the query, prefix it with "$$".
+</p>
+<p>The query can't be empty or null.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"valueAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
   <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
@@ -495,17 +494,17 @@
   <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
                              <span class="pl-c">// to retrieve the distinct values</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p><strong>Example</strong>:</p>
-  <p>Assuming that the collection <code>first</code> contains:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"a"</span> <span class="pl-kos">}</span>
+</div>
+<p><strong>Example</strong>:</p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"a"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"b"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"c"</span> <span class="pl-kos">}</span></pre>
-  </div>
-  <p>and that the generator for collection <code>second</code> is:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span>
+</div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span>
   <span class="pl-s">"database"</span>: <span class="pl-s">"test"</span><span class="pl-kos">,</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">"second"</span><span class="pl-kos">,</span>
   <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span>
@@ -526,22 +525,22 @@
     <span class="pl-kos">}</span>
   <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>The collection <code>second</code> will contain:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"a"</span><span class="pl-kos">,</span> <span class="pl-s">"b"</span><span class="pl-kos">]</span><span class="pl-kos">}</span>
+</div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"a"</span><span class="pl-kos">,</span> <span class="pl-s">"b"</span><span class="pl-kos">]</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"c"</span><span class="pl-kos">]</span><span class="pl-kos">}</span></pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-boundAggregator">BoundAggregator</h3>
-  <p>Get the lowest and highest value for a specific field of documents in
-    <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
-    the document in the query, prefix it with "$$"
-  </p>
-  <p>The query can't be empty or null</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-boundAggregator">BoundAggregator</h3>
+<p>Get the lowest and highest value for a specific field of documents in
+  <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a variable of
+  the document in the query, prefix it with "$$"
+</p>
+<p>The query can't be empty or null</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"valueAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
   <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
@@ -549,20 +548,20 @@
   <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
                              <span class="pl-c">// to retrieve lower/higer value</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p><strong>Example</strong>:</p>
-  <p>Assuming that the collection <code>first</code> contains:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"0"</span> <span class="pl-kos">}</span>
+</div>
+<p><strong>Example</strong>:</p>
+<p>Assuming that the collection <code>first</code> contains:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"0"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"10"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">3</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"20"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">4</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"30"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">5</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"15"</span> <span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">6</span><span class="pl-kos">,</span> <span class="pl-s">"field1"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"field2"</span>: <span class="pl-s">"200"</span> <span class="pl-kos">}</span></pre>
-  </div>
-  <p>and that the generator for collection <code>second</code> is:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span>
+</div>
+<p>and that the generator for collection <code>second</code> is:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span>
   <span class="pl-s">"database"</span>: <span class="pl-s">"test"</span><span class="pl-kos">,</span>
   <span class="pl-s">"collection"</span>: <span class="pl-s">"second"</span><span class="pl-kos">,</span>
   <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span>
@@ -583,29 +582,29 @@
     <span class="pl-kos">}</span>
   <span class="pl-kos">}</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>The collection <code>second</code> will contain:</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">{</span><span class="pl-s">"m"</span>: <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s">"M"</span>: <span class="pl-c1">10</span><span class="pl-kos">}</span><span class="pl-kos">}</span>
+</div>
+<p>The collection <code>second</code> will contain:</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">{</span><span class="pl-s">"m"</span>: <span class="pl-c1">0</span><span class="pl-kos">,</span> <span class="pl-s">"M"</span>: <span class="pl-c1">10</span><span class="pl-kos">}</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">{</span><span class="pl-s">"m"</span>: <span class="pl-c1">15</span><span class="pl-kos">,</span> <span class="pl-s">"M"</span>: <span class="pl-c1">200</span><span class="pl-kos">}</span><span class="pl-kos">}</span></pre>
-  </div>
-  <p>where <code>m</code> is the min value, and <code>M</code> the max value.</p>
-  <div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h3 id="mgodatagen-faker">Faker</h3>
-  <p>Generate 'real' data using <a href="https://github.com/brianvoe/gofakeit">gofakeit library</a>.</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
+</div>
+<p>where <code>m</code> is the min value, and <code>M</code> the max value.</p>
+<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h3 id="mgodatagen-faker">Faker</h3>
+<p>Generate 'real' data using <a href="https://github.com/brianvoe/gofakeit">gofakeit library</a>.</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"faker"</span><span class="pl-kos">,</span>  <span class="pl-c">// required</span>
     <span class="pl-s">"method"</span>:           <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, faker method to use, for example: Name</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
-  </div>
-  <p>List of faker methods:</p>
-  <div style="width:100%">
-    <div style="float:left;width:50%">
-      <pre><code>"FirstName"
+</div>
+<p>List of faker methods:</p>
+<div style="width:100%">
+  <div style="float:left;width:50%">
+    <pre><code>"FirstName"
 "LastName"
 "Name"
 "NamePrefix"
@@ -659,9 +658,9 @@
 "HipsterWord"
 "SafeColor"
 </code></pre>
-    </div>
-    <div style="float:right;width:50%">
-      <pre><code>"Street"
+  </div>
+  <div style="float:right;width:50%">
+    <pre><code>"Street"
 "StreetName"
 "StreetNumber"
 "StreetPrefix"
@@ -714,38 +713,37 @@
 "BeerStyle"
 "BeerYeast"
 </code></pre>
-    </div>
   </div>
+</div>
 
-  <div style="text-align: right;font-size: small;width:100%"><a href="#mgodatagen-list-top">^Back to the list of
-      <code>&lt;generator&gt;</code> types</a></div>
-  <h1 id="limitations">Limitations</h1>
-  <h3>Size limitations</h3>
-  <p>This playground has several limitations:</p>
-  <ul>
-    <li>a database can't contain more than <strong>10 collections</strong>
-    </li>
-    <li>a collection can't contain more than <strong>100 documents</strong>
-    </li>
-  </ul>
-  <h3>Queries</h3>
-  <p>Currently, the playground can run only <code>find()</code>, <code>aggregate()</code> and <code>update()</code>
-    queries. Options in aggregation queries are <strong>not</strong> supported.</p>
-  <h3>Shell regex</h3>
-  <p>Currently, shell regex doesn't work in query.</p>
-  <p>so instead of</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
+<div style="text-align: right;font-size: small;width:100%"><a href="#mgodatagen-list-top">^Back to the list of
+    <code>&lt;generator&gt;</code> types</a></div>
+<h1 id="limitations">Limitations</h1>
+<h3>Size limitations</h3>
+<p>This playground has several limitations:</p>
+<ul>
+  <li>a database can't contain more than <strong>10 collections</strong>
+  </li>
+  <li>a collection can't contain more than <strong>100 documents</strong>
+  </li>
+</ul>
+<h3>Queries</h3>
+<p>Currently, the playground can run only <code>find()</code>, <code>aggregate()</code> and <code>update()</code>
+  queries. Options in aggregation queries are <strong>not</strong> supported.</p>
+<h3>Shell regex</h3>
+<p>Currently, shell regex doesn't work in query.</p>
+<p>so instead of</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
     <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span><span class="pl-sr"> <span class="pl-pds">/</span>pattern<span class="pl-pds">/</span></span>
   })</pre>
-  </div>
-  <p>use</p>
-  <div class="highlight highlight-source-js">
-    <pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
+</div>
+<p>use</p>
+<div class="highlight highlight-source-js">
+  <pre><span class="pl-smi">db</span>.<span class="pl-smi">collection</span>.<span class="pl-c1">find</span>({
     <span class="pl-s"><span class="pl-pds">"</span>k<span class="pl-pds">"</span></span><span class="pl-k">:</span> {
       <span class="pl-s"><span class="pl-pds">"</span>$regex<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">"</span>pattern<span class="pl-pds">"</span></span>
     }
   })</pre>
-  </div>
-  <div style="text-align: right;font-size: small"><a href="#summary">^Back to the top</a></div>
 </div>
+<div style="text-align: right;font-size: small"><a href="#summary">^Back to the top</a></div>
