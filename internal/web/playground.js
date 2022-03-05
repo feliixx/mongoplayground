@@ -151,6 +151,12 @@ function addButtonClickListener() {
     document.getElementById("doc").addEventListener("click", function (e) { showDoc(true) })
 }
 
+/**
+ * Check editor content for syntax error
+ * 
+ * @param {ace.Editor} editor - the ace editor to check content from
+ * @param {string} type - type of editor, must be one of ["config", "query"] 
+ */
 function checkEditorContent(editor, type) {
 
     var errors = []
@@ -188,6 +194,12 @@ function checkEditorContent(editor, type) {
     }
 }
 
+/**
+ * Change the browser url 
+ * 
+ * @param {string} url - the url to display in the browser 
+ * @param {boolean} showLink - wether to show the playground link in the toolbar
+ */
 function redirect(url, showLink) {
     window.history.replaceState({}, "MongoDB playground", url)
     document.getElementById("link").style.visibility = showLink ? "visible" : "hidden"
@@ -195,6 +207,11 @@ function redirect(url, showLink) {
     document.getElementById("share").disabled = showLink
 }
 
+/**
+ * Fill config and query editor with a specific template 
+ * 
+ * @param {int} index - index of the template to use  
+ */
 function setTemplate(index) {
     comboMode.setValue(templates[index].mode)
     configEditor.setValue(parser.indent(templates[index].config, "config", comboMode.getValue()), 1)
@@ -202,6 +219,11 @@ function setTemplate(index) {
     resultEditor.setValue("", 1)
 }
 
+/**
+ * Show or hide the documentation panel
+ * 
+ * @param {boolean} doShow - display the doc panel if true, otherwise hide it 
+ */
 function showDoc(doShow) {
 
     if (doShow && !document.getElementById("docPanel").hasChildNodes()) {
@@ -219,6 +241,9 @@ function showDoc(doShow) {
     }
 }
 
+/**
+ * load the documentation and add it to the doc panel
+ */
 function loadDocs() {
     var r = new XMLHttpRequest()
     r.open("GET", "/static/docs-12.html", true)
@@ -231,6 +256,9 @@ function loadDocs() {
     r.send(null)
 }
 
+/**
+ * Format both editors and run the current playground
+ */
 function run() {
     if (formatAll(false)) {
 
@@ -260,6 +288,9 @@ function run() {
     }
 }
 
+/**
+ * Save the current playground
+ */
 function save() {
 
     formatAll(configChangedSinceLastRun || queryChangedSinceLastRun)
@@ -283,6 +314,13 @@ function save() {
     r.send(encodePlayground(true))
 }
 
+/**
+ * Encode the content of a playground as an URI
+ * 
+ * @param {boolean} keepComment - wether to keep comment or not 
+ * 
+ * @returns {string} the content of the playground URI encoded
+ */
 function encodePlayground(keepComment) {
     var result = "mode=" + comboMode.getValue()
     if (keepComment) {
@@ -295,6 +333,13 @@ function encodePlayground(keepComment) {
     return result
 }
 
+/**
+ * Format both editors and returns wether they have any syntax errors
+ * 
+ * @param {boolean} clearResult - wether to clear the result editor or not 
+ * 
+ * @returns {boolean} true if there's no syntax errors in both editors
+ */
 function formatAll(clearResult) {
 
     if (clearResult) {
@@ -323,12 +368,23 @@ function formatAll(clearResult) {
     return true
 }
 
+/**
+ * Display an error ( syntax error or server error) in the result editor
+ * 
+ * @param {string} errMsg - error message to display in result editor 
+ */
 function showError(errMsg) {
     document.getElementById("result").classList.add("text_red")
     resultEditor.setOption("wrap", true)
     resultEditor.setValue(errMsg, -1)
 }
 
+/**
+ * Display a valid result in the result editor
+ * 
+ * @param {string} result - the text to display in the result editor 
+ * @param {boolean} doIndent - wether to indent the result or not 
+ */
 function showResult(result, doIndent) {
     document.getElementById("result").classList.remove("text_red")
     if (doIndent) {
