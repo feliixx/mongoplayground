@@ -27,8 +27,10 @@ var configEditor,
 
     parser = new Parser(),
 
-    hasChangedSinceLastRun = true,
-    hasChangedSinceLastSave = true,
+    configChangedSinceLastRun = true,
+    queryChangedSinceLastRun = true,
+    configOrQueryChangedSinceLastSave = true,
+
     isConfigHandlerDragging = false,
     isQueryHandlerDragging = false
 
@@ -90,8 +92,9 @@ window.onload = function () {
     configDiv.style.display = "inline"
     queryDiv.style.display = "inline"
 
-    hasChangedSinceLastRun = false
-    hasChangedSinceLastSave = false
+    configChangedSinceLastRun = false
+    queryChangedSinceLastRun = false
+    configOrQueryChangedSinceLastSave = false
 
     addKeyDownListener()
     addDivResizeListener()
@@ -163,16 +166,24 @@ function checkEditorContent(editor, type) {
     }
     editor.getSession().setAnnotations(errors)
 
-    if (type === "query" && parser.getQueryType() === "aggregate") {
-        document.getElementById("stages").style.display = "inline"
-        comboStages.setOptions(parser.getAggregationStages())
-    } else {
-        document.getElementById("stages").style.display = "none"
+    if (type === "query") {
+        if (parser.getQueryType() === "aggregate") {
+            document.getElementById("custom-aggregation_stages").style.visibility = "visible"
+            document.getElementById("aggregation_stages_label").style.visibility = "visible"
+            comboStages.setOptions(parser.getAggregationStages())
+        } else {
+            document.getElementById("custom-aggregation_stages").style.visibility = "hidden"
+            document.getElementById("aggregation_stages_label").style.visibility = "hidden"
+        }
     }
 
-    if (!hasChangedSinceLastRun || !hasChangedSinceLastSave) {
-        hasChangedSinceLastRun = true
-        hasChangedSinceLastSave = true
+    if (!configChangedSinceLastRun || !queryChangedSinceLastRun || !configOrQueryChangedSinceLastSave) {
+        if (type === "query") {
+            queryChangedSinceLastRun = true
+        } else {
+            configChangedSinceLastRun = true
+        }
+        configOrQueryChangedSinceLastSave = true
         redirect("/", false)
     }
 }
@@ -203,7 +214,7 @@ function showDoc(doShow) {
     document.getElementById("docPanel").style.display = doShow ? "inline" : "none"
     document.getElementById("queryPanel").style.display = doShow ? "none" : "inline"
     document.getElementById("resultPanel").style.display = doShow ? "none" : "inline"
-    if (!doShow && hasChangedSinceLastSave) {
+    if (!doShow && configOrQueryChangedSinceLastSave) {
         redirect("/", false)
     }
 }
@@ -232,7 +243,9 @@ function run() {
             if (r.readyState !== 4) { return }
             if (r.status === 200) {
 
-                hasChangedSinceLastRun = false
+                configChangedSinceLastRun = false
+                queryChangedSinceLastRun = false
+
                 var response = r.responseText
                 if (response.startsWith("[") || response.startsWith("{")) {
                     showResult(response, true)
@@ -249,7 +262,7 @@ function run() {
 
 function save() {
 
-    formatAll(hasChangedSinceLastRun)
+    formatAll(configChangedSinceLastRun || queryChangedSinceLastRun)
 
     var r = new XMLHttpRequest()
     r.open("POST", "/save")
@@ -258,7 +271,7 @@ function save() {
         if (r.readyState !== 4) { return }
         if (r.status === 200) {
 
-            hasChangedSinceLastSave = false
+            configOrQueryChangedSinceLastSave = false
             var response = r.responseText
             if (response.startsWith("http")) {
                 redirect(response, true)
@@ -277,7 +290,7 @@ function encodePlayground(keepComment) {
             + "&query=" + encodeURIComponent(parser.compact(queryEditor.getValue(), "query", comboMode.getValue()))
     } else {
         result += "&config=" + encodeURIComponent(parser.compactAndRemoveComment(configEditor.getValue(), "config", comboMode.getValue(), -1))
-            + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue(), comboStages.getSelectedIndex()+1))
+            + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue(), comboStages.getSelectedIndex() + 1))
     }
     return result
 }
@@ -301,8 +314,10 @@ function formatAll(clearResult) {
         return false
     }
 
-    if (hasChangedSinceLastRun) {
+    if (configChangedSinceLastRun) {
         configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), 1)
+    }
+    if (queryChangedSinceLastRun) {
         queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), 1)
     }
     return true

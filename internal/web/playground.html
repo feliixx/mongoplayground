@@ -33,6 +33,8 @@
                 <option>indexe</option>
                 <option>explain</option>
             </select>
+            <label id="aggregation_stages_label" class="bold">Stage by stage output:</label>
+            <select id="aggregation_stages"></select>
             <input id="doc" type="button" value="docs">
         </div>
     </div>
@@ -45,12 +47,7 @@
             </div>
         </div>
         <div id="queryPanel">
-            <h3>Query
-                <div id="stages" class="select_stage_div">
-                    <label class="bold">Up to stage:</label>
-                    <select id="aggregation_stages"></select>
-                </div>
-            </h3>
+            <h3>Query</h3>
             <div class="resizable_editor">
                 <div id="query" class="ignore_warnings" style="display:none">{{printf "%s" .Query}}</div>
                 <div id="queryResizeHandler" class="handler"></div>
