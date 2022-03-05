@@ -56,6 +56,12 @@ var (
 			Help: "Size of last badger backup in bytes",
 		},
 	)
+	dbCacheHit = prometheus.NewCounter(
+		prometheus.CounterOpts{
+			Name: "db_cache_hit",
+			Help: "Number of run queries where the database already exists",
+		},
+	)
 )
 
 func initPrometheusCounter(storage *badger.DB) {
@@ -64,6 +70,7 @@ func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(savedPlaygroundSize)
 	prometheus.MustRegister(cleanupDuration)
 	prometheus.MustRegister(badgerBackupSize)
+	prometheus.MustRegister(dbCacheHit)
 
 	computeSavedPlaygroundStats(storage)
 }
