@@ -159,6 +159,9 @@ func (s *storage) createDatabase(db *mongo.Database, mode byte, config []byte, f
 			return dbInfo, nil
 		}
 		activeDatabasesCounter.Inc()
+	} else {
+		// database is already created, just increase the cache hit counter
+		dbCacheHit.Inc()
 	}
 
 	dbInfo.lastUsed = time.Now().Unix()
