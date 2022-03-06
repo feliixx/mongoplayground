@@ -9,13 +9,6 @@
     --btn-hover: #1f3663;
     --h3-color: #24292e;
     --resize-handler-background: #e5e7e8;
-    --ace-background: #f6f8fa;
-    --ace-string: #032f62;
-    --ace-numeric: #005cc5;
-    --ace-function: #6f42c1;
-    --ace-comment: #9299a2;
-    --ace-error: #8b0000;
-    --ace-variable: #000;
     --dropdown-title-color: #c9d1d9;
     --dropdown-title-background: #0d1117;
     --dropdown-list-color: #fff;
@@ -24,6 +17,18 @@
     --dropdown-hover-background: #375eab;
     --dropdown-selected-background: #1f3663;
     --footer-color: #646262;
+    
+    --ace-background: #f6f8fa;
+    --ace-string: #032f62;
+    --ace-numeric: #005cc5;
+    --ace-function: #6f42c1;
+    --ace-comment: #9299a2;
+    --ace-error: #8b0000;
+    --ace-variable: #000;
+
+    --doc-color: #24292e; 
+    --doc-code-background: #1b1f230d;
+    --doc-pre-background: #f6f8fa;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -32,7 +37,8 @@
         --toolbar-background: #2d333b;
         --h3-color: #adbac7;
         --resize-handler-background: #2d333b;
-        --footer-color: #ddd;
+        --footer-color: #dbd7d7;
+
         --ace-background: #22272e;
         --ace-string: #85b8e2;
         --ace-numeric: #65a8ec;
@@ -40,6 +46,11 @@
         --ace-comment: #6c7985;
         --ace-variable: #a8b5c1;
         --ace-error: #d6655e;
+
+        --doc-color: #a8b5c1;
+        --doc-code-background: #3b434d;
+        --doc-pre-background: #2d333b;
+
     }
     .ace_editor {
         color: #a8b5c1;
@@ -161,7 +172,7 @@ input[type=button]:disabled {
     overflow-y: scroll;
 }
 
-.content>div:not(.markdown-body)>h3 {
+.content>div:not(.doc)>h3 {
     text-align: center;
     font-size: 1.2em;
     color: var(--h3-color);
@@ -301,189 +312,189 @@ input[type=button]:disabled {
 
 /* styles for documentation */
 
-.markdown-body {
+.doc {
     -ms-text-size-adjust: 100%;
     -webkit-text-size-adjust: 100%;
-    color: #24292e;
+    color: var(--doc-color);
     font-family: var(--main-font-family);
     font-size: 16px;
     line-height: 24px;
     word-wrap: break-word;
 }
 
-.markdown-body .pl-c {
+.doc .pl-c {
     color: #6a737d;
 }
 
-.markdown-body .pl-c1,
-.markdown-body .pl-s .pl-v {
+.doc .pl-c1,
+.doc .pl-s .pl-v {
     color: #005cc5;
 }
 
-.markdown-body .pl-s .pl-s1 {
+.doc .pl-s .pl-s1 {
     color: #24292e;
 }
 
-.markdown-body .pl-k {
+.doc .pl-k {
     color: #d73a49;
 }
 
-.markdown-body .pl-pds,
-.markdown-body .pl-s {
+.doc .pl-pds,
+.doc .pl-s {
     color: #032f62;
 }
 
-.markdown-body a {
+.doc a {
     background-color: transparent;
 }
 
-.markdown-body a:active,
-.markdown-body a:hover {
+.doc a:active,
+.doc a:hover {
     outline-width: 0;
 }
 
-.markdown-body strong {
+.doc strong {
     font-weight: inherit;
 }
 
-.markdown-body strong {
+.doc strong {
     font-weight: bolder;
 }
 
-.markdown-body code,
-.markdown-body pre {
+.doc code,
+.doc pre {
     font-family: monospace, monospace;
     font-size: 1em;
 }
 
-.markdown-body * {
+.doc * {
     box-sizing: border-box;
 }
 
-.markdown-body input {
+.doc input {
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
 }
 
-.markdown-body a {
+.doc a {
     color: #0366d6;
     text-decoration: none;
 }
 
-.markdown-body a:hover {
+.doc a:hover {
     text-decoration: underline;
 }
 
-.markdown-body strong {
+.doc strong {
     font-weight: 600;
 }
 
-.markdown-body p {
+.doc p {
     margin-top: 0;
     margin-bottom: 10px;
 }
 
-.markdown-body ul {
+.doc ul {
     padding-left: 0;
     margin-top: 0;
     margin-bottom: 0;
 }
 
-.markdown-body code {
+.doc code {
     font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
     font-size: 12px;
 }
 
-.markdown-body pre {
+.doc pre {
     margin-top: 0;
     margin-bottom: 0;
     font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
     font-size: 12px;
 }
 
-.markdown-body::before {
+.doc::before {
     display: table;
     content: "";
 }
 
-.markdown-body::after {
+.doc::after {
     display: table;
     clear: both;
     content: "";
 }
 
-.markdown-body>:first-child {
+.doc>:first-child {
     margin-top: 0 !important;
 }
 
-.markdown-body>:last-child {
+.doc>:last-child {
     margin-bottom: 0 !important;
 }
 
-.markdown-body a:not([href]) {
+.doc a:not([href]) {
     color: inherit;
     text-decoration: none;
 }
 
-.markdown-body p,
-.markdown-body pre,
-.markdown-body ul {
+.doc p,
+.doc pre,
+.doc ul {
     margin-top: 0;
     margin-bottom: 16px;
 }
 
-.markdown-body h2,
-.markdown-body h3 {
+.doc h2,
+.doc h3 {
     margin-top: 24px;
     margin-bottom: 16px;
     font-weight: 600;
     line-height: 1.25;
 }
 
-.markdown-body h2 {
+.doc h2 {
     padding-bottom: .3em;
     font-size: 1.5em;
 }
 
-.markdown-body h3 {
+.doc h3 {
     font-size: 1.25em;
 }
 
-.markdown-body ul {
+.doc ul {
     padding-left: 2em;
 }
 
-.markdown-body ul ul {
+.doc ul ul {
     margin-top: 0;
     margin-bottom: 0;
 }
 
-.markdown-body li {
+.doc li {
     word-wrap: break-all;
 }
 
-.markdown-body li>p {
+.doc li>p {
     margin-top: 16px;
 }
 
-.markdown-body li+li {
+.doc li+li {
     margin-top: .25em;
 }
 
-.markdown-body code {
+.doc code {
     padding: .2em .4em;
     margin: 0;
     font-size: 85%;
-    background-color: rgba(27, 31, 35, .05);
+    background-color: var(--doc-code-background);
     border-radius: 3px;
 }
 
-.markdown-body pre {
+.doc pre {
     word-wrap: normal;
 }
 
-.markdown-body pre>code {
+.doc pre>code {
     padding: 0;
     margin: 0;
     font-size: 100%;
@@ -493,26 +504,26 @@ input[type=button]:disabled {
     border: 0;
 }
 
-.markdown-body .highlight {
+.doc .highlight {
     margin-bottom: 16px;
 }
 
-.markdown-body .highlight pre {
+.doc .highlight pre {
     margin-bottom: 0;
     word-break: normal;
 }
 
-.markdown-body .highlight pre,
-.markdown-body pre {
+.doc .highlight pre,
+.doc pre {
     padding: 16px;
     overflow: auto;
     font-size: 85%;
     line-height: 1.45;
-    background-color: #f6f8fa;
+    background-color: var(--doc-pre-background);
     border-radius: 3px;
 }
 
-.markdown-body pre code {
+.doc pre code {
     display: inline;
     max-width: auto;
     padding: 0;
@@ -524,21 +535,21 @@ input[type=button]:disabled {
     border: 0;
 }
 
-.markdown-body .link_back_to_top {
+.doc .link_back_to_top {
     text-align: right;
     font-size: small;
 }
 
-.markdown-body .faker_methods {
+.doc .faker_methods {
     width: 100%;
 }
 
-.markdown-body .faker_methods>:first-child {
+.doc .faker_methods>:first-child {
     float:left;
     width:50%;
 }
 
-.markdown-body .faker_methods>:last-child {
+.doc .faker_methods>:last-child {
     float:right;
     width:50%;
 }
