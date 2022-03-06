@@ -2,26 +2,20 @@
 <ul>
   <li><a href="#shortcuts">Shortcuts</a></li>
   <li><a href="#supported-methods">Supported methods</a></li>
-  <li>
-    <a href="#create-a-database">Create a database</a>
-    <ul>
-      <li><a href="#from-an-array-of-bson-documents">BSON mode</a></li>
-      <li><a href="#from-mgodatagen">Mgodatagen mode</a></li>
-    </ul>
-  </li>
+  <li><a href="#bson-mode">Create a DB from BSON documents</a></li>
+  <li><a href="#mgodatagen-mode">Create a DB with mgodatagen</a></li>
   <li><a href="#limitations">Limitations</a></li>
 </ul>
-<h1 id="shortcuts">Shortcuts</h1>
+<h2 id="shortcuts">Shortcuts</h2>
 <ul>
   <li>Use <code>Ctrl</code> + <code>Enter</code> to run a query (<code>Cmd</code> + <code>Enter</code> on mac)</li>
   <li>Use <code>Ctrl</code> + <code>s</code> to format the configuration and query editor (<code>Cmd</code> +
     <code>s</code> on mac)
   </li>
 </ul>
-<h1 id="supported-methods">Supported methods</h1>
+<h2 id="supported-methods">Supported methods</h2>
 <p>Only <code>find()</code>, <code>aggregate()</code> and <code>update()</code> are supported</p>
-<h1 id="create-a-database">Create a database</h1>
-<h2 id="from-an-array-of-bson-documents">From an array of BSON documents</h2>
+<h2 id="bson-mode">Create a DB from BSON documents</h2>
 <p>It is possible to create a collection from an array of BSON documents. If no collection name is specified,
   documents will be inserted in a collection named <strong><code>collection</code></strong>, for example</p>
 <div class="highlight highlight-source-js">
@@ -58,7 +52,7 @@
   }</pre>
 </div>
 <p>This will create two collections named <code>coll1</code> and <code>coll2</code></p>
-<h2 id="from-mgodatagen">From mgodatagen</h2>
+<h2 id="mgodatagen-mode">Create a DB with mgodatagen</h2>
 <p>You can create random documents using <strong><a
       href="https://github.com/feliixx/mgodatagen">mgodatagen</a></strong>. Select <code>mgodatagen</code> mode and
   create a custom configuration file.</p>
@@ -82,7 +76,7 @@
     }
   ]</pre>
 </div>
-<h2>Generator types</h2>
+<h3>Generator types</h3>
 <p>Generators have a common structure:</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, field name in generated document</span>
@@ -136,7 +130,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-unique-string">Unique String</h3>
 <p>If <code>unique</code> is set to true, the field will only contains unique strings. Unique strings
@@ -152,7 +146,7 @@
 "aad",
 ...
 </code></pre>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-int">Int</h3>
 <p>Generates a random <code>int</code> within bounds.</p>
@@ -165,7 +159,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-long">Long</h3>
 <p>Generates a random <code>long</code> within bounds.</p>
@@ -178,7 +172,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>   <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-double">Double</h3>
 <p>Generates a random <code>double</code> within bounds.</p>
@@ -191,7 +185,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-decimal">Decimal</h3>
 <p>Generates a random <code>decimal128</code>.</p>
@@ -202,7 +196,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-boolean">Boolean</h3>
 <p>Generates a random <code>boolean</code>.</p>
@@ -213,7 +207,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>      <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-objectid">ObjectId</h3>
 <p>Generates a random <code>objectId</code>.</p>
@@ -224,7 +218,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-array">Array</h3>
 <p>Generates a random array of bson object.</p>
@@ -239,7 +233,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-object">Object</h3>
 <p>Generates random nested object.</p>
@@ -255,7 +249,7 @@
     <span class="pl-s">"maxDistinctValue"</span>:    <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-binary">Binary</h3>
 <p>Generates random binary data of length within bounds.</p>
@@ -268,7 +262,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-date">Date</h3>
 <p>Generates a random date (stored as <a href="https://docs.mongodb.com/manual/reference/method/Date/"
@@ -284,7 +278,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-position">Position</h3>
 <p>Generates a random GPS position in Decimal Degrees ( WGS 84),
@@ -296,7 +290,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-constant">Constant</h3>
 <p>Add the same value to each document.</p>
@@ -308,7 +302,7 @@
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-autoincrement">Autoincrement</h3>
 <p>Generates an autoincremented value (type <code>&lt;long&gt;</code> or <code>&lt;int&gt;</code>).</p>
@@ -321,7 +315,7 @@
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>            <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-ref">Ref</h3>
 <p>If a field reference an other field in a different collection, you can use a ref generator.</p>
@@ -345,7 +339,7 @@
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-fromarray">FromArray</h3>
 <p>Pick an object from an array as value for the field. Currently, objects in the
@@ -365,7 +359,7 @@
 
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-uuid">UUID</h3>
 <p>Generate a random UUID ( using <a href="https://godoc.org/github.com/satori/go.uuid#NewV4"
@@ -384,7 +378,7 @@
     href="https://bsonspec.org/spec.html" rel="nofollow">bsonspec.org/spec.html</a>) like
   <code>BinData(4,"8bm1Z5s0Ra+dnDX1ZdV3Fg==")</code>.
 </p>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-stringFromParts">StringFromParts</h3>
 <p>Generate a random string from several generators</p>
@@ -427,7 +421,7 @@
   <span class="pl-kos">]</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-countAggregator">CountAggregator</h3>
 <p>Count documents from <code>&lt;database&gt;.&lt;collection&gt;</code> matching a specific query. To use a
@@ -477,7 +471,7 @@
   <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">2</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"count"</span>: <span class="pl-c1">1</span><span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-valueAggregator">ValueAggregator</h3>
 <p>Get distinct values for a specific field for documents from
@@ -531,7 +525,7 @@
   <pre><span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">1</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"a"</span><span class="pl-kos">,</span> <span class="pl-s">"b"</span><span class="pl-kos">]</span><span class="pl-kos">}</span>
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">[</span><span class="pl-s">"c"</span><span class="pl-kos">]</span><span class="pl-kos">}</span></pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-boundAggregator">BoundAggregator</h3>
 <p>Get the lowest and highest value for a specific field of documents in
@@ -589,7 +583,7 @@
 <span class="pl-kos">{</span><span class="pl-s">"_id"</span>: <span class="pl-c1">2</span><span class="pl-kos">,</span> <span class="pl-s">"values"</span>: <span class="pl-kos">{</span><span class="pl-s">"m"</span>: <span class="pl-c1">15</span><span class="pl-kos">,</span> <span class="pl-s">"M"</span>: <span class="pl-c1">200</span><span class="pl-kos">}</span><span class="pl-kos">}</span></pre>
 </div>
 <p>where <code>m</code> is the min value, and <code>M</code> the max value.</p>
-<div style="text-align: right;font-size: small"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
 <h3 id="mgodatagen-faker">Faker</h3>
 <p>Generate 'real' data using <a href="https://github.com/brianvoe/gofakeit">gofakeit library</a>.</p>
@@ -602,8 +596,8 @@
 <span class="pl-kos">}</span></pre>
 </div>
 <p>List of faker methods:</p>
-<div style="width:100%">
-  <div style="float:left;width:50%">
+<div class="faker_methods">
+  <div>
     <pre><code>"FirstName"
 "LastName"
 "Name"
@@ -659,7 +653,7 @@
 "SafeColor"
 </code></pre>
   </div>
-  <div style="float:right;width:50%">
+  <div>
     <pre><code>"Street"
 "StreetName"
 "StreetNumber"
@@ -715,10 +709,9 @@
 </code></pre>
   </div>
 </div>
-
-<div style="text-align: right;font-size: small;width:100%"><a href="#mgodatagen-list-top">^Back to the list of
+<div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
-<h1 id="limitations">Limitations</h1>
+<h2 id="limitations">Limitations</h2>
 <h3>Size limitations</h3>
 <p>This playground has several limitations:</p>
 <ul>
@@ -746,4 +739,4 @@
     }
   })</pre>
 </div>
-<div style="text-align: right;font-size: small"><a href="#summary">^Back to the top</a></div>
+<div class="link_back_to_top"><a href="#summary">^Back to the top</a></div>
