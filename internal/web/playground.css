@@ -1,6 +1,6 @@
 :root {
     --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
-    --white: #fff;
+    --body-background: white; 
     --toolbar-background: #353535;
     --toolbar-color: #d3d3d3;
     --ctr-input-border: #808080;
@@ -8,13 +8,13 @@
     --btn: #375eab;
     --btn-hover: #1f3663;
     --h3-color: #24292e;
-    --window-border: #e5e7e8;
+    --resize-handler-background: #e5e7e8;
     --ace-background: #f6f8fa;
     --ace-string: #032f62;
     --ace-numeric: #005cc5;
     --ace-function: #6f42c1;
     --ace-comment: #9299a2;
-    --ace-line: #8b0000;
+    --ace-error: #8b0000;
     --ace-variable: #000;
     --dropdown-title-color: #c9d1d9;
     --dropdown-title-background: #0d1117;
@@ -28,17 +28,39 @@
 
 @media (prefers-color-scheme: dark) {
      :root {
-        --h3-color: #fdfdfd;
-        --window-border: #555;
-        /*
-        GitHub Dark dimmed theme: https://themes.vivaldi.net/themes/nV6vpgDldN2
-            --colorAccentBg: #2d333b;
-            --colorBg: #22272e;
-            --colorFg: #adbac7;
-            --colorHighlightBg: #316dca;
-            --colorWindowBg: #22272e;
-        */
+        --body-background: #22272e;
+        --toolbar-background: #2d333b;
+        --h3-color: #adbac7;
+        --resize-handler-background: #2d333b;
         --footer-color: #ddd;
+        --ace-background: #22272e;
+        --ace-string: #85b8e2;
+        --ace-numeric: #65a8ec;
+        --ace-function: #c7ade5;
+        --ace-comment: #6c7985;
+        --ace-variable: #a8b5c1;
+        --ace-error: #d6655e;
+    }
+    .ace_editor {
+        color: #a8b5c1;
+        border: 1px solid #2d333b;
+    }
+    .ace_gutter-layer {
+        color: #4c545f;
+        background-color: #22272e;
+    }
+    .ace_gutter-active-line {
+        color: #4c545f;
+        background-color: #20242b !important;
+    }
+    .ace_language {
+        color: #d18849 !important;
+    }
+    .ace_bracket {
+        border: 1px solid #585c61 !important;
+    }
+    .ace_cursor {
+        color: #a8b5c1 !important;
     }
 }
 
@@ -46,6 +68,7 @@ body {
     height: 100vh;
     margin: 0;
     overflow: hidden;
+    background-color: var(--body-background);
 }
 
 .toolbar {
@@ -102,7 +125,7 @@ body {
     border: 1px solid var(--btn);
     font-size: 1em;
     background: var(--btn);
-    color: var(--white);
+    color: white;
     border-radius: 5px;
 }
 
@@ -163,7 +186,7 @@ input[type=button]:disabled {
     display: block;
     height: 100%;
     width: 5px;
-    background: var(--window-border);
+    background: var(--resize-handler-background);
 }
 
 .footer {
@@ -192,7 +215,7 @@ input[type=button]:disabled {
 }
 
 .ace_function {
-    color: var(--ace-ace-function) !important;
+    color: var(--ace-function) !important;
 }
 
 .ace_error {
@@ -203,8 +226,12 @@ input[type=button]:disabled {
     color: var(--ace-comment) !important;
 }
 
+.ace_indent-guide {
+    visibility: hidden;
+}
+
 .text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line {
-    color: var(--ace-line) !important;
+    color: var(--ace-error) !important;
 }
 
 .ace_variable {

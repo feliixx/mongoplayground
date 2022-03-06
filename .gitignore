@@ -13,3 +13,4 @@ backups
 .idea
 credentials.json
 token.json
+restart.sh
