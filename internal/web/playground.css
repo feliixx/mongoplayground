@@ -160,6 +160,8 @@ input[type=button]:disabled {
 .content>div:first-child {
     flex: 0 1 auto;
     width: 33%;
+    display: flex;
+    flex-direction: column;
 }
 
 .content>div:last-child {
