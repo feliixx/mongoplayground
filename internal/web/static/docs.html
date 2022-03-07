@@ -62,11 +62,11 @@
   <pre>[
     <span class="pl-c"><span class="pl-c">//</span> first collection to create </span>
     {  
-     <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>string<span class="pl-k">&gt;</span>,            <span class="pl-c"><span class="pl-c">//</span> required, collection name</span>
-     <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>int<span class="pl-k">&gt;</span>,                    <span class="pl-c"><span class="pl-c">//</span> required, number of document to insert in the collection </span>
+     <span class="pl-s"><span class="pl-pds">"</span>collection<span class="pl-pds">"</span></span><span class="pl-k">:</span>   <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span>,          <span class="pl-c"><span class="pl-c">//</span> required, collection name</span>
+     <span class="pl-s"><span class="pl-pds">"</span>count<span class="pl-pds">"</span></span><span class="pl-k">:</span>        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>,             <span class="pl-c"><span class="pl-c">//</span> required, number of document to insert in the collection </span>
      <span class="pl-s"><span class="pl-pds">"</span>content<span class="pl-pds">"</span></span><span class="pl-k">:</span> {                       <span class="pl-c"><span class="pl-c">//</span> required, the actual schema to generate documents   </span>
-       <span class="pl-s"><span class="pl-pds">"</span>fieldName1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,       <span class="pl-c"><span class="pl-c">//</span> optional, see Generator below</span>
-       <span class="pl-s"><span class="pl-pds">"</span>fieldName2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-k">&lt;</span>generator<span class="pl-k">&gt;</span>,
+       <span class="pl-s"><span class="pl-pds">"</span>fieldName1<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span>,       <span class="pl-c"><span class="pl-c">//</span> optional, see Generator below</span>
+       <span class="pl-s"><span class="pl-pds">"</span>fieldName2<span class="pl-pds">"</span></span><span class="pl-k">:</span> <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span>,
        <span class="pl-k">...</span>
      }
     },
@@ -80,11 +80,11 @@
 <p>Generators have a common structure:</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, field name in generated document</span>
-  <span class="pl-s">"type"</span>:             <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, type of the field</span>
+  <span class="pl-s">"type"</span>:             <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, type of the field</span>
   <span class="pl-s">"typeParam"</span>:        ...<span class="pl-kos">,</span>      <span class="pl-c">// specific parameters for this type</span>
 
-  <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, maximum number of distinct values for this field</span>
-  <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span>     <span class="pl-c">// optional, int between 0 and 100. Percentage of documents</span>
+  <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, maximum number of distinct values for this field</span>
+  <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional, int between 0 and 100. Percentage of documents</span>
                                 <span class="pl-c">// that will have this field</span>
 <span class="pl-kos">}</span></pre>
 </div>
@@ -123,11 +123,11 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"string"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
-    <span class="pl-s">"unique"</span>:           <span class="pl-s">`bool`</span><span class="pl-kos">,</span>   <span class="pl-c">// optional, see details below</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
+    <span class="pl-s">"unique"</span>:           <span class="pl-type">&lt;</span><span>bool</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>   <span class="pl-c">// optional, see details below</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -153,10 +153,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"int"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minInt"</span>:           <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxInt"</span>:           <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minInt</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
+    <span class="pl-s">"minInt"</span>:           <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxInt"</span>:           <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minInt</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -166,10 +166,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"long"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLong"</span>:          <span class="pl-s">`long`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxLong"</span>:          <span class="pl-s">`long`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minLong</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>  <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>   <span class="pl-c">// optional</span>
+    <span class="pl-s">"minLong"</span>:          <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxLong"</span>:          <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minLong</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>  <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>   <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -179,10 +179,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"double"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minDouble"</span>:        <span class="pl-s">`double`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDouble"</span>:        <span class="pl-s">`double`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minDouble</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"minDouble"</span>:        <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDouble"</span>:        <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minDouble</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -192,8 +192,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"decimal"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -203,8 +203,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"boolean"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>      <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>      <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -214,8 +214,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"objectId"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -225,12 +225,12 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"array"</span><span class="pl-kos">,</span>     <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= minLength</span>
-    <span class="pl-s">"arrayContent"</span>:     <span class="pl-s">`generator`</span><span class="pl-kos">,</span> <span class="pl-c">// generator use to create element to fill the array.</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= minLength</span>
+    <span class="pl-s">"arrayContent"</span>:     <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// generator use to create element to fill the array.</span>
                                      <span class="pl-c">// can be of any type</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -241,12 +241,12 @@
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:                <span class="pl-s">"object"</span><span class="pl-kos">,</span>    <span class="pl-c">// required</span>
     <span class="pl-s">"objectContent"</span>: <span class="pl-kos">{</span>                  <span class="pl-c">// required, list of generator used to</span>
-       <span class="pl-s">"nestedFieldName1"</span>: <span class="pl-s">`generator`</span><span class="pl-kos">,</span> <span class="pl-c">// generate the nested document</span>
-       <span class="pl-s">"nestedFieldName2"</span>: <span class="pl-s">`generator`</span><span class="pl-kos">,</span>
+       <span class="pl-s">"nestedFieldName1"</span>: <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// generate the nested document</span>
+       <span class="pl-s">"nestedFieldName2"</span>: <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>
        ...
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
-    <span class="pl-s">"nullPercentage"</span>:      <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>:    <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:      <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>:    <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -256,10 +256,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"binary"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -272,10 +272,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"date"</span><span class="pl-kos">,</span>   <span class="pl-c">// required</span>
-    <span class="pl-s">"startDate"</span>:        <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"endDate"</span>:          <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, must be &gt;= startDate</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"startDate"</span>:        <span class="pl-type">&lt;</span><span></span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
+    <span class="pl-s">"endDate"</span>:          <span class="pl-type">&lt;</span><span>string</span><span class="pl-type"></span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, must be &gt;= startDate</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -286,8 +286,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"position"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -297,9 +297,9 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"constant"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"constVal"</span>:       <span class="pl-s">`object`</span><span class="pl-kos">,</span>   <span class="pl-c">// required, can be of any type including object and array</span>
+    <span class="pl-s">"constVal"</span>:       <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>   <span class="pl-c">// required, can be of any type including object and array</span>
                                   <span class="pl-c">// eg: {"k": 1, "v": "val"}</span>
-    <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>       <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -309,10 +309,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"autoincrement"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"autoType"</span>:       <span class="pl-s">`string`</span><span class="pl-kos">,</span>        <span class="pl-c">// required, can be `int` or `long`</span>
-    <span class="pl-s">"startLong"</span>:      <span class="pl-s">`long`</span><span class="pl-kos">,</span>          <span class="pl-c">// optional, start value if autoType = long</span>
-    <span class="pl-s">"startInt"</span>:       <span class="pl-s">`int`</span><span class="pl-kos">,</span>           <span class="pl-c">// optional, start value if autoType = int</span>
-    <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>            <span class="pl-c">// optional</span>
+    <span class="pl-s">"autoType"</span>:       <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>        <span class="pl-c">// required, can be `int` or `long</span><span class="pl-type">&gt;</span>
+    <span class="pl-s">"startLong"</span>:      <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>          <span class="pl-c">// optional, start value if autoType = long</span>
+    <span class="pl-s">"startInt"</span>:       <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>           <span class="pl-c">// optional, start value if autoType = int</span>
+    <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>            <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -323,20 +323,20 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>:<span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"ref"</span><span class="pl-kos">,</span>       <span class="pl-c">// required</span>
-    <span class="pl-s">"id"</span>:               <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// required, generator id used to link</span>
+    <span class="pl-s">"id"</span>:               <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, generator id used to link</span>
                                      <span class="pl-c">// field between collections</span>
-    <span class="pl-s">"refContent"</span>:       <span class="pl-s">`generator`</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>        <span class="pl-c">// optional</span>
+    <span class="pl-s">"refContent"</span>:       <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <p>generator in other collections:</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"ref"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"id"</span>:               <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// required, same id as previous generator</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>  <span class="pl-c">// optional</span>
+    <span class="pl-s">"id"</span>:               <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, same id as previous generator</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -349,13 +349,13 @@
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"fromArray"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"in"</span>: <span class="pl-kos">[</span>                        <span class="pl-c">// required. Can't be empty. An array of object of</span>
-      <span class="pl-s">`object`</span><span class="pl-kos">,</span>                    <span class="pl-c">// any type, including object and array.</span>
-      <span class="pl-s">`object`</span>
+      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>                    <span class="pl-c">// any type, including object and array.</span>
+      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span>
       <span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span>
     <span class="pl-kos">]</span><span class="pl-kos">,</span>
-    <span class="pl-s">"randomOrder"</span>:    <span class="pl-s">`bool`</span><span class="pl-kos">,</span> <span class="pl-c">// optional. If set to true, objects will be picked </span>
+    <span class="pl-s">"randomOrder"</span>:    <span class="pl-type">&lt;</span><span>bool</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional. If set to true, objects will be picked </span>
                               <span class="pl-c">// from the array in random order.</span>
-    <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>   <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>   <span class="pl-c">// optional</span>
 
 <span class="pl-kos">}</span></pre>
 </div>
@@ -367,9 +367,9 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"uuid"</span><span class="pl-kos">,</span>   <span class="pl-c">// required</span>
-    <span class="pl-s">"format"</span>:         <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// optional, either "string" or "binary".</span>
+    <span class="pl-s">"format"</span>:         <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, either "string" or "binary".</span>
                                 <span class="pl-c">// default is "string"</span>
-    <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <p>If <code>format</code> is "string", the field will be a simple string like "f1b9b567-9b34-45af-9d9c-35f565d57716".
@@ -386,11 +386,11 @@
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"stringFromParts"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"parts"</span>: <span class="pl-kos">[</span>                           <span class="pl-c">// required. Can't be empty. An array </span>
-      <span class="pl-s">`generator`</span><span class="pl-kos">,</span>                       <span class="pl-c">// of generators of any basic type</span>
-      <span class="pl-s">`generator`</span>
+      <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>                       <span class="pl-c">// of generators of any basic type</span>
+      <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span>
       <span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span>
     <span class="pl-kos">]</span><span class="pl-kos">,</span>
-    <span class="pl-s">"nullPercentage"</span>: <span class="pl-s">`int`</span>              <span class="pl-c">// optional</span>
+    <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>              <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <p><strong>Example:</strong></p>
@@ -430,9 +430,9 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"countAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-  <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
-  <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
-  <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that selects which documents to count in</span>
+  <span class="pl-s">"database"</span>:   <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
+  <span class="pl-s">"collection"</span>: <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
+  <span class="pl-s">"query"</span>:      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span>     <span class="pl-c">// required, query that selects which documents to count in</span>
                              <span class="pl-c">// the collection</span>
 <span class="pl-kos">}</span></pre>
 </div>
@@ -482,10 +482,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"valueAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-  <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
-  <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
-  <span class="pl-s">"key"</span>:        <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, the field for which to return distinct values.</span>
-  <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
+  <span class="pl-s">"database"</span>:   <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
+  <span class="pl-s">"collection"</span>: <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
+  <span class="pl-s">"key"</span>:        <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, the field for which to return distinct values.</span>
+  <span class="pl-s">"query"</span>:      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
                              <span class="pl-c">// to retrieve the distinct values</span>
 <span class="pl-kos">}</span></pre>
 </div>
@@ -536,10 +536,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
   <span class="pl-s">"type"</span>: <span class="pl-s">"valueAggregator"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-  <span class="pl-s">"database"</span>:   <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
-  <span class="pl-s">"collection"</span>: <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
-  <span class="pl-s">"key"</span>:        <span class="pl-s">`string`</span><span class="pl-kos">,</span>    <span class="pl-c">// required, the field for which to return distinct values.</span>
-  <span class="pl-s">"query"</span>:      <span class="pl-s">`object`</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
+  <span class="pl-s">"database"</span>:   <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, db to use to perform aggregation</span>
+  <span class="pl-s">"collection"</span>: <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, collection to use to perform aggregation</span>
+  <span class="pl-s">"key"</span>:        <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, the field for which to return distinct values.</span>
+  <span class="pl-s">"query"</span>:      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span>     <span class="pl-c">// required, query that specifies the documents from which</span>
                              <span class="pl-c">// to retrieve lower/higer value</span>
 <span class="pl-kos">}</span></pre>
 </div>
@@ -590,9 +590,9 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"faker"</span><span class="pl-kos">,</span>  <span class="pl-c">// required</span>
-    <span class="pl-s">"method"</span>:           <span class="pl-s">`string`</span><span class="pl-kos">,</span> <span class="pl-c">// required, faker method to use, for example: Name</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-s">`int`</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-s">`int`</span>     <span class="pl-c">// optional</span>
+    <span class="pl-s">"method"</span>:           <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, faker method to use, for example: Name</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <p>List of faker methods:</p>

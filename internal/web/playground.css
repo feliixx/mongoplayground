@@ -38,6 +38,7 @@
     --token-comment-color: #9299a2;
     --token-variable-color: #000;
     --token-language-color: #686df7;
+    --token-type-color: #a73f3f; 
     --syntax-error-color: #8b0000;
 
     --doc-color: #24292e; 
@@ -387,6 +388,10 @@ input[type=button]:disabled {
 .doc .pl-pds,
 .doc .pl-s {
     color: var(--token-string-color );
+}
+
+.doc .pl-type {
+    color: var(--token-type-color)
 }
 
 .doc a {
