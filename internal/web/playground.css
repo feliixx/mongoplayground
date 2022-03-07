@@ -102,8 +102,7 @@ a {
     background-color: var(--toolbar-background);
 }
 
-.toolbar>.title,
-.toolbar>a>.title {
+.toolbar .title {
     width: 220px;
     font-family: var(--main-font-family);
     float: left;
@@ -113,26 +112,23 @@ a {
     cursor: pointer;
 }
 
-.toolbar>.controls {
+.toolbar .controls {
     margin-left: 230px;
     padding: 10px 15px;
 }
 
-.toolbar>.controls>:last-child {
+.toolbar .controls>:last-child {
     float: right !important;
 }
 
-.toolbar>.controls>label {
+.toolbar label {
+    margin-left: 15px;
+    font-size: 1.2em;
     color: var(--toolbar-color);
     font-family: var(--main-font-family);
 }
 
-.toolbar>.controls>label.bold {
-    margin-left: 15px;
-    font-size: 1.2em;
-}
-
-.toolbar>.controls>input[type=text] {
+.toolbar input[type=text] {
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
@@ -146,7 +142,7 @@ a {
     visibility: hidden;
 }
 
-.toolbar>.controls>input[type=button] {
+.toolbar input[type=button] {
     height: 30px;
     border: 1px solid var(--button-background);
     font-size: 1em;
@@ -155,8 +151,8 @@ a {
     border-radius: 5px;
 }
 
-.toolbar>.controls>input[type=button]:hover,
-input[type=button]:disabled {
+.toolbar input[type=button]:hover,
+.toolbar input[type=button]:disabled {
     background: var(--btn-hover-background) !important;
 }
 
@@ -196,20 +192,20 @@ input[type=button]:disabled {
     font-family: var(--main-font-family);
 }
 
-.content>div>.resizable_editor {
+.content .resizable_editor {
     width: 100%;
     height: 100%;
     display: flex;
 }
 
-.content>div>.resizable_editor>.handler {
+.content .handler {
     width: 4px;
     height: 93%;
     cursor: ew-resize;
     flex: 0 0 auto;
 }
 
-.content>div>.resizable_editor>.handler::before {
+.content .handler::before {
     content: '';
     display: block;
     height: 100%;
@@ -264,7 +260,7 @@ input[type=button]:disabled {
     visibility: hidden;
 }
 
-.text_red>.ace_scroller>.ace_content>.ace_text-layer>.ace_line_group>.ace_line {
+.text_red .ace_line {
     color: var(--syntax-error-color) !important;
 }
 
@@ -311,19 +307,19 @@ input[type=button]:disabled {
     .toolbar {
         height: 40px;
     }
-    .toolbar>.controls {
+    .toolbar .controls {
         padding: 3px 3px;
         margin: 0;
     }
-    .toolbar>.controls>:nth-child(2),
-    .toolbar>.controls>:nth-child(5),
-    .toolbar>.controls>:nth-child(6),
-    .toolbar>.controls>:nth-child(7),
-    .toolbar>.controls>:nth-child(8),
-    .toolbar>.controls>:nth-child(9),
-    .toolbar>.controls>:nth-child(10),
-    .toolbar>.controls>:nth-child(11),
-    .toolbar>.title {
+    .toolbar .controls>:nth-child(2),
+    .toolbar .controls>:nth-child(5),
+    .toolbar .controls>:nth-child(6),
+    .toolbar .controls>:nth-child(7),
+    .toolbar .controls>:nth-child(8),
+    .toolbar .controls>:nth-child(9),
+    .toolbar .controls>:nth-child(10),
+    .toolbar .controls>:nth-child(11),
+    .toolbar .title {
         display: none;
     }
     .content {
@@ -337,8 +333,8 @@ input[type=button]:disabled {
     .content>div:last-child {
         width: 100% !important;
     }
-    .content>div>.resizable_editor>.handler,
-    .handler::before {
+    .content .handler,
+    .content .handler::before {
         display: none;
     }
     .ace_editor {
@@ -350,12 +346,12 @@ input[type=button]:disabled {
 }
 
 @media only screen and (min-width:1000px) and (max-width:1450px) {
-    .toolbar>.controls>:nth-child(2),
-    .toolbar>.controls>:nth-child(7),
-    .toolbar>.controls>:nth-child(8),
-    .toolbar>.controls>:nth-child(9),
-    .toolbar>.controls>:nth-child(10),
-    .toolbar>.controls>:nth-child(11) {
+    .toolbar .controls>:nth-child(2),
+    .toolbar .controls>:nth-child(7),
+    .toolbar .controls>:nth-child(8),
+    .toolbar .controls>:nth-child(9),
+    .toolbar .controls>:nth-child(10),
+    .toolbar .controls>:nth-child(11) {
         display: none;
     }
 }
