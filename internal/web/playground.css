@@ -1,11 +1,12 @@
 :root {
     --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
     --doc-code-font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    --body-background: white; 
+    --body-background: #fff; 
     --toolbar-background: #353535;
     --toolbar-color: #d3d3d3;
     --text-input-border: #808080;
     --text-input-background: #ececec;
+    --text-input-color: #000;
     --button-background: #375eab;
     --button-hover-background: #1f3663;
     --h3-color: #24292e;
@@ -27,7 +28,7 @@
     --ace-gutter-color: #333333; 
     --ace-gutter-background: #f0f0f0; 
     --ace-gutter-active-line-background: #dcdcdc; 
-    --ace-bracket-border: 1px solid #c0c0c0;
+    --ace-bracket-border: #c0c0c0;
     --ace-autocomplete-background: #f6f8fa;
     --ace-completion-meta-color: #111;
     --ace-completion-line-selected-background: #cad6fa;
@@ -50,6 +51,9 @@
      :root {
         --body-background: #22272e;
         --toolbar-background: #2d333b;
+        --text-input-border: #444c56;
+        --text-input-background: #22272e;
+        --text-input-color: #c2c3c5;
         --h3-color: #adbac7;
         --a-color: #4c8edf;
         --resize-handler-background: #2d333b;
@@ -62,7 +66,7 @@
         --ace-gutter-color: #4c545f; 
         --ace-gutter-background: #22272e; 
         --ace-gutter-active-line-background: #20242b; 
-        --ace-bracket-border: 1px solid #585c61; 
+        --ace-bracket-border: #585c61; 
         --ace-autocomplete-background: #22272e;
         --ace-completion-meta-color: #a8b5c1;
         --ace-completion-line-selected-background: #171a1f;
@@ -135,6 +139,7 @@ a {
     border: 1px solid var(--text-input-border);
     border-radius: 4px;
     background-color: var(--text-input-background);
+    color: var(--text-input-color);
     font-size: 1em;
     height: 24px;
     width: 350px;
@@ -296,7 +301,7 @@ input[type=button]:disabled {
 }
 
 .ace_bracket {
-    border: var(--ace-bracket-border) !important;
+    border: 1px solid var(--ace-bracket-border) !important;
 }
 
 @media only screen and (max-width:999px) {
