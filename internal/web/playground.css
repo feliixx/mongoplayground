@@ -196,6 +196,10 @@ a {
     display: flex;
 }
 
+.content .resizable_editor>div:first-child {
+    display: none;
+}
+
 .content .handler {
     width: 4px;
     height: 93%;
