@@ -19,12 +19,12 @@
             <input id="format" type="button" value="format" title="ctrl + s">
             <input id="share" type="button" value="share" disabled>
             <input id="link" type="text">
-            <label class="bold">Mode:</label>
+            <label>Mode:</label>
             <select id="mode">
                 <option {{if eq .Mode 1 }} selected {{end}}>bson</option>
                 <option {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
             </select>
-            <label class="bold">Template:</label>
+            <label>Template:</label>
             <select id="template">
                 <option>bson single collection</option>
                 <option>bson multiple collections</option>
@@ -33,7 +33,7 @@
                 <option>indexe</option>
                 <option>explain</option>
             </select>
-            <label id="aggregation_stages_label" class="bold">Stage by stage output:</label>
+            <label id="aggregation_stages_label">Stage by stage output:</label>
             <select id="aggregation_stages"></select>
             <input id="doc" type="button" value="docs">
         </div>
@@ -42,20 +42,20 @@
         <div id="configPanel">
             <h3>Configuration</h3>
             <div class="resizable_editor">
-                <div id="config" class="ignore_warnings" style="display:none">{{printf "%s" .Config}}</div>
+                <div id="config">{{printf "%s" .Config}}</div>
                 <div id="configResizeHandler" class="handler"></div>
             </div>
         </div>
         <div id="queryPanel">
             <h3>Query</h3>
             <div class="resizable_editor">
-                <div id="query" class="ignore_warnings" style="display:none">{{printf "%s" .Query}}</div>
+                <div id="query">{{printf "%s" .Query}}</div>
                 <div id="queryResizeHandler" class="handler"></div>
             </div>
         </div>
         <div id="resultPanel">
             <h3>Result</h3>
-            <div id="result" class="text_red"></div>
+            <div id="result"></div>
         </div>
         <div id="docPanel" class="doc"></div>
     </div>
