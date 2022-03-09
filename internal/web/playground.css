@@ -1,7 +1,8 @@
 :root {
     --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
     --doc-code-font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    --body-background: #fff; 
+    
+    --body-background: #fff;
     --toolbar-background: #353535;
     --toolbar-color: #d3d3d3;
     --text-input-border: #808080;
@@ -22,12 +23,12 @@
     --dropdown-selected-background: #1f3663;
     
     --ace-editor-background: #f6f8fa;
-    --ace-editor-color: #000; 
+    --ace-editor-color: #000;
     --ace-editor-border: none;
     --ace-cursor-color: #000;
-    --ace-gutter-color: #333333; 
-    --ace-gutter-background: #f0f0f0; 
-    --ace-gutter-active-line-background: #dcdcdc; 
+    --ace-gutter-color: #333333;
+    --ace-gutter-background: #f0f0f0;
+    --ace-gutter-active-line-background: #dcdcdc;
     --ace-bracket-border: #c0c0c0;
     --ace-autocomplete-background: #f6f8fa;
     --ace-completion-meta-color: #111;
@@ -39,10 +40,10 @@
     --token-comment-color: #9299a2;
     --token-variable-color: #000;
     --token-language-color: #686df7;
-    --token-type-color: #a73f3f; 
+    --token-type-color: #a73f3f;
     --syntax-error-color: #8b0000;
 
-    --doc-color: #24292e; 
+    --doc-color: #24292e;
     --doc-code-background: #1b1f230d;
     --doc-pre-background: #f6f8fa;
 }
@@ -60,13 +61,13 @@
         --footer-color: #dbd7d7;
 
         --ace-editor-background: #22272e;
-        --ace-editor-color: #a8b5c1; 
+        --ace-editor-color: #a8b5c1;
         --ace-editor-border: 1px solid #2d333b;
         --ace-cursor-color: #a8b5c1;
-        --ace-gutter-color: #4c545f; 
-        --ace-gutter-background: #22272e; 
-        --ace-gutter-active-line-background: #20242b; 
-        --ace-bracket-border: #585c61; 
+        --ace-gutter-color: #4c545f;
+        --ace-gutter-background: #22272e;
+        --ace-gutter-active-line-background: #20242b;
+        --ace-bracket-border: #585c61;
         --ace-autocomplete-background: #22272e;
         --ace-completion-meta-color: #a8b5c1;
         --ace-completion-line-selected-background: #171a1f;
@@ -115,10 +116,15 @@ a {
 .toolbar .controls {
     margin-left: 230px;
     padding: 10px 15px;
+    vertical-align: middle;
 }
 
 .toolbar .controls>:last-child {
     float: right !important;
+}
+
+.toolbar .controls>:last-child>input[type=button] {
+    margin-left: 25px;
 }
 
 .toolbar label {
@@ -183,11 +189,23 @@ a {
     overflow-y: scroll;
 }
 
-.content>div:not(.doc)>h3 {
+.content>div:not(.doc) h3 {
     text-align: center;
     font-size: 1.2em;
     color: var(--h3-color);
     font-family: var(--main-font-family);
+}
+
+.content .config_title {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+}
+
+.content .config_title>:last-child {
+    margin-left: 25px;
 }
 
 .content .resizable_editor {
@@ -293,6 +311,7 @@ a {
     color: var(--ace-gutter-color);
     background-color: var(--ace-gutter-background);
 }
+
 .ace_gutter-active-line {
     color: var(--ace-gutter-color);
     background-color: var(--ace-gutter-active-line-background) !important;
@@ -377,7 +396,7 @@ a {
 
 .doc .pl-c1,
 .doc .pl-s .pl-v {
-    color: var(--token-numeric-color );
+    color: var(--token-numeric-color);
 }
 
 .doc .pl-s .pl-s1 {
@@ -390,7 +409,7 @@ a {
 
 .doc .pl-pds,
 .doc .pl-s {
-    color: var(--token-string-color );
+    color: var(--token-string-color);
 }
 
 .doc .pl-type {
@@ -597,14 +616,15 @@ a {
 }
 
 .doc .faker_methods>:first-child {
-    float:left;
-    width:50%;
+    float: left;
+    width: 50%;
 }
 
 .doc .faker_methods>:last-child {
-    float:right;
-    width:50%;
+    float: right;
+    width: 50%;
 }
+
 
 /** Style for custom combobox, adaptation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
 
@@ -623,7 +643,7 @@ a {
     box-sizing: border-box;
     cursor: pointer;
     font-size: 1em;
-    padding: .4em .6em;
+    padding: .3em .6em;
     position: relative;
     text-align: left;
     height: 30px;
