@@ -34,21 +34,18 @@ var configEditor,
     isConfigHandlerDragging = false,
     isQueryHandlerDragging = false
 
-window.onload = function () {
+function init() {
 
     comboStages = new CustomSelect({
         selectId: "aggregation_stages",
-        width: "170px",
         onChange: function () { run() }
     })
     comboMode = new CustomSelect({
         selectId: "mode",
-        width: "130px",
         onChange: function () { checkEditorContent(configEditor, "config") }
     })
     comboTemplate = new CustomSelect({
         selectId: "template",
-        width: "210px",
         onChange: function () { setTemplate(comboTemplate.getSelectedIndex()) }
     })
 
@@ -395,3 +392,7 @@ function showResult(result, doIndent) {
     resultEditor.setOption("wrap", false)
     resultEditor.setValue(result, -1)
 }
+
+
+// code to execute when script is loaded
+init()
