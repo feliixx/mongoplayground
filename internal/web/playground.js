@@ -77,7 +77,8 @@ window.onload = function () {
         "showGutter": false,
         "useWorker": false,
         "highlightActiveLine": false,
-        "wrap": true
+        "wrap": true,
+        "showPrintMargin": false
     })
     resultEditor.renderer.$cursorLayer.element.style.display = "none"
 
