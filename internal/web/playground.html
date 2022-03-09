@@ -19,28 +19,31 @@
             <input id="format" type="button" value="format" title="ctrl + s">
             <input id="share" type="button" value="share" disabled>
             <input id="link" type="text">
-            <label>Mode:</label>
-            <select id="mode">
-                <option {{if eq .Mode 1 }} selected {{end}}>bson</option>
-                <option {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
-            </select>
-            <label>Template:</label>
-            <select id="template">
-                <option>bson single collection</option>
-                <option>bson multiple collections</option>
-                <option>mgodatagen</option>
-                <option>update</option>
-                <option>indexe</option>
-                <option>explain</option>
-            </select>
             <label id="aggregation_stages_label">Stage by stage output:</label>
             <select id="aggregation_stages"></select>
-            <input id="doc" type="button" value="docs">
+            <div>
+                <label>Template:</label>
+                <select id="template">
+                    <option>bson single collection</option>
+                    <option>bson multiple collections</option>
+                    <option>mgodatagen</option>
+                    <option>update</option>
+                    <option>indexe</option>
+                    <option>explain</option>
+                </select>
+                <input id="showDoc" type="button" value="docs">
+            </div>
         </div>
     </div>
     <div class="content">
         <div id="configPanel">
-            <h3>Configuration</h3>
+            <div class="config_title">
+                <h3>Configuration</h3>
+                <select id="mode">
+                    <option {{if eq .Mode 1 }} selected {{end}}>bson</option>
+                    <option {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>
+                </select>
+            </div>
             <div class="resizable_editor">
                 <div id="config">{{printf "%s" .Config}}</div>
                 <div id="configResizeHandler" class="handler"></div>

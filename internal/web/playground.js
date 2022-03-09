@@ -61,6 +61,7 @@ window.onload = function () {
         "useWorker": false,
         "useSoftTabs": true,
         "tabSize": 2,
+        "showPrintMargin": false
     }
 
     var configDiv = document.getElementById("config")
@@ -148,7 +149,7 @@ function addButtonClickListener() {
     document.getElementById("run").addEventListener("click", function (e) { run() })
     document.getElementById("format").addEventListener("click", function (e) { formatAll(true) })
     document.getElementById("share").addEventListener("click", function (e) { save() })
-    document.getElementById("doc").addEventListener("click", function (e) { showDoc(true) })
+    document.getElementById("showDoc").addEventListener("click", function (e) { showDoc(true) })
 }
 
 /**
