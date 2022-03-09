@@ -247,7 +247,7 @@ function showDoc(doShow) {
  */
 function loadDocs() {
     var r = new XMLHttpRequest()
-    r.open("GET", "/static/docs-12.html", true)
+    r.open("GET", "/static/docs-13.html", true)
     r.onreadystatechange = function () {
         if (r.readyState !== 4) { return }
         if (r.status === 200) {

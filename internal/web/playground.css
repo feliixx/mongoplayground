@@ -33,6 +33,7 @@
     --ace-autocomplete-background: #f6f8fa;
     --ace-completion-meta-color: #111;
     --ace-completion-line-selected-background: #cad6fa;
+    --ace-selection-background: #b5d5ff;
 
     --token-string-color: #032f62;
     --token-numeric-color: #005cc5;
@@ -71,6 +72,7 @@
         --ace-autocomplete-background: #22272e;
         --ace-completion-meta-color: #a8b5c1;
         --ace-completion-line-selected-background: #171a1f;
+        --ace-selection-background: #2e4c77;
 
         --token-string-color: #85b8e2;
         --token-numeric-color: #65a8ec;
@@ -319,6 +321,10 @@ a {
 
 .ace_bracket {
     border: 1px solid var(--ace-bracket-border) !important;
+}
+
+.ace_selection {
+    background-color: var(--ace-selection-background) !important;
 }
 
 @media only screen and (max-width:999px) {
