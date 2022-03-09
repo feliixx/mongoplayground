@@ -30,9 +30,6 @@
  */
 var CustomSelect = function (config) {
 
-    var mainClass = "js-Dropdown"
-    var titleClass = "js-Dropdown-title"
-    var listClass = "js-Dropdown-list"
     var selectedClass = "is-selected"
     var openClass = "is-open"
 
@@ -45,15 +42,15 @@ var CustomSelect = function (config) {
     }
 
     var selectContainer = document.createElement("div")
-    selectContainer.className = mainClass
+    selectContainer.className = "js-Dropdown"
     selectContainer.id = "custom-" + select.id
 
     var button = document.createElement("button")
-    button.className = titleClass
+    button.className = "js-Dropdown-title"
     button.style.width = config.width
 
     var ul = document.createElement("ul")
-    ul.className = listClass
+    ul.className = "js-Dropdown-list"
     ul.style.width = config.width
 
     generateOptions()
