@@ -120,6 +120,23 @@ a {
     padding: 10px 15px;
 }
 
+select,
+.toolbar .controls>:nth-child(5) {
+    visibility: hidden;
+}
+
+#aggregation_stages {
+    width: 170px;
+}
+
+#template {
+    width: 210px;
+}
+
+#mode {
+    width: 130px;
+}
+
 .toolbar .controls>:last-child {
     float: right !important;
 }

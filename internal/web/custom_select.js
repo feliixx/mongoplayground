@@ -26,7 +26,6 @@
  * @class
  * @param {string} config.selectId - HTML id of the select.
  * @param {function} config.onChange - custom code to execute when an option is selected
- * @param {string} config.width - the desired width of the elem, in px, like "120px"
  */
 var CustomSelect = function (config) {
 
@@ -47,11 +46,11 @@ var CustomSelect = function (config) {
 
     var button = document.createElement("button")
     button.className = "js-Dropdown-title"
-    button.style.width = config.width
+    button.style.width = select.offsetWidth + "px"
 
     var ul = document.createElement("ul")
     ul.className = "js-Dropdown-list"
-    ul.style.width = config.width
+    ul.style.width = select.offsetWidth + "px"
 
     generateOptions()
 
