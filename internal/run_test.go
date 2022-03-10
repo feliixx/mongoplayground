@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 )
 
@@ -909,5 +910,34 @@ func TestConsistentError(t *testing.T) {
 	got = httpBody(t, runEndpoint, http.MethodPost, params)
 	if want != got {
 		t.Errorf("expected\n'%s'\n but got\n'%s'", want, got)
+	}
+}
+
+// for https://github.com/feliixx/mongoplayground/issues/120
+func TestUniqueBinaryUUID(t *testing.T) {
+
+	defer clearDatabases(t)
+
+	params := url.Values{"mode": {"mgodatagen"}, "config": {`[
+		{
+		  "collection": "collection",
+		  "count": 3,
+		  "content": {
+			"uuid": {
+			  "type": "uuid",
+			  "format": "binary"
+			}
+		  }
+		}
+	  ]`}, "query": {`db.collection.aggregate([{"$project": {"_id":0}}])`}}
+
+	got := httpBody(t, runEndpoint, http.MethodPost, params)
+	got = strings.ReplaceAll(got, "[", "")
+	got = strings.ReplaceAll(got, "]", "")
+	got = strings.ReplaceAll(got, "4,", "")
+
+	uuids := strings.Split(got, ",")
+	if uuids[0] == uuids[1] || uuids[1] == uuids[2] {
+		t.Errorf("expected unique UUIDs in db but got same multiple times: %v", uuids)
 	}
 }
