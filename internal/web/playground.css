@@ -182,7 +182,7 @@ select,
 
 .content {
     width: 100%;
-    height: calc(100% - 95px);
+    height: calc(100% - 110px);
     display: flex;
 }
 
