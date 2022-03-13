@@ -76,6 +76,7 @@ var CustomSelect = function (config) {
 
             var li = document.createElement("li")
             li.innerText = options[i]
+            li.setAttribute("data-index", i)
 
             if (i === selectedIndex) {
                 li.classList.add(selectedClass)
@@ -90,7 +91,7 @@ var CustomSelect = function (config) {
         event.preventDefault()
 
         if (event.target.tagName === "LI") {
-            setValue(event.target.innerText)
+            setSelectedIndex(event.target.getAttribute("data-index"))
 
             if (typeof config.onChange === "function") {
                 config.onChange()
@@ -111,11 +112,30 @@ var CustomSelect = function (config) {
         return selectedIndex
     }
 
+    /**
+     * 
+     * @param {int} index - the index of the value to select 
+     */
+    function setSelectedIndex(index) {
+
+        var liElem = ul.querySelectorAll("li")
+        for (var i = 0; i < liElem.length; i++) {
+            liElem[i].classList.remove(selectedClass)
+            if (i == index) {
+                selectedIndex = i
+                liElem[i].classList.add(selectedClass)
+                button.textContent = liElem[i].innerText
+            }
+        }
+    }
+
     function getValue() {
         return button.textContent
     }
 
     /**
+     * Set the select value from a string. Caution, do not use this 
+     * method if the select contains the same option several times 
      * 
      * @param {string} value - the option to select 
      */
