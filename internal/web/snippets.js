@@ -39,7 +39,7 @@ var templates = [
         mode: 'bson'
     },
     {
-        config: '[{"collection":"collection","count":5,"content":{"description":{"type":"fromArray","in":["Coffee and cakes","Gourmet hamburgers","Just coffee","Discount clothing","Indonesian goods"]}},"indexes":[{"name":"description_text_idx","key":{"description":"text"}}]}]',
+        config: '[{"collection":"collection","count":5,"content":{"description":{"type":"enum","values":["Coffee and cakes","Gourmet hamburgers","Just coffee","Discount clothing","Indonesian goods"]}},"indexes":[{"name":"description_text_idx","key":{"description":"text"}}]}]',
         query: 'db.collection.find({"$text":{"$search":"coffee"}})',
         mode: 'mgodatagen'
     },

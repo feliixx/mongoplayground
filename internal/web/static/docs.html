@@ -89,9 +89,10 @@
                                 <span class="pl-c">// that will have this field</span>
 <span class="pl-kos">}</span></pre>
 </div>
-<p id="mgodatagen-list-top">List of basic <code>&lt;generator&gt;</code> types:</p>
+<p id="mgodatagen-list-top">List of <code>&lt;generator&gt;</code> types:</p>
 <ul>
   <li><a href="#mgodatagen-string">string</a></li>
+  <li><a href="#mgodatagen-stringFromParts">stringFromParts</a></li>
   <li><a href="#mgodatagen-int">int</a></li>
   <li><a href="#mgodatagen-long">long</a></li>
   <li><a href="#mgodatagen-double">double</a></li>
@@ -99,20 +100,16 @@
   <li><a href="#mgodatagen-autoincrement">autoincrement</a></li>
   <li><a href="#mgodatagen-boolean">boolean</a></li>
   <li><a href="#mgodatagen-objectid">objectId</a></li>
+  <li><a href="#mgodatagen-uuid">UUID</a></li>
   <li><a href="#mgodatagen-binary">binary</a></li>
   <li><a href="#mgodatagen-date">date</a></li>
-  <li><a href="#mgodatagen-uuid">UUID</a></li>
-  <li><a href="#mgodatagen-position">position</a></li>
+  <li><a href="#mgodatagen-coordinates">coordinates</a></li>
+  <li><a href="#mgodatagen-constant">constant</a></li>
+  <li><a href="#mgodatagen-enum">enum</a></li>
+  <li><a href="#mgodatagen-reference">reference</a></li>
   <li><a href="#mgodatagen-faker">faker</a></li>
-</ul>
-<p>List of composite <code>&lt;generator&gt;</code> types:</p>
-<ul>
   <li><a href="#mgodatagen-array">array</a></li>
   <li><a href="#mgodatagen-object">object</a></li>
-  <li><a href="#mgodatagen-constant">constant</a></li>
-  <li><a href="#mgodatagen-ref">reference</a></li>
-  <li><a href="#mgodatagen-fromarray">fromArray</a></li>
-  <li><a href="#mgodatagen-stringFromParts">stringFromParts</a></li>
   <li><a href="#mgodatagen-countAggregator">countAggregator</a></li>
   <li><a href="#mgodatagen-valueAggregator">valueAggregator</a></li>
   <li><a href="#mgodatagen-boundAggregator">boundAggregator</a></li>
@@ -281,14 +278,15 @@
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
-<h3 id="mgodatagen-position">Position</h3>
-<p>Generates a random GPS position in Decimal Degrees ( WGS 84),
-  eg : [40.741895, -73.989308]</p>
+<h3 id="mgodatagen-coordinates">Coordinates</h3>
+<p>Generates a random <a href="" rel="nofolow">GeoJSON</a> coordinates ( a GPS position in WSG84 decimal degrees with
+  folowing format: <code>[ longitude, latitude ]</code></p>
+<p>eg : [40.741895, -73.989308]</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
-    <span class="pl-s">"type"</span>:             <span class="pl-s">"position"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>      <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>       <span class="pl-c">// optional</span>
+    <span class="pl-s">"type"</span>:             <span class="pl-s">"coordinates"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
+    <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>         <span class="pl-c">// optional</span>
+    <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>          <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
@@ -318,15 +316,15 @@
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
-<h3 id="mgodatagen-ref">Ref</h3>
-<p>If a field reference an other field in a different collection, you can use a ref generator.</p>
-<p>generator in first collection:</p>
+<h3 id="mgodatagen-reference">Reference</h3>
+<p>Use the same list of values for fields in different collection.</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>:<span class="pl-kos">{</span>
-    <span class="pl-s">"type"</span>:             <span class="pl-s">"ref"</span><span class="pl-kos">,</span>       <span class="pl-c">// required</span>
+    <span class="pl-s">"type"</span>:             <span class="pl-s">"reference"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
     <span class="pl-s">"id"</span>:               <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, generator id used to link</span>
                                      <span class="pl-c">// field between collections</span>
-    <span class="pl-s">"refContent"</span>:       <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
+    <span class="pl-s">"refContent"</span>:       <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, generator to use to create the</span>
+                                     <span class="pl-c">// list of values</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -342,15 +340,15 @@
 </div>
 <div class="link_back_to_top"><a href="#mgodatagen-list-top">^Back to the list of
     <code>&lt;generator&gt;</code> types</a></div>
-<h3 id="mgodatagen-fromarray">FromArray</h3>
+<h3 id="mgodatagen-enum">Enum</h3>
 <p>Pick an object from an array as value for the field. Currently, objects in the
   array have to be of the same type. By default, items are picked from the array
   in the order where they appear.</p>
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
-    <span class="pl-s">"type"</span>:           <span class="pl-s">"fromArray"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"in"</span>: <span class="pl-kos">[</span>                        <span class="pl-c">// required. Can't be empty. An array of object of</span>
-      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>                    <span class="pl-c">// any type, including object and array.</span>
+    <span class="pl-s">"type"</span>:           <span class="pl-s">"enum"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
+    <span class="pl-s">"in"</span>: <span class="pl-kos">[</span>                   <span class="pl-c">// required. Can't be empty. An array of object of</span>
+      <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>               <span class="pl-c">// any type, including object and array.</span>
       <span class="pl-type">&lt;</span><span>object</span><span class="pl-type">&gt;</span>
       <span class="pl-kos">.</span><span class="pl-kos">.</span><span class="pl-kos">.</span>
     <span class="pl-kos">]</span><span class="pl-kos">,</span>
