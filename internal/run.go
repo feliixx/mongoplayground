@@ -30,7 +30,6 @@ import (
 	"github.com/feliixx/mongoextjson"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsontype"
-	"go.mongodb.org/mongo-driver/bson/mgocompat"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -224,20 +223,18 @@ func createDBFromMgodatagen(db *mongo.Database, config []byte) (dbInfo dbMetaInf
 	return fillDatabase(db, collections)
 }
 
-func createIndexes(db *mongo.Database, indexes map[string][]datagen.Index) error {
-	mgoRegistry := mgocompat.NewRespectNilValuesRegistryBuilder().Build()
-	for collName, idx := range indexes {
-		cmd := bson.D{
-			bson.E{Key: "createIndexes", Value: collName},
-			bson.E{Key: "indexes", Value: idx},
+func createIndexes(db *mongo.Database, dbIndexes map[string][]datagen.Index) error {
+
+	for collName, indexes := range dbIndexes {
+
+		models := make([]mongo.IndexModel, len(indexes))
+		for i, index := range indexes {
+			models[i] = index.ConvertToIndexModel()
 		}
-		_, cmdBytes, err := bson.MarshalValueWithRegistry(mgoRegistry, cmd)
+
+		_, err := db.Collection(collName).Indexes().CreateMany(context.Background(), models)
 		if err != nil {
-			return fmt.Errorf("failed to generate mgocompat command\n  cause: %v", err)
-		}
-		res := db.RunCommand(context.Background(), cmdBytes)
-		if res != nil && res.Err() != nil {
-			return res.Err()
+			return fmt.Errorf("error while building indexes for collection '%s'\n cause: %v", collName, err)
 		}
 	}
 	return nil
@@ -576,7 +573,7 @@ func parseUpdateOpts(opts any) (bool, *options.UpdateOptions) {
 func sanitizeAggregationStages(stages []any) []any {
 
 	for i := 0; i < len(stages); i++ {
-		
+
 		stage, ok := stages[i].(map[string]any)
 		if !ok || len(stage) == 0 {
 			continue
