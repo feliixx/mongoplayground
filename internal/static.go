@@ -77,6 +77,7 @@ func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	if resource.contentEncoding != "" {
 		w.Header().Set("Content-Encoding", resource.contentEncoding)
+		staticEncodingCounter.WithLabelValues(resource.contentEncoding).Inc()
 	}
 
 	w.Write(resource.content)
