@@ -124,7 +124,7 @@ func handleAnyPanic(w http.ResponseWriter, r *http.Request, mailInfo *MailInfo) 
 
 	if panic := recover(); panic != nil {
 
-		stackTrace := string(debug.Stack())
+		stackTrace := fmt.Sprintf("%v\n%s", panic, debug.Stack())
 		log.Print(stackTrace)
 
 		if mailInfo != nil {
