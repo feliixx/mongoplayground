@@ -21,6 +21,11 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+const (
+	firstVisit   = "first_visit"
+	homePageLoad = "homepage_load"
+)
+
 var (
 	requestDurations = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
@@ -69,6 +74,13 @@ var (
 		},
 		[]string{"encoding"},
 	)
+	pageLoadCounter = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "page_load_counter",
+			Help: "Number of home page load, and number of first visit",
+		},
+		[]string{"type"},
+	)
 )
 
 func initPrometheusCounter(storage *badger.DB) {
@@ -79,6 +91,7 @@ func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(badgerBackupSize)
 	prometheus.MustRegister(dbCacheHit)
 	prometheus.MustRegister(staticEncodingCounter)
+	prometheus.MustRegister(pageLoadCounter)
 
 	computeSavedPlaygroundStats(storage)
 }

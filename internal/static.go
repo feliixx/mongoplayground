@@ -59,6 +59,10 @@ func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 	name = fileIdxReg.ReplaceAllString(name, ".")
 
+	if name == "playground-min.js" {
+		pageLoadCounter.WithLabelValues(firstVisit).Inc()
+	}
+
 	acceptedEncoding := gzipEncoding
 	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
 		acceptedEncoding = brotliEncoding

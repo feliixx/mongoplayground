@@ -42,6 +42,8 @@ func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pageLoadCounter.WithLabelValues(homePageLoad).Inc()
+
 	var writer io.WriteCloser
 	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
 		w.Header().Set("Content-Encoding", brotliEncoding)

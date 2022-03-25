@@ -33,6 +33,8 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	pageLoadCounter.WithLabelValues(homePageLoad).Inc()
+
 	acceptedEncoding := gzipEncoding
 	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
 		acceptedEncoding = brotliEncoding
