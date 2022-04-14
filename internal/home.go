@@ -42,6 +42,8 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	resource, _ := s.getResource(homeEndpoint, acceptedEncoding)
 
+	staticEncodingCounter.WithLabelValues(resource.contentEncoding).Inc()
+
 	w.Header().Set("Content-Encoding", resource.contentEncoding)
 	w.Header().Set("Content-Type", resource.contentType)
 	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
