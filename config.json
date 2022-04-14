@@ -1,0 +1,27 @@
+{
+  "https": {
+    "enabled": false,
+    "fullchain": "",
+    "privkey": ""
+  },
+  "mongo": {
+    "dropFirst": false,
+    "uri": "mongodb://localhost:27017"
+  },
+  "logging": {
+    "loki": {
+      "host": "",
+      "port": 0
+    }
+  },
+  "mail": {
+    "enabled": false,
+    "smtp": {
+      "host": "",
+      "port": 0,
+      "from": "",
+      "pwd": ""
+    },
+    "sendTo": ""
+  }
+}

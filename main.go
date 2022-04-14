@@ -19,11 +19,11 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 	"time"
 
+	"github.com/feliixx/boa"
 	"github.com/feliixx/mongoplayground/internal"
-
-	"github.com/spf13/viper"
 )
 
 const (
@@ -37,8 +37,8 @@ func main() {
 	setLogger()
 
 	s, err := internal.NewServer(
-		viper.GetString("mongo.uri"),
-		viper.GetBool("mongo.dropFirst"),
+		boa.GetString("mongo.uri"),
+		boa.GetBool("mongo.dropFirst"),
 		badgerDir,
 		backupDir,
 		loadSmtp(),
@@ -47,7 +47,7 @@ func main() {
 		log.Fatalf("aborting: %v\n", err)
 	}
 
-	if !viper.GetBool("https.enabled") {
+	if !boa.GetBool("https.enabled") {
 		log.Fatal(s.ListenAndServe())
 		return
 	}
@@ -60,21 +60,25 @@ func main() {
 
 	s.Addr = ":443"
 	log.Fatal(s.ListenAndServeTLS(
-		viper.GetString("https.fullchain"),
-		viper.GetString("https.privkey"),
+		boa.GetString("https.fullchain"),
+		boa.GetString("https.privkey"),
 	))
 }
 
 func loadConfig() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("yml")
-	viper.SetDefault("https.enabled", false)
-	viper.SetDefault("mongo.uri", "mongodb://localhost:27017")
-	viper.SetDefault("mongo.dropFirst", false)
-	viper.SetDefault("logging.loki.host", "")
-	viper.SetDefault("mail.enabled", false)
-	viper.AddConfigPath(".")
-	err := viper.ReadInConfig()
+
+	boa.SetDefault("https.enabled", false)
+	boa.SetDefault("mongo.uri", "mongodb://localhost:27017")
+	boa.SetDefault("mongo.dropFirst", false)
+	boa.SetDefault("logging.loki.host", "")
+	boa.SetDefault("mail.enabled", false)
+
+	f, err := os.Open("config.json")
+	if err != nil {
+		log.Println("config file not found")
+		return
+	}
+	err = boa.ParseConfig(f)
 	if err != nil {
 		log.Printf("error while loading conf: %v", err)
 	}
@@ -82,11 +86,11 @@ func loadConfig() {
 
 func setLogger() {
 
-	if viper.GetString("logging.loki.host") != "" {
+	if boa.GetString("logging.loki.host") != "" {
 
 		logger := internal.NewLokiLogger(
-			viper.GetString("logging.loki.host"),
-			viper.GetInt("logging.loki.port"),
+			boa.GetString("logging.loki.host"),
+			boa.GetInt("logging.loki.port"),
 		)
 		log.SetOutput(logger)
 
@@ -103,14 +107,14 @@ func setLogger() {
 
 func loadSmtp() *internal.MailInfo {
 
-	if viper.GetBool("mail.enabled") {
+	if boa.GetBool("mail.enabled") {
 
 		return internal.NewMailInfo(
-			viper.GetString("mail.smtp.host"),
-			viper.GetInt("mail.smtp.port"),
-			viper.GetString("mail.smtp.from"),
-			viper.GetString("mail.smtp.pwd"),
-			viper.GetString("mail.sendTo"),
+			boa.GetString("mail.smtp.host"),
+			boa.GetInt("mail.smtp.port"),
+			boa.GetString("mail.smtp.from"),
+			boa.GetString("mail.smtp.pwd"),
+			boa.GetString("mail.sendTo"),
 		)
 	}
 	return nil
