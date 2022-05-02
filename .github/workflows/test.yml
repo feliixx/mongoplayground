@@ -9,7 +9,7 @@ on:
       - production
 
 env: 
-  MONGO_VERSION: 5.0.7
+  MONGO_VERSION: 5.0.8
 
 jobs:
   test:
@@ -45,6 +45,6 @@ jobs:
       run: ./test.sh
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         files: ./coverage.txt

@@ -6,7 +6,7 @@ on:
       - "production" 
 
 env: 
-  MONGO_VERSION: 5.0.7
+  MONGO_VERSION: 5.0.8
   # name of the binary, the service and the user running the 
   # service 
   APP_NAME: mongoplayground
@@ -47,7 +47,7 @@ jobs:
 
     - name: Register SSH key
       continue-on-error: true
-      uses: webfactory/ssh-agent@v0.5.3
+      uses: webfactory/ssh-agent@v0.5.4
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
 
