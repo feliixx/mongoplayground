@@ -51,6 +51,7 @@ func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 		writer = gzip.NewWriter(w)
 	}
 
+	w.Header().Set("Cache-Control", "no-transform")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	homeTemplate.Execute(writer, page)
 	writer.Close()

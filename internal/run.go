@@ -76,6 +76,10 @@ db = {
 //    [{_id:1,k:1},{_id:2,k:33}]
 func (s *storage) runHandler(w http.ResponseWriter, r *http.Request) {
 
+	// response are usually small: 200-500B, so compressing it would
+	// be conterproductive. Add a 'no-transform' to prevent cloudfare
+	// from compressing the response
+	w.Header().Set("Cache-Control", "no-transform")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	p, err := newPage(
