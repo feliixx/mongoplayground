@@ -33,16 +33,12 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pageLoadCounter.WithLabelValues(homePageLoad).Inc()
-
 	acceptedEncoding := gzipEncoding
 	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
 		acceptedEncoding = brotliEncoding
 	}
 
 	resource, _ := s.getResource(homeEndpoint, acceptedEncoding)
-
-	staticEncodingCounter.WithLabelValues(resource.contentEncoding).Inc()
 
 	w.Header().Set("Content-Encoding", resource.contentEncoding)
 	w.Header().Set("Content-Type", resource.contentType)

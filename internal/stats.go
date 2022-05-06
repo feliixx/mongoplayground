@@ -67,20 +67,6 @@ var (
 			Help: "Number of run queries where the database already exists",
 		},
 	)
-	staticEncodingCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "static_encoding_counter",
-			Help: "Number of static resource served with specific encoding",
-		},
-		[]string{"encoding"},
-	)
-	pageLoadCounter = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "page_load_counter",
-			Help: "Number of home page load, and number of first visit",
-		},
-		[]string{"type"},
-	)
 )
 
 func initPrometheusCounter(storage *badger.DB) {
@@ -90,8 +76,6 @@ func initPrometheusCounter(storage *badger.DB) {
 	prometheus.MustRegister(cleanupDuration)
 	prometheus.MustRegister(badgerBackupSize)
 	prometheus.MustRegister(dbCacheHit)
-	prometheus.MustRegister(staticEncodingCounter)
-	prometheus.MustRegister(pageLoadCounter)
 
 	computeSavedPlaygroundStats(storage)
 }
