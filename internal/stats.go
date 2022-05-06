@@ -21,11 +21,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const (
-	firstVisit   = "first_visit"
-	homePageLoad = "homepage_load"
-)
-
 var (
 	requestDurations = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
