@@ -67,7 +67,7 @@ func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", resource.contentType)
-	w.Header().Set("Cache-Control", "public, max-age=31536000, no-transform")
+	w.Header().Set("Cache-Control", "public, max-age=31536000")
 	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
 
 	if resource.contentEncoding != "" {

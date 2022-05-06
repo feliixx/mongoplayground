@@ -29,7 +29,6 @@ import (
 //   https://mongoplayground.net/p/nJhd-dhf3Ea
 func (s *storage) saveHandler(w http.ResponseWriter, r *http.Request) {
 
-	w.Header().Set("Cache-Control", "no-transform")
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
 	p, err := newPage(
