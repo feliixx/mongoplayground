@@ -20,7 +20,6 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
-	"html/template"
 	"io"
 	"log"
 	"net/http"
@@ -32,9 +31,6 @@ import (
 )
 
 const (
-	templateConfig = `[{"key":1},{"key":2}]`
-	templateQuery  = "db.collection.find()"
-
 	staticDir        = "web/static"
 	homeTemplateFile = "web/playground.html"
 
@@ -46,7 +42,6 @@ var (
 	//go:embed web/static web/playground.html
 	assets embed.FS
 
-	homeTemplate *template.Template
 	// regex to strip file id
 	fileIdxReg = regexp.MustCompile("-[0-9]+.")
 )
@@ -142,13 +137,6 @@ func compressStaticResources(mongodbVersion []byte) (*staticContent, error) {
 	}
 	staticContent.addResource(content, "favicon.png", "image/png", "")
 
-	content, err = executeHomeTemplate(mongodbVersion)
-	if err != nil {
-		return nil, err
-	}
-	staticContent.addResource(compressContent(content, gzipEncoding), gzipEncoding+"_"+homeEndpoint, "text/html; charset=utf-8", gzipEncoding)
-	staticContent.addResource(compressContent(content, brotliEncoding), brotliEncoding+"_"+homeEndpoint, "text/html; charset=utf-8", brotliEncoding)
-
 	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", gzipEncoding)
 	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", brotliEncoding)
 
@@ -187,17 +175,4 @@ func compressContent(content []byte, encoding string) []byte {
 	wc.Write(content)
 	wc.Close()
 	return buf.Bytes()
-}
-
-func executeHomeTemplate(mongoVersion []byte) ([]byte, error) {
-	w := bytes.NewBuffer(nil)
-	homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
-
-	p, _ := newPage(bsonLabel, templateConfig, templateQuery)
-	p.MongoVersion = mongoVersion
-
-	if err := homeTemplate.Execute(w, p); err != nil {
-		return nil, err
-	}
-	return w.Bytes(), nil
 }

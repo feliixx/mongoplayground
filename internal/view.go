@@ -17,14 +17,11 @@
 package internal
 
 import (
-	"compress/gzip"
 	"errors"
-	"io"
 	"log"
 	"net/http"
 	"strings"
 
-	"github.com/andybalholm/brotli"
 	"github.com/dgraph-io/badger/v2"
 )
 
@@ -42,19 +39,11 @@ func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var writer io.WriteCloser
-	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
-		w.Header().Set("Content-Encoding", brotliEncoding)
-		writer = brotli.NewWriter(w)
-	} else {
-		w.Header().Set("Content-Encoding", gzipEncoding)
-		writer = gzip.NewWriter(w)
-	}
-
-	w.Header().Set("Cache-Control", "no-transform")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	homeTemplate.Execute(writer, page)
-	writer.Close()
+	serveHomeTemplate(
+		w,
+		page,
+		strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding),
+	)
 }
 
 func extractPageIDFromURL(url string) []byte {

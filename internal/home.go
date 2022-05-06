@@ -17,11 +17,22 @@
 package internal
 
 import (
+	"compress/gzip"
+	"html/template"
+	"io"
 	"log"
 	"net/http"
-	"strconv"
 	"strings"
+
+	"github.com/andybalholm/brotli"
 )
+
+const (
+	templateConfig = `[{"key":1},{"key":2}]`
+	templateQuery  = "db.collection.find()"
+)
+
+var homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
 
 // return a playground with the default configuration
 func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
@@ -33,15 +44,34 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	acceptedEncoding := gzipEncoding
-	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
-		acceptedEncoding = brotliEncoding
+	page := &page{
+		Mode:         bsonMode,
+		Config:       []byte(templateConfig),
+		Query:        []byte(templateQuery),
+		MongoVersion: s.mongodbVersion,
 	}
 
-	resource, _ := s.getResource(homeEndpoint, acceptedEncoding)
+	serveHomeTemplate(
+		w,
+		page,
+		strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding),
+	)
+}
 
-	w.Header().Set("Content-Encoding", resource.contentEncoding)
-	w.Header().Set("Content-Type", resource.contentType)
-	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
-	w.Write(resource.content)
+func serveHomeTemplate(w http.ResponseWriter, page *page, useBrotli bool) {
+
+	var writer io.WriteCloser
+
+	if useBrotli {
+		w.Header().Set("Content-Encoding", brotliEncoding)
+		writer = brotli.NewWriter(w)
+	} else {
+		w.Header().Set("Content-Encoding", gzipEncoding)
+		writer = gzip.NewWriter(w)
+	}
+
+	w.Header().Set("Cache-Control", "no-transform")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	homeTemplate.Execute(writer, page)
+	writer.Close()
 }
