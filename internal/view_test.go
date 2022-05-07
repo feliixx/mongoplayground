@@ -83,7 +83,6 @@ func TestView(t *testing.T) {
 				t.Parallel()
 
 				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", gzipEncoding)
-				checkServerResponse(t, fmt.Sprintf("/%s", test.url), test.responseCode, "text/html; charset=utf-8", brotliEncoding)
 			})
 		}
 	})

@@ -79,7 +79,6 @@ func TestStaticHandlers(t *testing.T) {
 
 			t.Parallel()
 
-			checkServerResponse(t, test.url, test.responseCode, test.contentType, brotliEncoding)
 			checkServerResponse(t, test.url, test.responseCode, test.contentType, gzipEncoding)
 		})
 	}

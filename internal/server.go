@@ -51,24 +51,19 @@ func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string, mai
 	if err != nil {
 		return nil, err
 	}
-	return newHttpServerWithStorage(storage)
+	return newHttpServerWithStorage(storage), nil
 }
 
-func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
-
-	staticContent, err := compressStaticResources(storage.mongoVersion)
-	if err != nil {
-		return nil, fmt.Errorf("fail to compress static resources: %v", err)
-	}
+func newHttpServerWithStorage(storage *storage) *http.Server {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc(homeEndpoint, staticContent.homeHandler)
+	mux.HandleFunc(homeEndpoint, storage.homeHandler)
 	mux.HandleFunc(viewEndpoint, storage.viewHandler)
 	mux.HandleFunc(runEndpoint, storage.runHandler)
 	mux.HandleFunc(saveEndpoint, storage.saveHandler)
-	mux.HandleFunc(staticEndpoint, staticContent.staticHandler)
 	mux.HandleFunc(healthEndpoint, storage.healthHandler)
+	mux.HandleFunc(staticEndpoint, newStaticContent().staticHandler)
 	mux.Handle(metricsEndpoint, promhttp.Handler())
 
 	return &http.Server{
@@ -77,7 +72,7 @@ func newHttpServerWithStorage(storage *storage) (*http.Server, error) {
 		ReadTimeout:  readTimeout,
 		WriteTimeout: writeTimeout,
 		IdleTimeout:  idleTimeout,
-	}, nil
+	}
 }
 
 // Middleware handler, with several roles:

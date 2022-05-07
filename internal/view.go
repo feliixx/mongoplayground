@@ -39,11 +39,7 @@ func (s *storage) viewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	serveHomeTemplate(
-		w,
-		page,
-		strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding),
-	)
+	serveHomeTemplate(w, page)
 }
 
 func extractPageIDFromURL(url string) []byte {

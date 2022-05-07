@@ -20,23 +20,14 @@ import (
 	"bytes"
 	"compress/gzip"
 	"embed"
-	"io"
 	"log"
 	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
-
-	"github.com/andybalholm/brotli"
 )
 
-const (
-	staticDir        = "web/static"
-	homeTemplateFile = "web/playground.html"
-
-	brotliEncoding = "br"
-	gzipEncoding   = "gzip"
-)
+const gzipEncoding = "gzip"
 
 var (
 	//go:embed web/static web/playground.html
@@ -47,6 +38,14 @@ var (
 )
 
 // serve static resources (css/js/html)
+//
+// content is only compressed with gzip, as brotli compression from origin
+// is not supported by cloudfare
+//
+// cloudfare will re-compress the resource using brotli for client that accept it
+//
+// see https://community.cloudflare.com/t/cloudfare-doesnt-serve-brolti-content-from-my-server/381662/5
+// for details
 func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
 	// transform 'static/playground-min-10.css' to 'playground-min.css'
@@ -54,12 +53,7 @@ func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
 	name = fileIdxReg.ReplaceAllString(name, ".")
 
-	acceptedEncoding := gzipEncoding
-	if strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding) {
-		acceptedEncoding = brotliEncoding
-	}
-
-	resource, ok := s.getResource(name, acceptedEncoding)
+	resource, ok := s.resources[name]
 	if !ok {
 		log.Printf("static resource %s doesn't exist", name)
 		w.WriteHeader(http.StatusNotFound)
@@ -70,109 +64,64 @@ func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "public, max-age=31536000")
 	w.Header().Set("Content-Length", strconv.Itoa(len(resource.content)))
 
-	if resource.contentEncoding != "" {
-		w.Header().Set("Content-Encoding", resource.contentEncoding)
+	if resource.compressed {
+		w.Header().Set("Content-Encoding", gzipEncoding)
 	}
-
 	w.Write(resource.content)
 }
 
-type staticResource struct {
-	content         []byte
-	contentType     string
-	contentEncoding string
-}
-
 type staticContent struct {
-	mongodbVersion  []byte
-	compressedFiles map[string]staticResource
-}
-
-func (s *staticContent) addResource(content []byte, name, contentType, contentEncoding string) {
-
-	b := make([]byte, len(content))
-	copy(b, content)
-
-	s.compressedFiles[name] = staticResource{
-		content:         b,
-		contentType:     contentType,
-		contentEncoding: contentEncoding,
-	}
-}
-
-func (s *staticContent) addResourceFromFile(fileName, contentType, contentEncoding string) {
-	var content []byte
-	if contentEncoding == brotliEncoding {
-		content = compressFileWithBrotli(fileName)
-	} else {
-		content = compressFileWithGzip(fileName)
-	}
-	s.addResource(content, contentEncoding+"_"+fileName, contentType, contentEncoding)
-}
-
-func (s *staticContent) getResource(name, acceptedEncoding string) (staticResource, bool) {
-
-	key := acceptedEncoding + "_" + name
-	// favicon is not compressed
-	if name == "favicon.png" {
-		key = name
-	}
-	resource, ok := s.compressedFiles[key]
-
-	return resource, ok
+	resources map[string]staticResource
 }
 
 // load static resources (javascript, css, docs and default page)
 // and compress them once at startup in order to serve them faster
-func compressStaticResources(mongodbVersion []byte) (*staticContent, error) {
+func newStaticContent() *staticContent {
 
-	staticContent := &staticContent{
-		mongodbVersion:  mongodbVersion,
-		compressedFiles: map[string]staticResource{},
+	return &staticContent{
+		resources: map[string]staticResource{
+			"favicon.png":        newResource("web/static/favicon.png", "image/png", false),
+			"playground-min.css": newResource("web/static/playground-min.css", "text/css; charset=utf-8", true),
+			"playground-min.js":  newResource("web/static/playground-min.js", "application/javascript; charset=utf-8", true),
+			"docs.html":          newResource("web/static/docs.html", "text/html; charset=utf-8", true),
+			"about.html":         newResource("web/static/about.html", "text/html; charset=utf-8", true),
+		},
 	}
+}
 
-	content, err := assets.ReadFile(staticDir + "/favicon.png")
+type staticResource struct {
+	content     []byte
+	contentType string
+	compressed  bool
+}
+
+func newResource(assetPath, contentType string, compressed bool) staticResource {
+
+	content, err := assets.ReadFile(assetPath)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	staticContent.addResource(content, "favicon.png", "image/png", "")
+	if compressed {
+		content = compressContent(content)
+	}
 
-	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", gzipEncoding)
-	staticContent.addResourceFromFile("playground-min.css", "text/css; charset=utf-8", brotliEncoding)
+	s := make([]byte, len(content))
+	copy(s, content)
 
-	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", gzipEncoding)
-	staticContent.addResourceFromFile("playground-min.js", "application/javascript; charset=utf-8", brotliEncoding)
-
-	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", gzipEncoding)
-	staticContent.addResourceFromFile("docs.html", "text/html; charset=utf-8", brotliEncoding)
-	staticContent.addResourceFromFile("about.html", "text/html; charset=utf-8", gzipEncoding)
-	staticContent.addResourceFromFile("about.html", "text/html; charset=utf-8", brotliEncoding)
-
-	return staticContent, nil
+	return staticResource{
+		content:     s,
+		contentType: contentType,
+		compressed:  compressed,
+	}
 }
 
-func compressFileWithGzip(fileName string) []byte {
-	b, _ := assets.ReadFile(staticDir + "/" + fileName)
-	return compressContent(b, gzipEncoding)
-}
-
-func compressFileWithBrotli(fileName string) []byte {
-	b, _ := assets.ReadFile(staticDir + "/" + fileName)
-	return compressContent(b, brotliEncoding)
-}
-
-func compressContent(content []byte, encoding string) []byte {
+func compressContent(content []byte) []byte {
 
 	buf := bytes.NewBuffer(make([]byte, 0, 1024))
-	var wc io.WriteCloser
-
-	if encoding == brotliEncoding {
-		wc = brotli.NewWriterLevel(buf, brotli.BestCompression)
-	} else {
-		wc, _ = gzip.NewWriterLevel(buf, gzip.BestCompression)
-	}
+	wc, _ := gzip.NewWriterLevel(buf, gzip.BestCompression)
 
 	wc.Write(content)
 	wc.Close()
+
 	return buf.Bytes()
 }

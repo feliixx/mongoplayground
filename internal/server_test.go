@@ -29,8 +29,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-
-	"github.com/andybalholm/brotli"
 )
 
 const (
@@ -64,22 +62,16 @@ func TestMain(m *testing.M) {
 	storageDir, _ := ioutil.TempDir(os.TempDir(), "storage")
 	backupsDir, _ := ioutil.TempDir(os.TempDir(), "backups")
 
-	ts, err := newStorage("mongodb://localhost:27017", true, storageDir, backupsDir, nil)
+	var err error
+	testStorage, err = newStorage("mongodb://localhost:27017", true, storageDir, backupsDir, nil)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)
 	}
-	testStorage = ts
-
-	s, err := newHttpServerWithStorage(testStorage)
-	if err != nil {
-		fmt.Printf("aborting: %v\n", err)
-		os.Exit(1)
-	}
-	testServer = s
-
 	defer testStorage.mongoSession.Disconnect(context.Background())
 	defer testStorage.kvStore.Close()
+
+	testServer = newHttpServerWithStorage(testStorage)
 
 	retCode := m.Run()
 	os.Exit(retCode)
@@ -89,7 +81,6 @@ func TestBasePage(t *testing.T) {
 
 	t.Parallel()
 
-	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", brotliEncoding)
 	checkServerResponse(t, homeEndpoint, http.StatusOK, "text/html; charset=utf-8", gzipEncoding)
 
 	checkServerResponse(t, "/robots.txt", http.StatusNotFound, "", gzipEncoding)
@@ -126,12 +117,7 @@ func checkServerResponse(t *testing.T, url string, expectedResponseCode int, exp
 			t.Errorf("expected Content-Encoding: %s, but got %s", want, got)
 		}
 
-		var reader io.Reader
-		if expectedEncoding == brotliEncoding {
-			reader = brotli.NewReader(resp.Body)
-		} else {
-			reader, _ = gzip.NewReader(resp.Body)
-		}
+		reader, _ := gzip.NewReader(resp.Body)
 
 		_, err := io.Copy(io.Discard, reader)
 		if err != nil {

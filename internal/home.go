@@ -19,12 +19,8 @@ package internal
 import (
 	"compress/gzip"
 	"html/template"
-	"io"
 	"log"
 	"net/http"
-	"strings"
-
-	"github.com/andybalholm/brotli"
 )
 
 const (
@@ -32,10 +28,10 @@ const (
 	templateQuery  = "db.collection.find()"
 )
 
-var homeTemplate = template.Must(template.ParseFS(assets, homeTemplateFile))
+var homeTemplate = template.Must(template.ParseFS(assets, "web/playground.html"))
 
 // return a playground with the default configuration
-func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
+func (s *storage) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path != homeEndpoint {
 		log.Printf("file not found: %s", r.URL.Path)
@@ -48,30 +44,18 @@ func (s *staticContent) homeHandler(w http.ResponseWriter, r *http.Request) {
 		Mode:         bsonMode,
 		Config:       []byte(templateConfig),
 		Query:        []byte(templateQuery),
-		MongoVersion: s.mongodbVersion,
+		MongoVersion: s.mongoVersion,
 	}
 
-	serveHomeTemplate(
-		w,
-		page,
-		strings.Contains(r.Header.Get("Accept-Encoding"), brotliEncoding),
-	)
+	serveHomeTemplate(w, page)
 }
 
-func serveHomeTemplate(w http.ResponseWriter, page *page, useBrotli bool) {
+func serveHomeTemplate(w http.ResponseWriter, page *page) {
 
-	var writer io.WriteCloser
-
-	if useBrotli {
-		w.Header().Set("Content-Encoding", brotliEncoding)
-		writer = brotli.NewWriter(w)
-	} else {
-		w.Header().Set("Content-Encoding", gzipEncoding)
-		writer = gzip.NewWriter(w)
-	}
-
-	w.Header().Set("Cache-Control", "no-transform")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Content-Encoding", gzipEncoding)
+
+	writer := gzip.NewWriter(w)
 	homeTemplate.Execute(writer, page)
 	writer.Close()
 }
