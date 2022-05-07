@@ -36,7 +36,6 @@ const (
 	unknown
 
 	mgodatagenLabel             = "mgodatagen"
-	bsonLabel                   = "bson"
 	bsonSingleCollectionLabel   = "bson_single_collection"
 	bsonMultipleCollectionLabel = "bson_multiple_collection"
 	unknownLabel                = "unknown"
