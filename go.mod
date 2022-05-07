@@ -4,11 +4,11 @@ go 1.18
 
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
-	github.com/feliixx/boa v0.2.0
+	github.com/feliixx/boa v0.2.1
 	github.com/feliixx/mgodatagen v0.10.2
 	github.com/feliixx/mongoextjson v1.1.3
 	github.com/prometheus/client_golang v1.11.1
-	go.mongodb.org/mongo-driver v1.9.0
+	go.mongodb.org/mongo-driver v1.9.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/api v0.63.0
 )
