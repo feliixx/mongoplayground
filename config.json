@@ -8,6 +8,10 @@
     "dropFirst": false,
     "uri": "mongodb://localhost:27017"
   },
+  "badger": {
+    "db_dir": "storage",
+    "backup_dir": "backups"
+  },
   "logging": {
     "loki": {
       "host": "",

@@ -30,6 +30,7 @@ FROM busybox
 WORKDIR /app
 
 COPY --from=builder /app/mongoplayground /usr/bin/
+COPY config.json . 
 
 RUN mkdir storage
 RUN mkdir backups 

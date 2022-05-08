@@ -26,11 +26,6 @@ import (
 	"github.com/feliixx/mongoplayground/internal"
 )
 
-const (
-	badgerDir = "storage"
-	backupDir = "backups"
-)
-
 func main() {
 
 	loadConfig()
@@ -39,8 +34,8 @@ func main() {
 	s, err := internal.NewServer(
 		boa.GetString("mongo.uri"),
 		boa.GetBool("mongo.dropFirst"),
-		badgerDir,
-		backupDir,
+		boa.GetString("badger.db_dir"),
+		boa.GetString("badger.backup_dir"),
 		loadSmtp(),
 	)
 	if err != nil {
