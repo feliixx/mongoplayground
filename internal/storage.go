@@ -17,6 +17,7 @@
 package internal
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -53,9 +54,11 @@ type storage struct {
 	activeDB     map[string]dbMetaInfo
 
 	mailInfo *MailInfo
+
+	cloudflareInfo *CloudflareInfo
 }
 
-func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, mailInfo *MailInfo) (*storage, error) {
+func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, cloudflareInfo *CloudflareInfo, mailInfo *MailInfo) (*storage, error) {
 
 	session, err := createMongodbSession(mongoUri)
 	if err != nil {
@@ -69,7 +72,7 @@ func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, ma
 
 	s := &storage{
 		mongoSession: session,
-		mongoVersion: getMongodVersion(session),
+		mongoVersion: getMongoVersion(session),
 		kvStore:      kvStore,
 		activeDB:     map[string]dbMetaInfo{},
 		backupDir:    backupDir,
@@ -77,7 +80,8 @@ func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, ma
 			Name:   "backup",
 			Status: statusUp,
 		},
-		mailInfo: mailInfo,
+		mailInfo:       mailInfo,
+		cloudflareInfo: cloudflareInfo,
 	}
 
 	if dropFirst {
@@ -174,7 +178,11 @@ func (s *storage) backup() {
 	// as backup() run once a day, also update the mongodb
 	// server version ( in case the cluster has automatically
 	// been upgraded )
-	s.mongoVersion = getMongodVersion(s.mongoSession)
+	currentMongoVersion := getMongoVersion(s.mongoSession)
+	if !bytes.Equal(currentMongoVersion, s.mongoVersion) && s.cloudflareInfo != nil {
+		s.mongoVersion = currentMongoVersion
+		s.cloudflareInfo.clearCloudflareCache()
+	}
 }
 
 func (s *storage) handleBackupError(message string, err error) {
@@ -220,7 +228,7 @@ func createMongodbSession(mongoUri string) (*mongo.Client, error) {
 	return session, nil
 }
 
-func getMongodVersion(client *mongo.Client) []byte {
+func getMongoVersion(client *mongo.Client) []byte {
 
 	result := client.Database("admin").RunCommand(context.Background(), bson.M{"buildInfo": 1})
 

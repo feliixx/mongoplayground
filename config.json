@@ -27,5 +27,9 @@
       "pwd": ""
     },
     "sendTo": ""
+  },
+  "cloudflare": {
+    "zone_id": "",
+    "api_token": ""
   }
 }

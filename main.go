@@ -36,6 +36,7 @@ func main() {
 		boa.GetBool("mongo.dropFirst"),
 		boa.GetString("badger.db_dir"),
 		boa.GetString("badger.backup_dir"),
+		loadCloudflareInfo(),
 		loadSmtp(),
 	)
 	if err != nil {
@@ -67,6 +68,8 @@ func loadConfig() {
 	boa.SetDefault("mongo.dropFirst", false)
 	boa.SetDefault("logging.loki.host", "")
 	boa.SetDefault("mail.enabled", false)
+	boa.SetDefault("badger.db_dir", "storage")
+	boa.SetDefault("badger.backup_dir", "backup")
 
 	f, err := os.Open("config.json")
 	if err != nil {
@@ -113,6 +116,13 @@ func loadSmtp() *internal.MailInfo {
 		)
 	}
 	return nil
+}
+
+func loadCloudflareInfo() *internal.CloudflareInfo {
+	return internal.NewCloudflareInfo(
+		boa.GetString("cloudflare.api_token"),
+		boa.GetString("cloudflare.zone_id"),
+	)
 }
 
 func redirectTLS(w http.ResponseWriter, r *http.Request) {

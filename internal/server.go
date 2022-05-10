@@ -28,13 +28,14 @@ import (
 )
 
 const (
-	homeEndpoint    = "/"
-	viewEndpoint    = "/p/"
-	runEndpoint     = "/run"
-	saveEndpoint    = "/save"
-	staticEndpoint  = "/static/"
-	metricsEndpoint = "/metrics"
-	healthEndpoint  = "/health"
+	homeEndpoint       = "/"
+	viewEndpoint       = "/p/"
+	runEndpoint        = "/run"
+	saveEndpoint       = "/save"
+	staticEndpoint     = "/static/"
+	metricsEndpoint    = "/metrics"
+	healthEndpoint     = "/health"
+	clearCacheEndpoint = "/clearCache"
 
 	readTimeout  = 10 * time.Second
 	writeTimeout = 30 * time.Second
@@ -45,9 +46,9 @@ const (
 
 // NewServer initialize a badger and a mongodb connection,
 // and return an http server
-func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string, mailInfo *MailInfo) (*http.Server, error) {
+func NewServer(mongoUri string, dropFirst bool, badgerDir, backupDir string, cloudflareInfo *CloudflareInfo, mailInfo *MailInfo) (*http.Server, error) {
 
-	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir, mailInfo)
+	storage, err := newStorage(mongoUri, dropFirst, badgerDir, backupDir, cloudflareInfo, mailInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +64,7 @@ func newHttpServerWithStorage(storage *storage) *http.Server {
 	mux.HandleFunc(runEndpoint, storage.runHandler)
 	mux.HandleFunc(saveEndpoint, storage.saveHandler)
 	mux.HandleFunc(healthEndpoint, storage.healthHandler)
+	mux.HandleFunc(clearCacheEndpoint, storage.cloudflareInfo.clearCacheHandler)
 	mux.HandleFunc(staticEndpoint, newStaticContent().staticHandler)
 	mux.Handle(metricsEndpoint, promhttp.Handler())
 
