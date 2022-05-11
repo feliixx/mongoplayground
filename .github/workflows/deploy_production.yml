@@ -71,6 +71,21 @@ jobs:
       id: ping_new_instance
       run: for i in 5 5 10; do sleep $i; wget -nv --no-check-certificate -O- https://${{ secrets.HOST_PRODUCTION }}/health  | grep -q '{"Status":"UP"' && s=0 && break || s=$?; done; (exit $s)
     
+    - name: Check if home/view pages have changed
+      uses: tj-actions/verify-changed-files@v9
+      id: verify-changed-files
+      with:
+        files: |
+           internal/web/playground.html
+           internal/web/static/about.html
+           internal/view.go
+           internal/home.go
+
+    - name: If files changed, clear cloudflare cache 
+      if: steps.verify-changed-files.outputs.files_changed == 'true'
+      run: |
+        wget -nv --no-check-certificate --header="Authorization: Bearer ${{ secrets.CLOUDFLARE_TOKEN }}" -O- https://${{ secrets.HOST_PRODUCTION }}/clear_cache
+
     - name: Print first logs if deploy failed
       if: failure() && steps.ping_new_instance.outcome == 'failure'
       run: ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} journalctl -u $APP_NAME | tail -100

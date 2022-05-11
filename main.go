@@ -120,8 +120,8 @@ func loadSmtp() *internal.MailInfo {
 
 func loadCloudflareInfo() *internal.CloudflareInfo {
 	return internal.NewCloudflareInfo(
-		boa.GetString("cloudflare.api_token"),
 		boa.GetString("cloudflare.zone_id"),
+		boa.GetString("cloudflare.api_token"),
 	)
 }
 

@@ -35,7 +35,7 @@ const (
 	staticEndpoint     = "/static/"
 	metricsEndpoint    = "/metrics"
 	healthEndpoint     = "/health"
-	clearCacheEndpoint = "/clearCache"
+	clearCacheEndpoint = "/clear_cache"
 
 	readTimeout  = 10 * time.Second
 	writeTimeout = 30 * time.Second
