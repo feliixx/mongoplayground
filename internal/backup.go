@@ -31,13 +31,6 @@ import (
 	"google.golang.org/api/option"
 )
 
-const (
-	// google drive dir for storing last backup
-	driveBackupDir = "autobackup"
-	// file holding google drive token
-	tokenFile = "token.json"
-)
-
 func localBackup(storage *badger.DB, fileName string) error {
 	f, err := os.Create(fileName)
 	if err != nil {
@@ -62,30 +55,38 @@ func localBackup(storage *badger.DB, fileName string) error {
 	return nil
 }
 
-func saveBackupToGoogleDrive(fileName string) error {
+type GoogleDriveInfo struct {
+	dir    string
+	token  *oauth2.Token
+	config *oauth2.Config
+}
 
-	b, err := os.ReadFile("credentials.json")
-	if err != nil {
-		return fmt.Errorf("unable to read client secret file: %v", err)
-	}
+func NewGoogleDriveInfo(dir string, token, credentials any) *GoogleDriveInfo {
 
-	config, err := google.ConfigFromJSON(b, drive.DriveFileScope)
-	if err != nil {
-		return fmt.Errorf("unable to parse client secret file to config: %v", err)
+	tb, _ := json.Marshal(token)
+	t := &oauth2.Token{}
+	json.Unmarshal(tb, t)
 
+	b, _ := json.Marshal(credentials)
+	config, _ := google.ConfigFromJSON(b, drive.DriveFileScope)
+
+	return &GoogleDriveInfo{
+		dir:    dir,
+		token:  t,
+		config: config,
 	}
-	token, err := tokenFromFile(tokenFile)
-	if err != nil {
-		return fmt.Errorf("fail to read token file: %v", err)
-	}
-	client := config.Client(context.Background(), token)
+}
+
+func (g *GoogleDriveInfo) saveBackupToGoogleDrive(fileName string) error {
+
+	client := g.config.Client(context.Background(), g.token)
 
 	service, err := drive.NewService(context.Background(), option.WithHTTPClient(client))
 	if err != nil {
 		return fmt.Errorf("unable to retrieve Drive client: %v", err)
 	}
 
-	dir, err := getDriveBackupDir(service)
+	dir, err := getDriveBackupDir(service, g.dir)
 	if err != nil {
 		return fmt.Errorf("unable to create dir: %v", err)
 	}
@@ -105,28 +106,17 @@ func saveBackupToGoogleDrive(fileName string) error {
 	return nil
 }
 
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-	tok := &oauth2.Token{}
-	err = json.NewDecoder(f).Decode(tok)
-	return tok, err
-}
-
-func getDriveBackupDir(service *drive.Service) (*drive.File, error) {
+func getDriveBackupDir(service *drive.Service, dirName string) (*drive.File, error) {
 
 	fileList, _ := service.Files.List().Do()
 	for _, dir := range fileList.Files {
-		if dir.Name == driveBackupDir {
+		if dir.Name == dirName {
 			return dir, nil
 		}
 	}
 
 	d := &drive.File{
-		Name:     driveBackupDir,
+		Name:     dirName,
 		MimeType: "application/vnd.google-apps.folder",
 		Parents:  []string{"root"},
 	}

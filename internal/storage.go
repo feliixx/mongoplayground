@@ -56,16 +56,18 @@ type storage struct {
 	mailInfo *MailInfo
 
 	cloudflareInfo *CloudflareInfo
+
+	googleDriveInfo *GoogleDriveInfo
 }
 
-func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, cloudflareInfo *CloudflareInfo, mailInfo *MailInfo) (*storage, error) {
+func newStorage(mongoUri string, dropFirst bool, cloudflareInfo *CloudflareInfo, mailInfo *MailInfo, googleDriveInfo *GoogleDriveInfo) (*storage, error) {
 
 	session, err := createMongodbSession(mongoUri)
 	if err != nil {
 		return nil, err
 	}
 
-	kvStore, err := badger.Open(badger.DefaultOptions(badgerDir))
+	kvStore, err := badger.Open(badger.DefaultOptions("storage"))
 	if err != nil {
 		return nil, err
 	}
@@ -75,13 +77,14 @@ func newStorage(mongoUri string, dropFirst bool, badgerDir, backupDir string, cl
 		mongoVersion: getMongoVersion(session),
 		kvStore:      kvStore,
 		activeDB:     map[string]dbMetaInfo{},
-		backupDir:    backupDir,
+		backupDir:    "backups",
 		backupServiceStatus: serviceInfo{
 			Name:   "backup",
 			Status: statusUp,
 		},
-		mailInfo:       mailInfo,
-		cloudflareInfo: cloudflareInfo,
+		mailInfo:        mailInfo,
+		cloudflareInfo:  cloudflareInfo,
+		googleDriveInfo: googleDriveInfo,
 	}
 
 	if dropFirst {
@@ -166,10 +169,13 @@ func (s *storage) backup() {
 		s.handleBackupError("error in local backup", err)
 		return
 	}
-	err = saveBackupToGoogleDrive(fileName)
-	if err != nil {
-		s.handleBackupError("error while saving backup", err)
-		return
+
+	if s.googleDriveInfo != nil {
+		err = s.googleDriveInfo.saveBackupToGoogleDrive(fileName)
+		if err != nil {
+			s.handleBackupError("error while uploading backup", err)
+			return
+		}
 	}
 
 	s.backupServiceStatus.Status = statusUp

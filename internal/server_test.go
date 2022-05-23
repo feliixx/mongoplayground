@@ -59,11 +59,11 @@ func TestMain(m *testing.M) {
 
 	log.SetOutput(os.Stdout)
 
-	storageDir, _ := ioutil.TempDir(os.TempDir(), "storage")
-	backupsDir, _ := ioutil.TempDir(os.TempDir(), "backups")
+	ioutil.TempDir(os.TempDir(), "storage")
+	ioutil.TempDir(os.TempDir(), "backups")
 
 	var err error
-	testStorage, err = newStorage("mongodb://localhost:27017", true, storageDir, backupsDir, nil, nil)
+	testStorage, err = newStorage("mongodb://localhost:27017", true, nil, nil, nil)
 	if err != nil {
 		fmt.Printf("aborting: %v\n", err)
 		os.Exit(1)

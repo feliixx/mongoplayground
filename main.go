@@ -34,10 +34,9 @@ func main() {
 	s, err := internal.NewServer(
 		boa.GetString("mongo.uri"),
 		boa.GetBool("mongo.dropFirst"),
-		boa.GetString("badger.db_dir"),
-		boa.GetString("badger.backup_dir"),
 		loadCloudflareInfo(),
-		loadSmtp(),
+		loadMailInfo(),
+		loadGoogleDriveInfo(),
 	)
 	if err != nil {
 		log.Fatalf("aborting: %v\n", err)
@@ -63,14 +62,6 @@ func main() {
 
 func loadConfig() {
 
-	boa.SetDefault("https.enabled", false)
-	boa.SetDefault("mongo.uri", "mongodb://localhost:27017")
-	boa.SetDefault("mongo.dropFirst", false)
-	boa.SetDefault("logging.loki.host", "")
-	boa.SetDefault("mail.enabled", false)
-	boa.SetDefault("badger.db_dir", "storage")
-	boa.SetDefault("badger.backup_dir", "backup")
-
 	f, err := os.Open("config.json")
 	if err != nil {
 		log.Println("config file not found")
@@ -84,44 +75,58 @@ func loadConfig() {
 
 func setLogger() {
 
-	if boa.GetString("logging.loki.host") != "" {
-
-		logger := internal.NewLokiLogger(
-			boa.GetString("logging.loki.host"),
-			boa.GetInt("logging.loki.port"),
-		)
-		log.SetOutput(logger)
-
-		go func(l *internal.LokiLogger) {
-			for range time.Tick(5 * time.Minute) {
-				err := l.Send()
-				if err != nil {
-					log.Printf("fail to send to loki: %v", err)
-				}
-			}
-		}(logger)
+	if !boa.GetBool("loki.enabled") {
+		return
 	}
+
+	logger := internal.NewLokiLogger(
+		boa.GetString("loki.host"),
+		boa.GetInt("loki.port"),
+	)
+	log.SetOutput(logger)
+
+	go func(l *internal.LokiLogger) {
+		for range time.Tick(5 * time.Minute) {
+			err := l.Send()
+			if err != nil {
+				log.Printf("fail to send to loki: %v", err)
+			}
+		}
+	}(logger)
 }
 
-func loadSmtp() *internal.MailInfo {
+func loadMailInfo() *internal.MailInfo {
 
-	if boa.GetBool("mail.enabled") {
-
-		return internal.NewMailInfo(
-			boa.GetString("mail.smtp.host"),
-			boa.GetInt("mail.smtp.port"),
-			boa.GetString("mail.smtp.from"),
-			boa.GetString("mail.smtp.pwd"),
-			boa.GetString("mail.sendTo"),
-		)
+	if !boa.GetBool("mail.enabled") {
+		return nil
 	}
-	return nil
+
+	return internal.NewMailInfo(
+		boa.GetString("mail.smtp.host"),
+		boa.GetInt("mail.smtp.port"),
+		boa.GetString("mail.smtp.from"),
+		boa.GetString("mail.smtp.pwd"),
+		boa.GetString("mail.sendTo"),
+	)
 }
 
 func loadCloudflareInfo() *internal.CloudflareInfo {
 	return internal.NewCloudflareInfo(
 		boa.GetString("cloudflare.zone_id"),
 		boa.GetString("cloudflare.api_token"),
+	)
+}
+
+func loadGoogleDriveInfo() *internal.GoogleDriveInfo {
+
+	if !boa.GetBool("google_drive.enabled") {
+		return nil
+	}
+
+	return internal.NewGoogleDriveInfo(
+		boa.GetString("google_drive.dir"),
+		boa.GetMap("google_drive.token"),
+		boa.GetMap("google_drive.credentials"),
 	)
 }
 

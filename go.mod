@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
-	github.com/feliixx/boa v0.2.1
+	github.com/feliixx/boa v0.2.2
 	github.com/feliixx/mgodatagen v0.10.2
 	github.com/feliixx/mongoextjson v1.1.3
 	github.com/prometheus/client_golang v1.11.1
