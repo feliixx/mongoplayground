@@ -25,32 +25,33 @@
  *
  * @class
  * @param {string} config.selectId - HTML id of the select.
+ * @param {string} config.width - width of the custom select in px
  * @param {function} config.onChange - custom code to execute when an option is selected
  */
 var CustomSelect = function (config) {
 
-    var selectedClass = "is-selected"
-    var openClass = "is-open"
+    const selectedClass = "is-selected"
+    const openClass = "is-open"
 
-    var select = document.getElementById(config.selectId)
-    var selectedIndex = select.selectedIndex
+    const select = document.getElementById(config.selectId)
+    let selectedIndex = select.selectedIndex
 
-    var options = []
+    let options = []
     for (var i = 0; i < select.options.length; i++) {
         options.push(select.options[i].textContent)
     }
 
-    var selectContainer = document.createElement("div")
+    const selectContainer = document.createElement("div")
     selectContainer.className = "js-Dropdown"
     selectContainer.id = "custom-" + select.id
 
-    var button = document.createElement("button")
+    const button = document.createElement("button")
     button.className = "js-Dropdown-title"
-    button.style.width = select.offsetWidth + "px"
+    button.style.width = config.width
 
-    var ul = document.createElement("ul")
+    const ul = document.createElement("ul")
     ul.className = "js-Dropdown-list"
-    ul.style.width = select.offsetWidth + "px"
+    ul.style.width = config.width
 
     generateOptions()
 
@@ -62,8 +63,8 @@ var CustomSelect = function (config) {
     select.parentNode.insertBefore(selectContainer, select)
     select.parentNode.removeChild(select)
 
-    document.addEventListener("click", function (e) {
-        if (!selectContainer.contains(e.target)) {
+    document.addEventListener("click", event => {
+        if (!selectContainer.contains(event.target)) {
             close()
         }
     })
@@ -118,8 +119,8 @@ var CustomSelect = function (config) {
      */
     function setSelectedIndex(index) {
 
-        var liElem = ul.querySelectorAll("li")
-        for (var i = 0; i < liElem.length; i++) {
+        let liElem = ul.querySelectorAll("li")
+        for (let i = 0; i < liElem.length; i++) {
             liElem[i].classList.remove(selectedClass)
             if (i == index) {
                 selectedIndex = i
@@ -143,8 +144,8 @@ var CustomSelect = function (config) {
 
         button.textContent = value
 
-        var liElem = ul.querySelectorAll("li")
-        for (var i = 0; i < liElem.length; i++) {
+        let liElem = ul.querySelectorAll("li")
+        for (let i = 0; i < liElem.length; i++) {
             liElem[i].classList.remove(selectedClass)
             if (liElem[i].innerText == value) {
                 selectedIndex = i

@@ -17,7 +17,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var templates = [
+const templates = [
     {
         config: '[{"key":1},{"key":2}]',
         query: 'db.collection.find()',
@@ -50,7 +50,7 @@ var templates = [
     }
 ]
 
-var methodSnippet = [
+const methodSnippet = [
     {
         caption: "find()",
         value: "find()",
@@ -73,7 +73,7 @@ var methodSnippet = [
     },
 ]
 
-var availableCollections = [
+let availableCollections = [
     {
         caption: "collection",
         value: "collection",
@@ -82,7 +82,7 @@ var availableCollections = [
 ]
 
 
-var basicBsonSnippet = [
+const basicBsonSnippet = [
     {
         caption: "true",
         value: "true",
@@ -140,7 +140,7 @@ var basicBsonSnippet = [
     }
 ]
 
-var querySnippet = [
+const querySnippet = [
     {
         caption: "$eq",
         value: '$eq: "value"',
@@ -338,7 +338,7 @@ var querySnippet = [
     },
 ]
 
-var aggregationSnippet = [
+const aggregationSnippet = [
     {
         caption: "$abs",
         value: '$abs: -1',
@@ -1148,7 +1148,7 @@ var aggregationSnippet = [
 ]
 
 
-var updateSnippet = [
+const updateSnippet = [
     {
         caption: "$currentDate",
         value: '$currentDate: "expression"',
@@ -1246,10 +1246,10 @@ var updateSnippet = [
     }
 ]
 
-var configWordCompleter = {
+const configWordCompleter = {
     getCompletions: function (editor, session, pos, prefix, callback) {
 
-        var token = session.getTokenAt(pos.row, pos.column)
+        let token = session.getTokenAt(pos.row, pos.column)
 
         callback(null, basicBsonSnippet.map(function (snippet) {
             return {
@@ -1261,16 +1261,16 @@ var configWordCompleter = {
 
                         editor.removeWordLeft()
 
-                        var start = ""
-                        if (!token.value.startsWith("\"")) {
-                            start = "\""
+                        let start = ""
+                        if (!token.value.startsWith('"')) {
+                            start = '"'
                         }
 
-                        if (token.value.endsWith("\"")) {
+                        if (token.value.endsWith('"')) {
                             editor.removeWordRight()
                         }
 
-                        editor.insert(start + data.value.replace(":", "\":"))
+                        editor.insert(start + data.value.replace(":", '":'))
                     }
                 }
             }
@@ -1278,13 +1278,13 @@ var configWordCompleter = {
     }
 }
 
-var queryWordCompleter = {
+const queryWordCompleter = {
 
     getCompletions: function (editor, session, pos, prefix, callback) {
 
-        var token = session.getTokenAt(pos.row, pos.column)
+        let token = session.getTokenAt(pos.row, pos.column)
 
-        var tokens = session.getTokens(pos.row)
+        let tokens = session.getTokens(pos.row)
         if (tokens.length > 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
             callback(null, methodSnippet)
             return
@@ -1293,7 +1293,7 @@ var queryWordCompleter = {
             return
         }
 
-        var wordsQuery = basicBsonSnippet
+        let wordsQuery = basicBsonSnippet
 
         if (editor.getSession().getLine(0).includes(".find(")) {
             wordsQuery = wordsQuery.concat(querySnippet)
@@ -1313,16 +1313,16 @@ var queryWordCompleter = {
 
                         editor.removeWordLeft()
 
-                        var start = ""
-                        if (!token.value.startsWith("\"")) {
-                            start = "\""
+                        let start = ""
+                        if (!token.value.startsWith('"')) {
+                            start = '"'
                         }
 
-                        if (token.value.endsWith("\"")) {
+                        if (token.value.endsWith('"')) {
                             editor.removeWordRight()
                         }
 
-                        editor.insert(start + data.value.replace(":", "\":"))
+                        editor.insert(start + data.value.replace(":", '":'))
                     }
                 }
             }
