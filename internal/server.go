@@ -92,7 +92,8 @@ func latencyAndPanicObserver(handler http.Handler, mailInfo *MailInfo) http.Hand
 		defer handleAnyPanic(w, r, mailInfo)
 
 		// unsafe-inline is needed for style-src because of ace.js
-		w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
+		// allow js script from static.cloudflareinsights.com for web analytics
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self' static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
 		w.Header().Set("Strict-Transport-Security", "max-age=63072000; includeSubDomains; preload")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 
