@@ -25,7 +25,7 @@
  */
 var Parser = function () {
 
-    var at,     // The index of the current character
+    let at,     // The index of the current character
         ch,     // The current character
 
         doIndent = false,
@@ -139,7 +139,7 @@ var Parser = function () {
                     white()
                     return null
                 }
-                error("Unexpected remaining char after end of " + type)
+                error(`Unexpected remaining char after end of ${type}`)
             }
         } catch (err) {
             // if there's an error, keep indenting so it's easier to
@@ -155,7 +155,7 @@ var Parser = function () {
     function next(c) {
 
         if (c && c !== ch) {
-            error("Expected '" + c + "' instead of '" + ch + "'")
+            error(`Expected '${c}' instead of '${ch}'`)
         }
         nextNoAppend()
 
@@ -253,12 +253,12 @@ var Parser = function () {
 
         output = output.slice(0, -2)
 
-        var endIndex = input.indexOf("\n", at)
+        let endIndex = input.indexOf("\n", at)
         if (endIndex === -1) {
             endIndex = input.length
         }
 
-        var comment = input.substring(at, endIndex).trimRight()
+        const comment = input.substring(at, endIndex).trimRight()
 
         if (keepComment) {
             if (doIndent) {
@@ -285,7 +285,7 @@ var Parser = function () {
 
         output = output.slice(0, -2)
 
-        var endIndex = input.indexOf("*/", at)
+        const endIndex = input.indexOf("*/", at)
         if (endIndex === -1) {
             error("Unfinished multiligne comment")
         }
@@ -295,7 +295,7 @@ var Parser = function () {
             nextNoAppend()
         }
 
-        var comment = input.substring(at - 1, endIndex)
+        let comment = input.substring(at - 1, endIndex)
 
         if (keepComment && comment !== "") {
             if (doIndent) {
@@ -327,7 +327,7 @@ var Parser = function () {
         if (ch === '"' || ch === "'") {
             return string()
         }
-        var start = at - 1
+        const start = at - 1
         while (ch && ((ch >= "0" && ch <= "9") || (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || ch === "$" || ch === "_")) {
             next()
         }
@@ -393,7 +393,7 @@ var Parser = function () {
 
     function collectionBson() {
         white()
-        var collName = anyWord()
+        const collName = anyWord()
         white()
         next(":")
         white()
@@ -403,7 +403,7 @@ var Parser = function () {
 
     function number() {
 
-        var numberStr = ""
+        let numberStr = ""
 
         if (ch === "-") {
             numberStr += ch
@@ -447,12 +447,12 @@ var Parser = function () {
 
         output = output.slice(0, -1)
 
-        var string = "",
+        let string = "",
             startStringCh = ch
 
         nextNoAppend()
 
-        var prevCh = ch
+        let prevCh = ch
         while (ch) {
 
             if (ch === startStringCh && prevCh !== "\\") {
@@ -480,7 +480,7 @@ var Parser = function () {
 
     function word() {
 
-        var start = at - 1
+        const start = at - 1
         switch (ch) {
             case "t":
                 next()
@@ -540,8 +540,8 @@ var Parser = function () {
                 error("Expecting NumberInt, NumberLong or NumberDecimal")
         }
 
-        var end = input.indexOf("\n", start)
-        error("Unknown type: '" + input.substring(start, end) + "'")
+        const end = input.indexOf("\n", start)
+        error(`Unknown type: '${input.substring(start, end)}'`)
     }
 
     function newDate() {
@@ -583,7 +583,7 @@ var Parser = function () {
         next("d")
         next("(")
         white()
-        var hash = string()
+        const hash = string()
         if (hash.length !== 24) {
             error("Invalid ObjectId: hash has to be 24 char long")
         }
@@ -749,21 +749,21 @@ var Parser = function () {
         next()
         white()
 
-        var keys = []
+        let keys = []
 
         if (ch === "}") {
             return next()
         }
         while (ch) {
 
-            var key = anyWord()
+            let key = anyWord()
             white()
             next(":")
             if (keys.includes(key)) {
                 error("Duplicate key '" + key + "'")
             }
             keys.push(key)
-            var val = value()
+            let val = value()
             if (updateAvailableCollection && key === "collection") {
                 addCollectionSnippet(val)
             }
@@ -844,9 +844,9 @@ var Parser = function () {
         if (ch === ")") {
             return next()
         }
-        var explainMode = string()
+        const explainMode = string()
         if (!["executionStats", "queryPlanner", "allPlansExecution"].includes(explainMode)) {
-            error("Invalid explain mode :" + explainMode + ', expected one of ["executionStats", "queryPlanner", "allPlansExecution"] ')
+            error(`Invalid explain mode: '${explainMode}', expected one of ["executionStats", "queryPlanner", "allPlansExecution"]`)
         }
         white()
         next(")")
@@ -895,11 +895,11 @@ var Parser = function () {
     }
 
     function nObject(n) {
-        var count = 0
+        let count = 0
         while (ch && ch === "{") {
             count++
             if (n !== -1 && count > n) {
-                error("too many object, expected up to " + n)
+                error(`too many object, expected up to ${n}`)
             }
             object()
             white()
@@ -922,8 +922,8 @@ var Parser = function () {
             return next()
         }
 
-        var stagesNb = 0
-        var indexEndLastWantedStages = output.length
+        let stagesNb = 0
+        let indexEndLastWantedStages = output.length
 
         while (ch) {
 
@@ -966,15 +966,15 @@ var Parser = function () {
         next()
         white()
 
-        var keys = []
-        var stageNamePushed = false
+        let keys = []
+        let stageNamePushed = false
 
         if (ch === "}") {
             return next()
         }
         while (ch) {
 
-            var key = anyWord()
+            let key = anyWord()
 
             if (!stageNamePushed) {
                 aggregationStages.push(key)
@@ -984,7 +984,7 @@ var Parser = function () {
             white()
             next(":")
             if (keys.includes(key)) {
-                error("Duplicate key '" + key + "'")
+                error(`Duplicate key '${key}'`)
             }
             keys.push(key)
             value()

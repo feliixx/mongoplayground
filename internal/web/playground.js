@@ -17,39 +17,26 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var configEditor,
-    queryEditor,
-    resultEditor,
+var Playground = function () {
 
-    comboMode,
-    comboTemplate,
-    comboStages,
+    const parser = new Parser()
 
-    parser = new Parser(),
+    let configChangedSinceLastRun = true
+    let queryChangedSinceLastRun = true
+    let configOrQueryChangedSinceLastSave = true
 
-    configChangedSinceLastRun = true,
-    queryChangedSinceLastRun = true,
-    configOrQueryChangedSinceLastSave = true,
+    let isConfigHandlerDragging = false
+    let isQueryHandlerDragging = false
 
-    isConfigHandlerDragging = false,
-    isQueryHandlerDragging = false
+    const configPanel = document.getElementById("configPanel")
+    const queryPanel = document.getElementById("queryPanel")
+    const resultPanel = document.getElementById("resultPanel")
+    const docPanel = document.getElementById("docPanel")
 
-function init() {
+    const link = document.getElementById("link")
+    const shareBtn = document.getElementById("share")
 
-    comboStages = new CustomSelect({
-        selectId: "aggregation_stages",
-        onChange: function () { run() }
-    })
-    comboMode = new CustomSelect({
-        selectId: "mode",
-        onChange: function () { checkEditorContent(configEditor, "config") }
-    })
-    comboTemplate = new CustomSelect({
-        selectId: "template",
-        onChange: function () { setTemplate(comboTemplate.getSelectedIndex()) }
-    })
-
-    var commonOpts = {
+    const commonOpts = {
         "mode": "ace/mode/mongo",
         "fontSize": "16px",
         "enableBasicAutocompletion": true,
@@ -61,12 +48,9 @@ function init() {
         "showPrintMargin": false
     }
 
-    var configDiv = document.getElementById("config")
-    var queryDiv = document.getElementById("query")
-
-    configEditor = ace.edit(configDiv, commonOpts)
-    queryEditor = ace.edit(queryDiv, commonOpts)
-    resultEditor = ace.edit(document.getElementById("result"), {
+    const configEditor = ace.edit(document.getElementById("config"), commonOpts)
+    const queryEditor = ace.edit(document.getElementById("query"), commonOpts)
+    const resultEditor = ace.edit(document.getElementById("result"), {
         "mode": commonOpts.mode,
         "fontSize": commonOpts.fontSize,
         "readOnly": true,
@@ -77,6 +61,26 @@ function init() {
         "wrap": true,
         "showPrintMargin": false
     })
+
+    const comboStages = new CustomSelect({
+        selectId: "aggregation_stages",
+        width: "170px",
+        onChange: run
+    })
+    const comboMode = new CustomSelect({
+        selectId: "mode",
+        width: "130px",
+        onChange: checkEditorContent.bind(null, configEditor, "config")
+    })
+    const comboTemplate = new CustomSelect({
+        selectId: "template",
+        width: "210px",
+        onChange: () => { setTemplate(comboTemplate.getSelectedIndex()) }
+    })
+
+    const customStages = document.getElementById("custom-aggregation_stages")
+    const labelStages = document.getElementById("aggregation_stages_label")
+
     resultEditor.renderer.$cursorLayer.element.style.display = "none"
 
     configEditor.completers = [configWordCompleter]
@@ -88,311 +92,304 @@ function init() {
     configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), -1)
     queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), -1)
 
-    configDiv.style.display = "inline"
-    queryDiv.style.display = "inline"
-
     configChangedSinceLastRun = false
     queryChangedSinceLastRun = false
     configOrQueryChangedSinceLastSave = false
 
-    addKeyDownListener()
-    addDivResizeListener()
-    addButtonClickListener()
-}
-
-function addKeyDownListener() {
-    document.addEventListener("keydown", function (event) {
+    document.addEventListener("keydown", event => {
         if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
             event.preventDefault()
             run()
         }
         if ((event.ctrlKey || event.metaKey) && event.key === "s") {
             event.preventDefault()
-            formatAll(true)
+            formatAll()
         }
     })
-}
 
-function addDivResizeListener() {
-    document.addEventListener("mousedown", function (e) {
-        if (e.target.id === "configResizeHandler") {
+    document.addEventListener("mousedown", event => {
+        if (event.target.id === "configResizeHandler") {
             isConfigHandlerDragging = true
         }
-        if (e.target.id === "queryResizeHandler") {
+        if (event.target.id === "queryResizeHandler") {
             isQueryHandlerDragging = true
         }
     })
 
-    document.addEventListener("mouseup", function (e) {
+    document.addEventListener("mousemove", event => {
+        let box
+        if (isConfigHandlerDragging) {
+            box = configPanel
+        } else if (isQueryHandlerDragging) {
+            box = queryPanel
+        } else {
+            return false
+        }
+        let pointerRelativeXpos = event.clientX - box.offsetLeft
+        let width = Math.max(60, pointerRelativeXpos + 2)
+
+        box.style.width = `${width}px`
+        box.style.flexGrow = "0"
+    })
+
+    document.addEventListener("mouseup", () => {
         isConfigHandlerDragging = false
         isQueryHandlerDragging = false
     })
 
-    document.addEventListener("mousemove", function (e) {
-        var box
-        if (isConfigHandlerDragging) {
-            box = document.getElementById("configPanel")
-        } else if (isQueryHandlerDragging) {
-            box = document.getElementById("queryPanel")
-        } else {
-            return false
+    document.getElementById("run").addEventListener("click", run)
+    document.getElementById("format").addEventListener("click", formatAll)
+    document.getElementById("share").addEventListener("click", save)
+    document.getElementById("showDoc").addEventListener("click", toggleDoc)
+
+    /**
+     * Check editor content for syntax error
+     * 
+     * @param {ace.Editor} editor - the ace editor to check content from
+     * @param {string} type - type of editor, must be one of ["config", "query"] 
+     */
+    function checkEditorContent(editor, type) {
+
+        let errors = []
+
+        const err = parser.parse(editor.getValue(), type, comboMode.getValue())
+        if (err != null) {
+            const pos = editor.getSession().getDocument().indexToPosition(err.at - 1)
+            errors.push({
+                row: pos.row,
+                column: pos.column,
+                text: err.message,
+                type: "error"
+            })
         }
-        var pointerRelativeXpos = e.clientX - box.offsetLeft
-        box.style.width = (Math.max(60, pointerRelativeXpos + 2)) + "px"
-        box.style.flexGrow = "0"
-    })
-}
+        editor.getSession().setAnnotations(errors)
 
-function addButtonClickListener() {
-    document.getElementById("run").addEventListener("click", function (e) { run() })
-    document.getElementById("format").addEventListener("click", function (e) { formatAll(true) })
-    document.getElementById("share").addEventListener("click", function (e) { save() })
-    document.getElementById("showDoc").addEventListener("click", function (e) { showDoc(true) })
-}
-
-/**
- * Check editor content for syntax error
- * 
- * @param {ace.Editor} editor - the ace editor to check content from
- * @param {string} type - type of editor, must be one of ["config", "query"] 
- */
-function checkEditorContent(editor, type) {
-
-    var errors = []
-    var err = parser.parse(editor.getValue(), type, comboMode.getValue())
-    if (err != null) {
-        var pos = editor.getSession().getDocument().indexToPosition(err.at - 1)
-        errors.push({
-            row: pos.row,
-            column: pos.column,
-            text: err.message,
-            type: "error"
-        })
-    }
-    editor.getSession().setAnnotations(errors)
-
-    if (type === "query") {
-        if (parser.getQueryType() === "aggregate") {
-            document.getElementById("custom-aggregation_stages").style.visibility = "visible"
-            document.getElementById("aggregation_stages_label").style.visibility = "visible"
-            comboStages.setOptions(parser.getAggregationStages())
-        } else {
-            document.getElementById("custom-aggregation_stages").style.visibility = "hidden"
-            document.getElementById("aggregation_stages_label").style.visibility = "hidden"
-        }
-    }
-
-    if (!configChangedSinceLastRun || !queryChangedSinceLastRun || !configOrQueryChangedSinceLastSave) {
         if (type === "query") {
-            queryChangedSinceLastRun = true
+            if (parser.getQueryType() === "aggregate") {
+                comboStages.setOptions(parser.getAggregationStages())
+                customStages.style.visibility = "visible"
+                labelStages.style.visibility = "visible"
+            } else {
+                customStages.style.visibility = "hidden"
+                labelStages.style.visibility = "hidden"
+            }
+        }
+
+        if (!configChangedSinceLastRun || !queryChangedSinceLastRun || !configOrQueryChangedSinceLastSave) {
+            if (type === "query") {
+                queryChangedSinceLastRun = true
+            } else {
+                configChangedSinceLastRun = true
+            }
+            configOrQueryChangedSinceLastSave = true
+            redirect("/", false)
+        }
+    }
+
+    /**
+     * Change the browser url 
+     * 
+     * @param {string} url - the url to display in the browser 
+     * @param {boolean} showLink - wether to show the playground link in the toolbar
+     */
+    function redirect(url, showLink) {
+        window.history.replaceState({}, "MongoDB playground", url)
+        link.style.visibility = showLink ? "visible" : "hidden"
+        link.value = url
+        shareBtn.disabled = showLink
+    }
+
+    /**
+     * Fill config and query editor with a specific template 
+     * 
+     * @param {Number} index - index of the template to use  
+     */
+    function setTemplate(index) {
+        comboMode.setValue(templates[index].mode)
+        configEditor.setValue(parser.indent(templates[index].config, "config", comboMode.getValue()), 1)
+        queryEditor.setValue(parser.indent(templates[index].query, "query", comboMode.getValue()), 1)
+        resultEditor.setValue("", 1)
+    }
+
+    function toggleDoc() {
+        if (docPanel.style.display === "inline") {
+            hideDoc()
         } else {
-            configChangedSinceLastRun = true
-        }
-        configOrQueryChangedSinceLastSave = true
-        redirect("/", false)
-    }
-}
-
-/**
- * Change the browser url 
- * 
- * @param {string} url - the url to display in the browser 
- * @param {boolean} showLink - wether to show the playground link in the toolbar
- */
-function redirect(url, showLink) {
-    window.history.replaceState({}, "MongoDB playground", url)
-    document.getElementById("link").style.visibility = showLink ? "visible" : "hidden"
-    document.getElementById("link").value = url
-    document.getElementById("share").disabled = showLink
-}
-
-/**
- * Fill config and query editor with a specific template 
- * 
- * @param {int} index - index of the template to use  
- */
-function setTemplate(index) {
-    comboMode.setValue(templates[index].mode)
-    configEditor.setValue(parser.indent(templates[index].config, "config", comboMode.getValue()), 1)
-    queryEditor.setValue(parser.indent(templates[index].query, "query", comboMode.getValue()), 1)
-    resultEditor.setValue("", 1)
-}
-
-/**
- * Show or hide the documentation panel
- * 
- * @param {boolean} doShow - display the doc panel if true, otherwise hide it 
- */
-function showDoc(doShow) {
-
-    if (doShow && !document.getElementById("docPanel").hasChildNodes()) {
-        loadDocs()
-    }
-
-    if (doShow && document.getElementById("docPanel").style.display === "inline") {
-        doShow = false
-    }
-    document.getElementById("docPanel").style.display = doShow ? "inline" : "none"
-    document.getElementById("queryPanel").style.display = doShow ? "none" : "inline"
-    document.getElementById("resultPanel").style.display = doShow ? "none" : "inline"
-    if (!doShow && configOrQueryChangedSinceLastSave) {
-        redirect("/", false)
-    }
-}
-
-/**
- * load the documentation and add it to the doc panel
- */
-function loadDocs() {
-    var r = new XMLHttpRequest()
-    r.open("GET", "/static/docs-14.html", true)
-    r.onreadystatechange = function () {
-        if (r.readyState !== 4) { return }
-        if (r.status === 200) {
-            document.getElementById("docPanel").innerHTML = r.responseText
+            showDoc()
         }
     }
-    r.send(null)
-}
 
-/**
- * Format both editors and run the current playground
- */
-function run() {
-    if (formatAll(false)) {
+    function showDoc() {
+
+        if (!docPanel.hasChildNodes()) {
+            loadDocs()
+        }
+
+        docPanel.style.display = "inline"
+        queryPanel.style.display = "none"
+        resultPanel.style.display = "none"
+    }
+
+    function hideDoc() {
+        docPanel.style.display = "none"
+        queryPanel.style.display = "inline"
+        resultPanel.style.display = "inline"
+    }
+
+    /**
+     * load the documentation and add it to the doc panel
+     */
+    function loadDocs() {
+        fetch("/static/docs-14.html", { method: "GET" })
+            .then(response => response.text())
+            .then(responseTxt => {
+                docPanel.innerHTML = responseTxt
+            })
+    }
+
+    /**
+     * Format both editors and run the current playground
+     */
+    function run() {
+
+        if (hasSyntaxError()) {
+            return
+        }
+        formatAll()
 
         showResult("running query...", false)
 
-        var r = new XMLHttpRequest()
-        r.open("POST", "/run")
-        r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-        r.onreadystatechange = function () {
-            if (r.readyState !== 4) { return }
-            if (r.status === 200) {
+        fetch("/run", { method: "POST", body: encodePlayground(false) })
+            .then(response => response.text())
+            .then(responseTxt => {
 
                 configChangedSinceLastRun = false
                 queryChangedSinceLastRun = false
 
-                var response = r.responseText
-                if (response.startsWith("[") || response.startsWith("{")) {
-                    showResult(response, true)
-                } else if (response === "no document found") {
-                    showResult(response, false)
+                if (responseTxt.startsWith("[") || responseTxt.startsWith("{")) {
+                    showResult(responseTxt, true)
+                } else if (responseTxt === "no document found") {
+                    showResult(responseTxt, false)
                 } else {
-                    showError(response)
+                    showError(responseTxt)
                 }
-            }
+            })
+    }
+
+    /**
+     * Save the current playground. The playground can be saved even if 
+     * it contains syntax errors 
+     */
+    function save() {
+
+        formatAll()
+
+        fetch("/save", { method: "POST", body: encodePlayground(true) })
+            .then(response => response.text())
+            .then(responseTxt => {
+
+                configOrQueryChangedSinceLastSave = false
+
+                if (responseTxt.startsWith("http")) {
+                    redirect(responseTxt, true)
+                } else {
+                    showError(responseTxt)
+                }
+            })
+    }
+
+    /**
+     * Encode the content of a playground as an URI
+     * 
+     * @param {boolean} keepComment - wether to keep comment or not 
+     * 
+     * @returns {FormData} a formData containing the mode, config and query 
+     */
+    function encodePlayground(keepComment) {
+
+        let mode = comboMode.getValue()
+        let compactFunc = keepComment ? parser.compact : parser.compactAndRemoveComment
+
+        const formData = new FormData()
+        formData.append("mode", mode)
+        formData.append("config", compactFunc(configEditor.getValue(), "config", mode))
+        formData.append("query", compactFunc(queryEditor.getValue(), "query", mode, comboStages.getSelectedIndex() + 1))
+
+        return formData
+    }
+
+    /**
+     * Check wether there is any syntax error in config or query editor 
+     * 
+     * @returns {boolean} true if there is at least one syntax error, in config or query editor
+     */
+    function hasSyntaxError() {
+
+        let errors = configEditor.getSession().getAnnotations()
+        if (errors.length > 0) {
+            showError(`Invalid configuration:\n\nLine ${(errors[0].row + 1)}: ${errors[0].text}`)
+            return true
         }
-        r.send(encodePlayground(false))
-    }
-}
-
-/**
- * Save the current playground
- */
-function save() {
-
-    formatAll(configChangedSinceLastRun || queryChangedSinceLastRun)
-
-    var r = new XMLHttpRequest()
-    r.open("POST", "/save")
-    r.setRequestHeader("Content-Type", "application/x-www-form-urlencoded")
-    r.onreadystatechange = function () {
-        if (r.readyState !== 4) { return }
-        if (r.status === 200) {
-
-            configOrQueryChangedSinceLastSave = false
-            var response = r.responseText
-            if (response.startsWith("http")) {
-                redirect(response, true)
-            } else {
-                showError(response)
-            }
+        errors = queryEditor.getSession().getAnnotations()
+        if (errors.length > 0) {
+            showError(`Invalid query:\n\nLine ${(errors[0].row + 1)}: ${errors[0].text}`)
+            return true
         }
-    }
-    r.send(encodePlayground(true))
-}
-
-/**
- * Encode the content of a playground as an URI
- * 
- * @param {boolean} keepComment - wether to keep comment or not 
- * 
- * @returns {string} the content of the playground URI encoded
- */
-function encodePlayground(keepComment) {
-    var result = "mode=" + comboMode.getValue()
-    if (keepComment) {
-        result += "&config=" + encodeURIComponent(parser.compact(configEditor.getValue(), "config", comboMode.getValue()))
-            + "&query=" + encodeURIComponent(parser.compact(queryEditor.getValue(), "query", comboMode.getValue()))
-    } else {
-        result += "&config=" + encodeURIComponent(parser.compactAndRemoveComment(configEditor.getValue(), "config", comboMode.getValue(), -1))
-            + "&query=" + encodeURIComponent(parser.compactAndRemoveComment(queryEditor.getValue(), "query", comboMode.getValue(), comboStages.getSelectedIndex() + 1))
-    }
-    return result
-}
-
-/**
- * Format both editors and returns wether they have any syntax errors
- * 
- * @param {boolean} clearResult - wether to clear the result editor or not 
- * 
- * @returns {boolean} true if there's no syntax errors in both editors
- */
-function formatAll(clearResult) {
-
-    if (clearResult) {
-        resultEditor.setValue("", -1)
-    }
-
-    showDoc(false)
-
-    var errors = configEditor.getSession().getAnnotations()
-    if (errors.length > 0) {
-        showError("Invalid configuration:\n\nLine " + (errors[0].row + 1) + ": " + errors[0].text)
-        return false
-    }
-    errors = queryEditor.getSession().getAnnotations()
-    if (errors.length > 0) {
-        showError("Invalid query:\n\nLine " + (errors[0].row + 1) + ": " + errors[0].text)
         return false
     }
 
-    if (configChangedSinceLastRun) {
-        configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), 1)
+    /**
+     * Format both config and query editors 
+     */
+    function formatAll() {
+
+        hideDoc()
+
+        if (hasSyntaxError()) {
+            return
+        }
+
+        if (configChangedSinceLastRun || queryChangedSinceLastRun) {
+            resultEditor.setValue("", -1)
+        }
+        if (configChangedSinceLastRun) {
+            configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), 1)
+        }
+        if (queryChangedSinceLastRun) {
+            queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), 1)
+        }
     }
-    if (queryChangedSinceLastRun) {
-        queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), 1)
+
+    /**
+     * Display an error ( syntax error or server error) in the result editor
+     * 
+     * @param {string} errMsg - error message to display in result editor 
+     */
+    function showError(errMsg) {
+
+        hideDoc()
+
+        resultPanel.classList.add("text_red")
+        resultEditor.setOption("wrap", true)
+        resultEditor.setValue(errMsg, -1)
     }
-    return true
+
+    /**
+     * Display a valid result in the result editor
+     * 
+     * @param {string} result - the text to display in the result editor 
+     * @param {boolean} doIndent - wether to indent the result or not 
+     */
+    function showResult(result, doIndent) {
+        resultPanel.classList.remove("text_red")
+        if (doIndent) {
+            result = parser.indent(result, "result", comboMode.getValue())
+        }
+        resultEditor.setOption("wrap", false)
+        resultEditor.setValue(result, -1)
+    }
 }
 
-/**
- * Display an error ( syntax error or server error) in the result editor
- * 
- * @param {string} errMsg - error message to display in result editor 
- */
-function showError(errMsg) {
-    document.getElementById("result").classList.add("text_red")
-    resultEditor.setOption("wrap", true)
-    resultEditor.setValue(errMsg, -1)
+window.onload = () => {
+    new Playground()
 }
-
-/**
- * Display a valid result in the result editor
- * 
- * @param {string} result - the text to display in the result editor 
- * @param {boolean} doIndent - wether to indent the result or not 
- */
-function showResult(result, doIndent) {
-    document.getElementById("result").classList.remove("text_red")
-    if (doIndent) {
-        result = parser.indent(result, "result", comboMode.getValue())
-    }
-    resultEditor.setOption("wrap", false)
-    resultEditor.setValue(result, -1)
-}
-
-
-// code to execute when script is loaded
-init()

@@ -125,18 +125,6 @@ select,
     visibility: hidden;
 }
 
-#aggregation_stages {
-    width: 170px;
-}
-
-#template {
-    width: 210px;
-}
-
-#mode {
-    width: 130px;
-}
-
 .toolbar .controls>:last-child {
     float: right !important;
 }
@@ -230,10 +218,6 @@ select,
     width: 100%;
     height: 100%;
     display: flex;
-}
-
-.content .resizable_editor>div:first-child {
-    display: none;
 }
 
 .content .handler {
