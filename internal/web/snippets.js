@@ -347,17 +347,17 @@ const aggregationSnippet = [
     {
         caption: "$accumulator",
         value: '$accumulator: {\n "init": "code",\n "initArgs": "array expression",\n "accumulate": "code",\n "accumulateArgs": "array expression",\n "merge": "code",\n "finalize": "code",\n "lang": "string"\n}',
-        meta: "accumulation operator"
+        meta: "accumulation operator (v4.4+)"
     },
     {
         caption: "$acos",
         value: '$acos: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$acosh",
         value: '$acosh: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$add",
@@ -402,27 +402,27 @@ const aggregationSnippet = [
     {
         caption: "$asin",
         value: '$asin: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$asinh",
         value: '$asinh: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$atan",
         value: '$atan: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$atan2",
         value: '$atan2: [ "expression 1", "expression 2" ]',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$atanh",
         value: '$atanh: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$avg",
@@ -432,12 +432,12 @@ const aggregationSnippet = [
     {
         caption: "$binarySize",
         value: '$binarySize: "string or binData"',
-        meta: "size operator"
+        meta: "size operator (v4.4+)"
     },
     {
         caption: "$bsonSize",
         value: '$bsonSize: "object"',
-        meta: "size operator"
+        meta: "size operator (v4.4+)"
     },
     {
         caption: "$bucket",
@@ -477,12 +477,12 @@ const aggregationSnippet = [
     {
         caption: "$convert",
         value: '$convert: {\n "input": "expression",\n "to": "type expression",\n "onError": "expression",\n "onNull": "expression"\n}',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$cos",
         value: '$cos: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$count",
@@ -527,7 +527,7 @@ const aggregationSnippet = [
     {
         caption: "$degreesToRadians",
         value: '$degreesToRadians: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$divide",
@@ -562,7 +562,7 @@ const aggregationSnippet = [
     {
         caption: "$first",
         value: '$first: "expression"',
-        meta: "array operator"
+        meta: "array operator (v4.4+)"
     },
     {
         caption: "$floor",
@@ -572,7 +572,7 @@ const aggregationSnippet = [
     {
         caption: "$function",
         value: '$function: {\n "body": "code",\n "args": "array expression",\n "lang": "js"\n}',
-        meta: "aggregation operator"
+        meta: "aggregation operator (v4.4+)"
     },
     {
         caption: "$geoNear",
@@ -637,7 +637,7 @@ const aggregationSnippet = [
     {
         caption: "$isNumber",
         value: '$isNumber: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.4+)"
     },
     {
         caption: "$isoDayOfWeek",
@@ -657,7 +657,7 @@ const aggregationSnippet = [
     {
         caption: "$last",
         value: '$last: "expression"',
-        meta: "array operator"
+        meta: "array operator (v4.4+)"
     },
     {
         caption: "$limit",
@@ -697,7 +697,7 @@ const aggregationSnippet = [
     {
         caption: "$ltrim",
         value: '$ltrim: { "input": "string",  "chars": "string" }',
-        meta: "string operator"
+        meta: "string operator (v4.0+)"
     },
     {
         caption: "$map",
@@ -717,7 +717,7 @@ const aggregationSnippet = [
     {
         caption: "$merge",
         value: '$merge: {\n "into": "collection",\n "on": "identifier field",\n "let": "variables",\n "whenMatched": "replace|keepExisting|merge|fail|pipeline",\n "whenNotMatched": "insert|discard|fail"\n}',                     // Optional\n}",
-        meta: "aggregation stage"
+        meta: "aggregation stage (v4.2+)"
     },
     {
         caption: "$mergeObjects",
@@ -797,7 +797,7 @@ const aggregationSnippet = [
     {
         caption: "$radiansToDegrees",
         value: '$radiansToDegrees: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$range",
@@ -817,27 +817,27 @@ const aggregationSnippet = [
     {
         caption: "$regexFind",
         value: '$regexFind: { "input": "expression", "regex": "expression", "options": "expression" }',
-        meta: "string operator"
+        meta: "string operator (v4.2+)"
     },
     {
         caption: "$regexFindAll",
         value: '$regexFindAll: { "input": "expression", "regex": "expression", "options": "expression" }',
-        meta: "string operator"
+        meta: "string operator (v4.2+)"
     },
     {
         caption: "$regexMatch",
         value: '$regexMatch: { "input": "expression" , "regex": "expression", "options": "expression" }',
-        meta: "string operator"
+        meta: "string operator (v4.2+)"
     },
     {
         caption: "$replaceAll",
         value: '$replaceAll: { "input": "expression", "find": "expression", "replacement": "expression" }',
-        meta: "string operator"
+        meta: "string operator (v4.4+)"
     },
     {
         caption: "$replaceOne",
         value: '$replaceOne: { "input": "expression", "find": "expression", "replacement": "expression" }',
-        meta: "string operator"
+        meta: "string operator (v4.4+)"
     },
     {
         caption: "$replaceRoot",
@@ -847,7 +847,7 @@ const aggregationSnippet = [
     {
         caption: "$replaceWith",
         value: '$replaceWith: "replacementDocument"',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v4.2+)"
     },
     {
         caption: "$reverseArray",
@@ -857,12 +857,12 @@ const aggregationSnippet = [
     {
         caption: "$round",
         value: '$round : [ "number", "place" ]',
-        meta: "arithmetic operator"
+        meta: "arithmetic operator (v4.2+)"
     },
     {
         caption: "$rtrim",
         value: '$rtrim: { "input": "string", chars: "string" }',
-        meta: "string operator"
+        meta: "string operator (v4.0+)"
     },
     {
         caption: "$sample",
@@ -877,7 +877,7 @@ const aggregationSnippet = [
     {
         caption: "$set",
         value: '$set: { "newField": "expression" }',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v4.2+)"
     },
     {
         caption: "$setDifference",
@@ -907,7 +907,7 @@ const aggregationSnippet = [
     {
         caption: "$sin",
         value: '$sin: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$size",
@@ -1002,37 +1002,37 @@ const aggregationSnippet = [
     {
         caption: "$tan",
         value: '$tan: "expression"',
-        meta: "trigonometry operator"
+        meta: "trigonometry operator (v4.2+)"
     },
     {
         caption: "$toBool",
         value: '$toBool: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toDate",
         value: '$toDate: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toDecimal",
         value: '$toDecimal: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toDouble",
         value: '$toDouble: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toInt",
         value: '$toInt: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toLong",
         value: '$toLong: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toLower",
@@ -1042,12 +1042,12 @@ const aggregationSnippet = [
     {
         caption: "$toObjectId",
         value: '$toObjectId: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toString",
         value: '$toString: "expression"',
-        meta: "type operator"
+        meta: "type operator (v4.0+)"
     },
     {
         caption: "$toUpper",
@@ -1056,8 +1056,8 @@ const aggregationSnippet = [
     },
     {
         caption: "$trim",
-        value: '$trim: { "input": "string",  "chars": "string" }',
-        meta: "string operator"
+        value: '$trim: { "input": "string", "chars": "string" }',
+        meta: "string operator (v4.0+)"
     },
     {
         caption: "$trunc",
@@ -1077,7 +1077,7 @@ const aggregationSnippet = [
     {
         caption: "$unset",
         value: '$unset: "field"',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v4.2+)"
     },
     {
         caption: "$unwind",
@@ -1108,88 +1108,88 @@ const aggregationSnippet = [
     {
         caption: "$dateAdd",
         value: '$dateAdd: {\n "startDate": "dateExpression",\n "unit": "Unit",\n "amount": "int",\n "timezone": "tzExpression"\n}',
-        meta: "date operator"
+        meta: "date operator (v5.0+)"
     },
     {
         caption: "$dateDiff",
         value: '$dateDiff: {\n "startDate": "dateExpression",\n "unit": "Unit",\n" amount": "int",\n "timezone": "tzExpression",\n "startOfWeek": "day"\n}',
-        meta: "date operator"
+        meta: "date operator (v5.0+)"
     },
     {
         caption: "$dateSubtract",
         value: '$dateSubtract: {\n "startDate": "dateExpression",\n "unit": "Unit",\n "amount": "int",\n "timezone": "tzExpression"\n}',
-        meta: "date operator"
+        meta: "date operator (v5.0+)"
     },
     {
         caption: "$getField",
         value: '$getField: { "field": "string", "input": "object" }',
-        meta: "aggregation operator"
+        meta: "aggregation operator (v5.0+)"
     },
     {
         caption: "$setField",
         value: '$setField: { "field": "string", "input": "object", "value": "expression" }',
-        meta: "aggregation operator"
+        meta: "aggregation operator (v5.0+)"
     },
     {
         caption: "$sampleRate",
         value: '$sampleRate: "non negative float"',
-        meta: "aggregation operator"
+        meta: "aggregation operator (v5.0+)"
     },
     {
         caption: "$rand",
         value: '$rand: {}',
-        meta: "aggregation operator"
+        meta: "aggregation operator (v5.0+)"
     },
     {
         caption: "$setWindowFields",
         value: '$setWindowFields: {\n "partitionBy": "$state",\n "sortBy": { "field": "order" },\n "output": {\n  "field": {\n  "window operator": "window operator param",\n  "window": {\n   "documents": [ "lower boundary", "upper bondary" ],\n   "range": [ "lower boundary", "upper bondary" ],\n   "unit": "time unit"\n  }\n  }\n }\n}',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v5.0+)"
     },
     // new in v6.0
     {
         caption: "$densify",
         value: '$densify: {\n "field": "fieldName",\n "partitionByFields": ["field1", "field2"],\n "range": {\n  "step": 1,\n  "unit": "hour",\n  "bounds": [ "lower boundary", "upper bondary" ]\n }\n}',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v5.1+)"
     },
     {
         caption: "$documents",
         value: '$documents: "expression"',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v5.1+)"
     },
     {
         caption: "$fill",
         value: '$fill: {\n "partitionBy": "expression",\n "partitionByFields": ["field1", "field2"],\n"sortBy": { "field": 1 },\n "output": { "field": { "value": "expression"}}\n}',
-        meta: "aggregation stage"
+        meta: "aggregation stage (v5.3+)"
     },
     {
         caption: "$bottom",
         value: '$bottom: {\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
-        meta: "aggregation accumulator"
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$bottomN",
         value: '$bottomN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
-        meta: "aggregation accumulator"
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$firstN",
         value: '$firstN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "aggregation accumulator "
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$firstN",
         value: '$firstN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "array operator "
+        meta: "array operator (v5.2+)"
     },
     {
         caption: "$lastN",
         value: '$lastN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "aggregation accumulator "
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$lastN",
         value: '$lastN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "array operator "
+        meta: "array operator (v5.2+)"
     },
     {
         caption: "$maxN",
@@ -1199,47 +1199,47 @@ const aggregationSnippet = [
     {
         caption: "$maxN",
         value: '$maxN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "array operator "
+        meta: "array operator (v5.2+)"
     },
     {
         caption: "$minN",
         value: '$minN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "aggregation accumulator "
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$minN",
         value: '$minN: {\n "n": "expression",\n "input": "expression"\n}',
-        meta: "array operator "
+        meta: "array operator (v5.2+)"
+    },
+    {
+        caption: "$top",
+        value: '$top: {\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$topN",
-        value: '$topN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "input": "expression"\n}',
-        meta: "aggregation accumulator "
-    },
-    {
-        caption: "$topN",
-        value: '$topN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "input": "expression"\n}',
-        meta: "array operator "
+        value: '$topN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
+        meta: "aggregation accumulator (v5.2+)"
     },
     {
         caption: "$linearFill",
         value: '$linearFill: "expression"',
-        meta: "aggregation"
+        meta: "aggregation (v5.3+)"
     },
     {
         caption: "$locf",
         value: '$locf: "expression"',
-        meta: "aggregation"
+        meta: "aggregation (v5.2+)"
     },
     {
         caption: "$tsIncrement",
         value: '$tsIncrement: "expression"',
-        meta: "aggregation"
+        meta: "aggregation (v5.1+)"
     },
     {
         caption: "$tsSecond",
         value: '$tsSecond: "expression"',
-        meta: "aggregation"
+        meta: "aggregation (v5.1+)"
     },
 ]
 
