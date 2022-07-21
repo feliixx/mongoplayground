@@ -1308,97 +1308,102 @@ var Completer = function (config) {
         }
     ]
 
-    return {
-        configWordCompleter: {
-            getCompletions: function (editor, session, pos, prefix, callback) {
 
-                let token = session.getTokenAt(pos.row, pos.column)
+    const configCompleter = {
+        
+        getCompletions: function (editor, session, pos, prefix, callback) {
 
-                callback(null, basicBsonSnippet.map(function (snippet) {
-                    return {
-                        caption: snippet.caption,
-                        value: snippet.value,
-                        meta: snippet.meta,
-                        completer: {
-                            insertMatch: function (editor, data) {
+            let token = session.getTokenAt(pos.row, pos.column)
 
-                                editor.removeWordLeft()
+            callback(null, basicBsonSnippet.map(function (snippet) {
+                return {
+                    caption: snippet.caption,
+                    value: snippet.value,
+                    meta: snippet.meta,
+                    completer: {
+                        insertMatch: function (editor, data) {
 
-                                let start = ""
-                                if (!token.value.startsWith('"')) {
-                                    start = '"'
-                                }
+                            editor.removeWordLeft()
 
-                                if (token.value.endsWith('"')) {
-                                    editor.removeWordRight()
-                                }
-
-                                editor.insert(start + data.value.replace(":", '":'))
+                            let start = ""
+                            if (!token.value.startsWith('"')) {
+                                start = '"'
                             }
+
+                            if (token.value.endsWith('"')) {
+                                editor.removeWordRight()
+                            }
+
+                            editor.insert(start + data.value.replace(":", '":'))
                         }
                     }
-                }))
-            }
-        },
-        queryWordCompleter: {
-
-            getCompletions: function (editor, session, pos, prefix, callback) {
-
-                let token = session.getTokenAt(pos.row, pos.column)
-
-                let tokens = session.getTokens(pos.row)
-                if (tokens.length > 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
-                    callback(null, methodSnippet)
-                    return
-                } else if (tokens.length === 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
-
-                    let availableCollections = config.parser.getCollections().map(function (collName) {
-                        return {
-                            caption: collName,
-                            value: collName,
-                            meta: "collection name"
-                        }
-                    })
-
-                    callback(null, availableCollections)
-                    return
                 }
-
-                let wordsQuery = basicBsonSnippet
-
-                if (editor.getSession().getLine(0).includes(".find(")) {
-                    wordsQuery = wordsQuery.concat(querySnippet)
-                } else if (editor.getSession().getLine(0).includes(".aggregate(")) {
-                    wordsQuery = wordsQuery.concat(aggregationSnippet)
-                } else {
-                    wordsQuery = wordsQuery.concat(updateSnippet)
-                }
-
-                callback(null, wordsQuery.map(function (snippet) {
-                    return {
-                        caption: snippet.caption,
-                        value: snippet.value,
-                        meta: snippet.meta,
-                        completer: {
-                            insertMatch: function (editor, data) {
-
-                                editor.removeWordLeft()
-
-                                let start = ""
-                                if (!token.value.startsWith('"')) {
-                                    start = '"'
-                                }
-
-                                if (token.value.endsWith('"')) {
-                                    editor.removeWordRight()
-                                }
-
-                                editor.insert(start + data.value.replace(":", '":'))
-                            }
-                        }
-                    }
-                }))
-            }
+            }))
         }
+    }
+
+    const queryCompleter = {
+
+        getCompletions: function (editor, session, pos, prefix, callback) {
+
+            let tokens = session.getTokens(pos.row)
+            if (tokens.length === 3 && tokens[0].value === "db" && tokens[1].value === ".") {
+
+                callback(null, config.parser.getCollections().map(function (collName) {
+                    return {
+                        caption: collName,
+                        value: collName,
+                        meta: "collection name"
+                    }
+                }))
+                return
+            }
+
+            let token = session.getTokenAt(pos.row, pos.column)
+            if (tokens.length > 3 && tokens[0].value === "db" && tokens[token.index - 1].value === ".") {
+                callback(null, methodSnippet)
+                return
+            }
+
+            let wordsQuery = basicBsonSnippet
+
+            if (editor.getSession().getLine(0).includes(".find(")) {
+                wordsQuery = wordsQuery.concat(querySnippet)
+            } else if (editor.getSession().getLine(0).includes(".aggregate(")) {
+                wordsQuery = wordsQuery.concat(aggregationSnippet)
+            } else {
+                wordsQuery = wordsQuery.concat(updateSnippet)
+            }
+
+            callback(null, wordsQuery.map(function (snippet) {
+                return {
+                    caption: snippet.caption,
+                    value: snippet.value,
+                    meta: snippet.meta,
+                    completer: {
+                        insertMatch: function (editor, data) {
+
+                            editor.removeWordLeft()
+
+                            let start = ""
+                            if (!token.value.startsWith('"')) {
+                                start = '"'
+                            }
+
+                            if (token.value.endsWith('"')) {
+                                editor.removeWordRight()
+                            }
+
+                            editor.insert(start + data.value.replace(":", '":'))
+                        }
+                    }
+                }
+            }))
+        }
+    }
+
+    return {
+        configCompleter: configCompleter,
+        queryCompleter: queryCompleter
     }
 }

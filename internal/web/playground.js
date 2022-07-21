@@ -19,8 +19,6 @@
 
 var Playground = function () {
 
-    const parser = new Parser()
-
     let configChangedSinceLastRun = true
     let queryChangedSinceLastRun = true
     let configOrQueryChangedSinceLastSave = true
@@ -83,12 +81,13 @@ var Playground = function () {
 
     resultEditor.renderer.$cursorLayer.element.style.display = "none"
 
+    const parser = new Parser()
     const completer = new Completer({
         parser: parser
     })
 
-    configEditor.completers = [completer.configWordCompleter]
-    queryEditor.completers = [completer.queryWordCompleter]
+    configEditor.completers = [completer.configCompleter]
+    queryEditor.completers = [completer.queryCompleter]
 
     configEditor.getSession().on("change", checkEditorContent.bind(null, configEditor, "config"))
     queryEditor.getSession().on("change", checkEditorContent.bind(null, queryEditor, "query"))
