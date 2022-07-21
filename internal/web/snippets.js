@@ -1145,6 +1145,102 @@ const aggregationSnippet = [
         value: '$setWindowFields: {\n "partitionBy": "$state",\n "sortBy": { "field": "order" },\n "output": {\n  "field": {\n  "window operator": "window operator param",\n  "window": {\n   "documents": [ "lower boundary", "upper bondary" ],\n   "range": [ "lower boundary", "upper bondary" ],\n   "unit": "time unit"\n  }\n  }\n }\n}',
         meta: "aggregation stage"
     },
+    // new in v6.0
+    {
+        caption: "$densify",
+        value: '$densify: {\n "field": "fieldName",\n "partitionByFields": ["field1", "field2"],\n "range": {\n  "step": 1,\n  "unit": "hour",\n  "bounds": [ "lower boundary", "upper bondary" ]\n }\n}',
+        meta: "aggregation stage"
+    },
+    {
+        caption: "$documents",
+        value: '$documents: "expression"',
+        meta: "aggregation stage"
+    },
+    {
+        caption: "$fill",
+        value: '$fill: {\n "partitionBy": "expression",\n "partitionByFields": ["field1", "field2"],\n"sortBy": { "field": 1 },\n "output": { "field": { "value": "expression"}}\n}',
+        meta: "aggregation stage"
+    },
+    {
+        caption: "$bottom",
+        value: '$bottom: {\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
+        meta: "aggregation accumulator"
+    },
+    {
+        caption: "$bottomN",
+        value: '$bottomN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "output": "expression"\n}',
+        meta: "aggregation accumulator"
+    },
+    {
+        caption: "$firstN",
+        value: '$firstN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "aggregation accumulator "
+    },
+    {
+        caption: "$firstN",
+        value: '$firstN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "array operator "
+    },
+    {
+        caption: "$lastN",
+        value: '$lastN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "aggregation accumulator "
+    },
+    {
+        caption: "$lastN",
+        value: '$lastN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "array operator "
+    },
+    {
+        caption: "$maxN",
+        value: '$maxN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "aggregation accumulator "
+    },
+    {
+        caption: "$maxN",
+        value: '$maxN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "array operator "
+    },
+    {
+        caption: "$minN",
+        value: '$minN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "aggregation accumulator "
+    },
+    {
+        caption: "$minN",
+        value: '$minN: {\n "n": "expression",\n "input": "expression"\n}',
+        meta: "array operator "
+    },
+    {
+        caption: "$topN",
+        value: '$topN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "input": "expression"\n}',
+        meta: "aggregation accumulator "
+    },
+    {
+        caption: "$topN",
+        value: '$topN: {\n "n": "expression",\n "sortBy": { "field": 1 },\n "input": "expression"\n}',
+        meta: "array operator "
+    },
+    {
+        caption: "$linearFill",
+        value: '$linearFill: "expression"',
+        meta: "aggregation"
+    },
+    {
+        caption: "$locf",
+        value: '$locf: "expression"',
+        meta: "aggregation"
+    },
+    {
+        caption: "$tsIncrement",
+        value: '$tsIncrement: "expression"',
+        meta: "aggregation"
+    },
+    {
+        caption: "$tsSecond",
+        value: '$tsSecond: "expression"',
+        meta: "aggregation"
+    },
 ]
 
 
