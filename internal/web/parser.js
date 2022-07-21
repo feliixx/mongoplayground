@@ -21,7 +21,6 @@
  * a simple config / query parser and formatter 
  * 
  * @class
- * 
  */
 var Parser = function () {
 
@@ -39,6 +38,8 @@ var Parser = function () {
 
         input,  // the string to parse
         output, // formatted result
+
+        collections = [],
 
         aggregationStagesLimit = -1, // -1 means keep all stages 
         aggregationStages = [],      // list of stages name for aggregation queries
@@ -336,7 +337,7 @@ var Parser = function () {
 
     function config(mode) {
 
-        availableCollections = []
+        collections = []
         white()
         if (mode === "mgodatagen" && ch !== "[") {
             error("mgodatagen config has to be an array")
@@ -344,7 +345,7 @@ var Parser = function () {
 
         if (ch === "[") {
             if (mode === "bson") {
-                addCollectionSnippet("collection")
+                collections.push("collection")
                 return array()
             }
             next()
@@ -398,7 +399,7 @@ var Parser = function () {
         next(":")
         white()
         array()
-        addCollectionSnippet(collName)
+        collections.push(collName)
     }
 
     function number() {
@@ -741,7 +742,7 @@ var Parser = function () {
         error("Invalid array: missing closing bracket")
     }
 
-    function object(updateAvailableCollection) {
+    function object(updateCollection) {
 
         if (ch !== "{") {
             error("Expected an object")
@@ -764,8 +765,8 @@ var Parser = function () {
             }
             keys.push(key)
             let val = value()
-            if (updateAvailableCollection && key === "collection") {
-                addCollectionSnippet(val)
+            if (updateCollection && key === "collection") {
+                collections.push(val)
             }
             white()
             if (ch === "}") {
@@ -1069,20 +1070,22 @@ var Parser = function () {
         return queryType
     }
 
+    /**
+     * Get the list of collections defined in the config
+     * 
+     * @returns {string[]} the list of collections
+     */
+    function getCollections() {
+        return collections
+    }
+
     return {
         indent: indent,
         compact: compact,
         compactAndRemoveComment: compactAndRemoveComment,
         parse: parse,
         getAggregationStages: getAggregationStages,
-        getQueryType: getQueryType
+        getQueryType: getQueryType,
+        getCollections: getCollections
     }
-}
-
-function addCollectionSnippet(collectionName) {
-    availableCollections.push({
-        caption: collectionName,
-        value: collectionName,
-        meta: "collection name"
-    })
 }
