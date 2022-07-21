@@ -134,7 +134,13 @@
  "body": "code",
  "args": "array expression",
  "lang": "js"
-}`,meta:"aggregation operator (v4.4+)"},{caption:"$geoNear",value:'$geoNear: { "TODO" }',meta:"aggregation stage"},{caption:"$graphLookup",value:`$graphLookup: {
+}`,meta:"aggregation operator (v4.4+)"},{caption:"$geoNear",value:`$geoNear: {
+ "near": {
+  "type": "Point",
+  "coordinates": [ "long", "lat" ]
+ },
+  "distanceField": "fieldName"
+}`,meta:"aggregation stage"},{caption:"$graphLookup",value:`$graphLookup: {
  "from": "collection",
  "startWith": "expression",
  "connectFromField": "string",
