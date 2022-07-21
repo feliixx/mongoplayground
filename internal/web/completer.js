@@ -542,7 +542,7 @@ var Completer = function (config) {
         },
         {
             caption: "$geoNear",
-            value: '$geoNear: { "TODO" }',
+            value: '$geoNear: {\n "near": {\n  "type": "Point",\n  "coordinates": [ "long", "lat" ]\n },\n  "distanceField": "fieldName"\n}',
             meta: "aggregation stage"
         },
         {
@@ -1310,7 +1310,7 @@ var Completer = function (config) {
 
 
     const configCompleter = {
-        
+
         getCompletions: function (editor, session, pos, prefix, callback) {
 
             let token = session.getTokenAt(pos.row, pos.column)
