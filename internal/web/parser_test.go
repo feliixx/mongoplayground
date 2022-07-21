@@ -1108,7 +1108,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 		parser.parse(tt.input, "config", "bson")
 
 		let want = tt.expectedModeBson
-		let got = availableCollections.map(c => c.value).join(",") 
+		let got = parser.getCollections().join(",") 
 		if (want != got) {
 			print("test " + tt.name + " in bson mode failed, expected: " + want +  " but got: " + got)
 		}
@@ -1116,7 +1116,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 		parser.parse(tt.input, "config", "mgodatagen")
 
 		want = tt.expectedModeMgodatagen
-		got = availableCollections.map(c => c.value).join(",") 
+		got = parser.getCollections().join(",") 
 		if (want != got) {
 			print("test " + tt.name + " in mgodatagen mode failed, expected: " + want +  " but got: " + got)
 		}
