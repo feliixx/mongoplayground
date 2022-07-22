@@ -104,9 +104,9 @@ var Completer = function (config) {
             value: "$date: ",
             meta: "bson keyword"
         }
-    ]
+    ].map(addInsertMatch)
 
-    const querySnippet = [
+    const findSnippet = [
         {
             caption: "$eq",
             value: '$eq: "value"',
@@ -302,7 +302,7 @@ var Completer = function (config) {
             value: "$slice: 2",
             meta: "projection operator"
         },
-    ]
+    ].map(addInsertMatch).concat(basicBsonSnippet)
 
     const aggregationSnippet = [
         {
@@ -1207,7 +1207,7 @@ var Completer = function (config) {
             value: '$tsSecond: "expression"',
             meta: "aggregation (v5.1+)"
         },
-    ]
+    ].map(addInsertMatch).concat(basicBsonSnippet)
 
 
     const updateSnippet = [
@@ -1306,39 +1306,50 @@ var Completer = function (config) {
             value: '$bit: { "field": { "and|or|xor": 4} }',
             meta: "update operator"
         }
-    ]
+    ].map(addInsertMatch).concat(basicBsonSnippet)
+
+    function addInsertMatch(snippet) {
+        return {
+            caption: snippet.caption,
+            value: snippet.value,
+            meta: snippet.meta,
+            completer: {
+                insertMatch: insertMatch
+            }
+        }
+    }
+
+    function insertMatch(editor, data) {
+
+        let pos = editor.getCursorPosition()
+        let token = editor.getSession().getTokenAt(pos.row, pos.column)
+
+        editor.removeWordLeft()
+
+        let start = ""
+        if (!token.value.startsWith('"')) {
+            start = '"'
+        }
+
+        if (token.value.endsWith('"')) {
+            editor.removeWordRight()
+        }
+
+        editor.insert(start + data.value.replace(":", '":'))
+    }
+
+    function collectionSnippet(collName) {
+        return {
+            caption: collName,
+            value: collName,
+            meta: "collection name"
+        }
+    }
 
 
     const configCompleter = {
-
         getCompletions: function (editor, session, pos, prefix, callback) {
-
-            let token = session.getTokenAt(pos.row, pos.column)
-
-            callback(null, basicBsonSnippet.map(function (snippet) {
-                return {
-                    caption: snippet.caption,
-                    value: snippet.value,
-                    meta: snippet.meta,
-                    completer: {
-                        insertMatch: function (editor, data) {
-
-                            editor.removeWordLeft()
-
-                            let start = ""
-                            if (!token.value.startsWith('"')) {
-                                start = '"'
-                            }
-
-                            if (token.value.endsWith('"')) {
-                                editor.removeWordRight()
-                            }
-
-                            editor.insert(start + data.value.replace(":", '":'))
-                        }
-                    }
-                }
-            }))
+            callback(null, basicBsonSnippet)
         }
     }
 
@@ -1348,14 +1359,7 @@ var Completer = function (config) {
 
             let tokens = session.getTokens(pos.row)
             if (tokens.length === 3 && tokens[0].value === "db" && tokens[1].value === ".") {
-
-                callback(null, config.parser.getCollections().map(function (collName) {
-                    return {
-                        caption: collName,
-                        value: collName,
-                        meta: "collection name"
-                    }
-                }))
+                callback(null, config.parser.getCollections().map(collectionSnippet))
                 return
             }
 
@@ -1365,40 +1369,18 @@ var Completer = function (config) {
                 return
             }
 
-            let wordsQuery = basicBsonSnippet
-
-            if (editor.getSession().getLine(0).includes(".find(")) {
-                wordsQuery = wordsQuery.concat(querySnippet)
-            } else if (editor.getSession().getLine(0).includes(".aggregate(")) {
-                wordsQuery = wordsQuery.concat(aggregationSnippet)
-            } else {
-                wordsQuery = wordsQuery.concat(updateSnippet)
+            switch (config.parser.getQueryType()) {
+                case "find":
+                    callback(null, findSnippet)
+                    break
+                case "aggregate":
+                    callback(null, aggregationSnippet)
+                    break
+                case "update":
+                    callback(null, updateSnippet)
+                    break
+                default: callback(null, [])
             }
-
-            callback(null, wordsQuery.map(function (snippet) {
-                return {
-                    caption: snippet.caption,
-                    value: snippet.value,
-                    meta: snippet.meta,
-                    completer: {
-                        insertMatch: function (editor, data) {
-
-                            editor.removeWordLeft()
-
-                            let start = ""
-                            if (!token.value.startsWith('"')) {
-                                start = '"'
-                            }
-
-                            if (token.value.endsWith('"')) {
-                                editor.removeWordRight()
-                            }
-
-                            editor.insert(start + data.value.replace(":", '":'))
-                        }
-                    }
-                }
-            }))
         }
     }
 
