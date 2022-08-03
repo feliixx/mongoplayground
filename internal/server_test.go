@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -59,8 +58,8 @@ func TestMain(m *testing.M) {
 
 	log.SetOutput(os.Stdout)
 
-	ioutil.TempDir(os.TempDir(), "storage")
-	ioutil.TempDir(os.TempDir(), "backups")
+	os.MkdirTemp(os.TempDir(), "storage")
+	os.MkdirTemp(os.TempDir(), "backups")
 
 	var err error
 	testStorage, err = newStorage("mongodb://localhost:27017", true, nil, nil, nil)
