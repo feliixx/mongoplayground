@@ -70,7 +70,7 @@ jobs:
     # script is an adaptation of this question: https://unix.stackexchange.com/questions/82598/
     - name: Check new instance has started correctly
       id: ping_new_instance
-      run: for i in 5 5 10; do sleep $i; wget -nv --no-check-certificate -O- https://${{ secrets.HOST_PRODUCTION }}/health  | grep -q '{"Status":"UP"' && s=0 && break || s=$?; done; (exit $s)
+      run: for i in 5 5 10 15; do sleep $i; wget -nv --no-check-certificate -O- https://${{ secrets.HOST_PRODUCTION }}/health  | grep -q '{"Status":"UP"' && s=0 && break || s=$?; done; (exit $s)
     
     - name: Check if home/view pages have changed
       uses: tj-actions/verify-changed-files@v9
@@ -89,7 +89,7 @@ jobs:
 
     - name: Print first logs if deploy failed
       if: failure() && steps.ping_new_instance.outcome == 'failure'
-      run: ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} journalctl -u $APP_NAME | tail -100
+      run: ssh $APP_NAME@${{ secrets.HOST_PRODUCTION }} journalctl -u $APP_NAME | tail -n 600 | grep -r "Deleting db"
     
     - name: Rollback previous version if deploy failed
       if: failure() && steps.ping_new_instance.outcome == 'failure'
