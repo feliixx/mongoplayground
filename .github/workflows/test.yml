@@ -9,7 +9,7 @@ on:
       - production
 
 env: 
-  MONGO_VERSION: 6.0.0
+  MONGO_VERSION: 6.0.1
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
 
 jobs:
