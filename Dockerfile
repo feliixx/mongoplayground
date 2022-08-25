@@ -1,11 +1,11 @@
-FROM golang:latest as esbuild
+FROM golang:alpine3.16 as esbuild
 
 WORKDIR /tools
 
 RUN go install github.com/evanw/esbuild/cmd/esbuild@v0.14.11
 RUN mv ${GOPATH}/bin/esbuild . 
 
-FROM golang:latest as builder
+FROM golang:alpine3.16 as builder
 
 COPY --from=esbuild /tools/esbuild /usr/bin/
 
@@ -23,9 +23,9 @@ RUN ./bundle.sh
 COPY main.go . 
 COPY internal/*.go ./internal/
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" .
+RUN --mount=type=cache,target=/root/.cache/go-build go build
 
-FROM busybox
+FROM alpine:3.16
 
 WORKDIR /app
 
