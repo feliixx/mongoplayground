@@ -26,9 +26,55 @@ import (
 	"testing"
 )
 
-func TestJavascriptIndentRoundTrip(t *testing.T) {
+func TestParser(t *testing.T) {
 
-	t.Parallel()
+	parserjs, err := os.ReadFile("parser.js")
+	if err != nil {
+		t.Error(err)
+	}
+	buffer := bytes.NewBuffer(parserjs)
+	buffer.WriteString(`
+	
+	var tests = []
+	`)
+
+	addJavascriptIndentRoundTripTests(buffer)
+	addCompactAndRemoveCommentTests(buffer)
+	addCompactAndRemoveCommentWithStagesUpToTests(buffer)
+	addExtractAvailableCollectionsTests(buffer)
+	addGetAggregationStagesTests(buffer)
+	addValidConfigTests(buffer)
+	addValidQueryTests(buffer)
+
+	testFile, err := os.Create(os.TempDir() + "/parser_test.js")
+	if err != nil {
+		t.Error(err)
+	}
+	io.Copy(testFile, buffer)
+	testFile.Close()
+	// run the tests using mongodb javascript engine
+	cmd := exec.Command("mongosh", "--quiet", "--nodb", "--norc", testFile.Name())
+	var out bytes.Buffer
+	cmd.Stdout = &out
+
+	var stdErr bytes.Buffer
+	cmd.Stderr = &stdErr
+
+	err = cmd.Run()
+	if err != nil {
+		errMsg := stdErr.String()
+		t.Errorf("%s (%v)", errMsg, err)
+	}
+
+	result := out.String()
+	if result != "" {
+		t.Error(result)
+	} else {
+		os.Remove(testFile.Name())
+	}
+}
+
+func addJavascriptIndentRoundTripTests(buffer *bytes.Buffer) {
 
 	jsIndentTests := []struct {
 		name    string
@@ -413,8 +459,6 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
@@ -422,25 +466,20 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
         "type": %s,
 		"expectedIndent": %s, 
 		"expectedCompact": %s
-	}
+	},
 	`
 
-	buffer.Write([]byte(`
-		var tests = [`))
+	buffer.WriteString("tests = [")
 	for _, tt := range jsIndentTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.eType), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( indent round trip ) "+tt.name), strconv.Quote(tt.input), strconv.Quote(tt.eType), strconv.Quote(tt.indent), strconv.Quote(tt.compact))
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
 	// for each test case, indent/compact the input, and make sure results are correct.
 	// Then, indent/compact the results, to make sure that re-indent/re-compact give the same
 	// results
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
 	var parser = new Parser()
 
@@ -449,40 +488,37 @@ func TestJavascriptIndentRoundTrip(t *testing.T) {
 
 		let indentResult = parser.indent(tt.input, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
-			print("test " + tt.name + " ident failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
+			print("test '" + tt.name + "' ident failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 		let compactResult = parser.compact(tt.input, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
-			print("test " + tt.name + " compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
+			print("test '" + tt.name + "' compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 
 		indentResult = parser.indent(indentResult, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
-			print("test " + tt.name + " re-indent failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
+			print("test '" + tt.name + "' re-indent failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 
 		compactResult = parser.compact(indentResult, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
-			print("test " + tt.name + " compact-indent failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
+			print("test '" + tt.name + "' compact-indent failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 
 		indentResult = parser.indent(compactResult, tt.type, "bson")
 		if (indentResult !== tt.expectedIndent) {
-			print("test " + tt.name + " indent-compact failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
+			print("test '" + tt.name + "' indent-compact failed, expected: \n" + tt.expectedIndent +  "\nbut got: \n" + indentResult)
 		}
 
 		compactResult = parser.compact(compactResult, tt.type, "bson")
 		if (compactResult !== tt.expectedCompact) {
-			print("test " + tt.name + " re-compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
+			print("test '" + tt.name + "' re-compact failed, expected: \n" + tt.expectedCompact +  "\nbut got: \n" + compactResult)
 		}
 	}	
-	`))
-	runJsTest(t, buffer, "testIndent.js")
+	`)
 }
 
-func TestCompactAndRemoveComment(t *testing.T) {
-
-	t.Parallel()
+func addCompactAndRemoveCommentTests(buffer *bytes.Buffer) {
 
 	removeCommentTests := []struct {
 		name     string
@@ -573,28 +609,22 @@ func TestCompactAndRemoveComment(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"type": %s,
 		"input": %s, 
 		"expected": %s
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("tests = [")
 	for _, tt := range removeCommentTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.eType), strconv.Quote(tt.input), strconv.Quote(tt.expected))
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( compact remove comment ) "+tt.name), strconv.Quote(tt.eType), strconv.Quote(tt.input), strconv.Quote(tt.expected))
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -604,17 +634,13 @@ func TestCompactAndRemoveComment(t *testing.T) {
 		let want = tt.expected
 		let got = parser.compactAndRemoveComment(tt.input, tt.type, "bson", 0) 
 		if (want !== got) {
-			print("test " + tt.name + " compact and remove comment failed, expected: \n" + want +  "\nbut got: \n" + got)
+			print("test '" + tt.name + "' failed, expected: \n" + want +  "\nbut got: \n" + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testCompactAndRemoveComment.js")
+	`)
 }
 
-func TestCompactAndRemoveCommentWithStagesUpTo(t *testing.T) {
-
-	t.Parallel()
+func addCompactAndRemoveCommentWithStagesUpToTests(buffer *bytes.Buffer) {
 
 	removeCommentTests := []struct {
 		name           string
@@ -647,28 +673,22 @@ func TestCompactAndRemoveCommentWithStagesUpTo(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"keepStagesUpTo": %d,
 		"input": %s, 
 		"expected": %s
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("tests = [")
 	for _, tt := range removeCommentTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), tt.keepStagesUpTo, strconv.Quote(tt.input), strconv.Quote(tt.expected))
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( compact remove comment stages up to ) "+tt.name), tt.keepStagesUpTo, strconv.Quote(tt.input), strconv.Quote(tt.expected))
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -678,17 +698,13 @@ func TestCompactAndRemoveCommentWithStagesUpTo(t *testing.T) {
 		let want = tt.expected
 		let got = parser.compactAndRemoveComment(tt.input, "query", "bson", tt.keepStagesUpTo) 
 		if (want !== got) {
-			print("test '" + tt.name + "' compact and remove comment with stages up to failed, expected: \n" + want +  "\nbut got: \n" + got)
+			print("test '" + tt.name + "' failed, expected: \n" + want +  "\nbut got: \n" + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testCompactAndRemoveCommentWithStagesUpTo.js")
+	`)
 }
 
-func TestValidConfig(t *testing.T) {
-
-	t.Parallel()
+func addValidConfigTests(buffer *bytes.Buffer) {
 
 	formatTests := []struct {
 		name             string
@@ -728,28 +744,22 @@ func TestValidConfig(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
 		"validModeBSON": %v, 
 		"validModeDatagen": %v
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("tests = [")
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), tt.validModeBSON, tt.validModeDatagen)
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( valid config ) "+tt.name), strconv.Quote(tt.input), tt.validModeBSON, tt.validModeDatagen)
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -758,22 +768,18 @@ func TestValidConfig(t *testing.T) {
 
 		let got = ( parser.parse(tt.input, "config", "bson") === null )
 		if (got !== tt.validModeBSON) {
-			print("test " + tt.name + " format mode bson failed, expected: " + tt.validModeBSON +  " but got: " + got)
+			print("test '" + tt.name + "' in bson mode failed, expected: " + tt.validModeBSON +  " but got: " + got)
 		}
 
 		got = ( parser.parse(tt.input, "config", "mgodatagen") === null )
 		if (got !== tt.validModeDatagen) {
-			print("test " + tt.name + " format mode mgodatagen failed, expected: " + tt.validModeDatagen +  " but got: " + got)
+			print("test '" + tt.name + "' in mgodatagen mode failed, expected: " + tt.validModeDatagen +  " but got: " + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testFormatConfig.js")
+	`)
 }
 
-func TestValidQuery(t *testing.T) {
-
-	t.Parallel()
+func addValidQueryTests(buffer *bytes.Buffer) {
 
 	formatTests := []struct {
 		name  string
@@ -943,27 +949,21 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
 		"expected": %v, 
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("tests = [")
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), tt.valid)
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( valid query ) "+tt.name), strconv.Quote(tt.input), tt.valid)
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -973,17 +973,13 @@ db.collection.aggregate([{"$match": { "_id": ObjectId("5a934e000102030405000000"
 		let want = tt.expected
 		let got = ( parser.parse(tt.input, "query", "bson") === null )
 		if (want != got) {
-			print("test query with" + tt.name + " failed, expected: " + want +  " but got: " + got)
+			print("test '" + tt.name + "' failed, expected: " + want +  " but got: " + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testFormatQuery.js")
+	`)
 }
 
-func TestExtractAvailableCollections(t *testing.T) {
-
-	t.Parallel()
+func addExtractAvailableCollectionsTests(buffer *bytes.Buffer) {
 
 	formatTests := []struct {
 		name                      string
@@ -1077,28 +1073,22 @@ func TestExtractAvailableCollections(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
 		"expectedModeBson": %v, 
 		"expectedModeMgodatagen": %v, 
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("var tests = [")
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.input), strconv.Quote(tt.collectionsBsonMode), strconv.Quote(tt.collectionsMgodatagenMode))
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( extract available collection )"+tt.name), strconv.Quote(tt.input), strconv.Quote(tt.collectionsBsonMode), strconv.Quote(tt.collectionsMgodatagenMode))
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -1110,7 +1100,7 @@ func TestExtractAvailableCollections(t *testing.T) {
 		let want = tt.expectedModeBson
 		let got = parser.getCollections().join(",") 
 		if (want != got) {
-			print("test " + tt.name + " in bson mode failed, expected: " + want +  " but got: " + got)
+			print("test '" + tt.name + "' in bson mode failed, expected: " + want +  " but got: " + got)
 		}
 
 		parser.parse(tt.input, "config", "mgodatagen")
@@ -1118,17 +1108,13 @@ func TestExtractAvailableCollections(t *testing.T) {
 		want = tt.expectedModeMgodatagen
 		got = parser.getCollections().join(",") 
 		if (want != got) {
-			print("test " + tt.name + " in mgodatagen mode failed, expected: " + want +  " but got: " + got)
+			print("test '" + tt.name + "' in mgodatagen mode failed, expected: " + want +  " but got: " + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testExtractCollections.js")
+	`)
 }
 
-func TestGetAggregationStages(t *testing.T) {
-
-	t.Parallel()
+func addGetAggregationStagesTests(buffer *bytes.Buffer) {
 
 	formatTests := []struct {
 		name              string
@@ -1173,27 +1159,21 @@ func TestGetAggregationStages(t *testing.T) {
 		},
 	}
 
-	buffer := loadJsParser(t)
-
 	testFormat := `
 	{
 		"name": %s,
 		"input": %s, 
 		"expected": %s, 
-	}
+	},
 	`
 
-	buffer.Write([]byte("var tests = ["))
+	buffer.WriteString("var tests = [")
 	for _, tt := range formatTests {
-		fmt.Fprintf(buffer, testFormat, strconv.Quote(tt.name), strconv.Quote(tt.query), strconv.Quote(tt.aggregationStages))
-		buffer.WriteByte(',')
+		fmt.Fprintf(buffer, testFormat, strconv.Quote("( aggregation stages ) "+tt.name), strconv.Quote(tt.query), strconv.Quote(tt.aggregationStages))
 	}
-	buffer.Write([]byte(`
-	]
-	
-	`))
+	buffer.WriteByte(']')
 
-	buffer.Write([]byte(`
+	buffer.WriteString(`
 
     var parser = new Parser()
 
@@ -1205,45 +1185,8 @@ func TestGetAggregationStages(t *testing.T) {
 		let want = tt.expected
 		let got = parser.getAggregationStages().join(",") 
 		if (want != got) {
-			print("got wrong aggregation names for test '" + tt.name + "', expected: " + want +  " but got: " + got)
+			print("test '" + tt.name + "' failed, expected: " + want +  " but got: " + got)
 		}
 	}	
-	`))
-
-	runJsTest(t, buffer, "testGetAggregationStages.js")
-}
-
-func loadJsParser(t *testing.T) *bytes.Buffer {
-	parserjs, err := os.ReadFile("parser.js")
-	if err != nil {
-		t.Error(err)
-	}
-	buffer := bytes.NewBuffer(parserjs)
-	buffer.WriteString("\n")
-	return buffer
-}
-
-func runJsTest(t *testing.T, buffer *bytes.Buffer, filename string) {
-
-	testFile, err := os.CreateTemp(os.TempDir(), filename)
-	if err != nil {
-		t.Error(err)
-	}
-	io.Copy(testFile, buffer)
-	testFile.Close()
-	// run the tests using mongodb javascript engine
-	cmd := exec.Command("mongo", "--quiet", testFile.Name())
-	var out bytes.Buffer
-	cmd.Stdout = &out
-
-	err = cmd.Run()
-	if err != nil {
-		t.Error(err)
-	}
-	result := out.String()
-	if result != "" {
-		t.Error(result)
-	} else {
-		os.Remove(filename)
-	}
+	`)
 }
