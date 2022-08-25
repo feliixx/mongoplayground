@@ -276,7 +276,7 @@ var Playground = function () {
      * load the documentation and add it to the doc panel
      */
     function loadDocs() {
-        fetch("/static/docs-19.html", { method: "GET" })
+        fetch("/static/docs-5dfd5e05e10781375508c99a328ff767.html", { method: "GET" })
             .then(response => response.text())
             .then(responseTxt => {
                 docPanel.innerHTML = responseTxt

@@ -33,8 +33,8 @@ var (
 	//go:embed web/static web/playground.html
 	assets embed.FS
 
-	// regex to strip file id
-	fileIdxReg = regexp.MustCompile("-[0-9]+.")
+	// regex to match a md5 hash
+	fileHashReg = regexp.MustCompile("-([0-9a-f]{32}|[0-9]+).")
 )
 
 // serve static resources (css/js/html)
@@ -48,10 +48,10 @@ var (
 // for details
 func (s *staticContent) staticHandler(w http.ResponseWriter, r *http.Request) {
 
-	// transform 'static/playground-min-10.css' to 'playground-min.css'
+	// transform 'static/playground-min-c6c2fc9118ccb95919a78bc892d49228.css' to 'playground-min.css'
 	// the numeric id is just used to force the browser to reload the new version
 	name := strings.TrimPrefix(r.URL.Path, staticEndpoint)
-	name = fileIdxReg.ReplaceAllString(name, ".")
+	name = fileHashReg.ReplaceAllString(name, ".")
 
 	resource, ok := s.resources[name]
 	if !ok {

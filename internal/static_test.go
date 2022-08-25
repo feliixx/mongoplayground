@@ -30,8 +30,14 @@ func TestStaticHandlers(t *testing.T) {
 		responseCode int
 	}{
 		{
-			name:         "css",
+			name:         "css old version",
 			url:          "/static/playground-min-10.css",
+			contentType:  "text/css; charset=utf-8",
+			responseCode: http.StatusOK,
+		},
+		{
+			name:         "css with md5 hash",
+			url:          "/static/playground-min-62345cc3aaee366e7ea51bd732975c6b.css",
 			contentType:  "text/css; charset=utf-8",
 			responseCode: http.StatusOK,
 		},
