@@ -1309,14 +1309,8 @@ var Completer = function (config) {
     ].map(addInsertMatch).concat(basicBsonSnippet)
 
     function addInsertMatch(snippet) {
-        return {
-            caption: snippet.caption,
-            value: snippet.value,
-            meta: snippet.meta,
-            completer: {
-                insertMatch: insertMatch
-            }
-        }
+        snippet.completer = { insertMatch: insertMatch }
+        return snippet
     }
 
     function insertMatch(editor, data) {
@@ -1345,7 +1339,6 @@ var Completer = function (config) {
             meta: "collection name"
         }
     }
-
 
     const configCompleter = {
         getCompletions: function (editor, session, pos, prefix, callback) {
