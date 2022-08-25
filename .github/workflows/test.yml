@@ -11,6 +11,7 @@ on:
 env: 
   MONGO_VERSION: 6.0.1
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
+  ESBUILD_VERSION: 0.14.11
 
 jobs:
   test:
@@ -24,6 +25,17 @@ jobs:
       uses: actions/setup-go@v3
       with:
         go-version: '1.19'
+
+    - name: Check minified files
+      id: check_minified_files
+      run: |
+        go install github.com/evanw/esbuild/cmd/esbuild@v$ESBUILD_VERSION
+        ./bundle.sh
+        git diff --quiet
+
+    - name: Print message if files are out of sync
+      if: failure() && steps.check_minified_files.outcome == 'failure'
+      run: echo "minified files are out of sync, run ./bundle.sh and commit the modified files"
 
     - name: Lint code 
       uses: golangci/golangci-lint-action@v3
