@@ -48,7 +48,7 @@ create to directory: `storage` and `backups`, and then run the playground with d
 
 
 ```
-docker-compose up --build
+COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
 ```
 
 ## Credits 
