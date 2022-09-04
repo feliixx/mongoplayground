@@ -2,10 +2,12 @@ version: '3'
 services:
   mongodb:
     image: mongo:6.0.1
+    logging:
+      driver: "none"
     network_mode: host
   web:
-    build: . 
-    depends_on: 
+    build: .
+    depends_on:
       - mongodb
     network_mode: host
     volumes:
