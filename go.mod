@@ -5,10 +5,10 @@ go 1.18
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/feliixx/boa v0.2.2
-	github.com/feliixx/mgodatagen v0.10.2
+	github.com/feliixx/mgodatagen v0.11.0
 	github.com/feliixx/mongoextjson v1.1.3
 	github.com/prometheus/client_golang v1.12.2
-	go.mongodb.org/mongo-driver v1.10.0
+	go.mongodb.org/mongo-driver v1.10.1
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	google.golang.org/api v0.63.0
 )
@@ -49,7 +49,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220622213112-05595931fe9d // indirect
 	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20211208223120-3a66f561d7aa // indirect

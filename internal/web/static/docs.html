@@ -121,8 +121,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"string"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, must be &gt;= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, must be &gt;= minLength</span>
     <span class="pl-s">"unique"</span>:           <span class="pl-type">&lt;</span><span>bool</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>   <span class="pl-c">// optional, see details below</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
@@ -151,8 +151,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"int"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minInt"</span>:           <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxInt"</span>:           <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minInt</span>
+    <span class="pl-s">"min"</span>:              <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"max"</span>:              <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= min</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>  <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -164,8 +164,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"long"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLong"</span>:          <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxLong"</span>:          <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minLong</span>
+    <span class="pl-s">"min"</span>:              <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"max"</span>:              <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= min</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>  <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>   <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -177,8 +177,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"double"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minDouble"</span>:        <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
-    <span class="pl-s">"maxDouble"</span>:        <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= minDouble</span>
+    <span class="pl-s">"min"</span>:              <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional</span>
+    <span class="pl-s">"max"</span>:              <span class="pl-type">&lt;</span><span>double</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// optional, must be &gt;= min</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -223,10 +223,10 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"array"</span><span class="pl-kos">,</span>     <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// required, must be >= minLength</span>
-    <span class="pl-s">"arrayContent"</span>:     <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// generator use to create element to fill the array.</span>
-                                     <span class="pl-c">// can be of any type</span>
+    <span class="pl-s">"arrayContent"</span>:     <span class="pl-type">&lt;</span><span>generator</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span> <span class="pl-c">// required, generator use to create element</span>
+    <span class="pl-c">                                 // to fill the array. Can be of any type</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional, must be >= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional, must be >= minLength</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>       <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>        <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -254,8 +254,8 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:             <span class="pl-s">"binary"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= 0</span>
-    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// required, must be &gt;= minLength</span>
+    <span class="pl-s">"minLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, must be &gt;= 0</span>
+    <span class="pl-s">"maxLength"</span>:        <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional, must be &gt;= minLength</span>
     <span class="pl-s">"nullPercentage"</span>:   <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>    <span class="pl-c">// optional</span>
     <span class="pl-s">"maxDistinctValue"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>     <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
@@ -308,9 +308,9 @@
 <div class="highlight highlight-source-js">
   <pre><span class="pl-s">"fieldName"</span>: <span class="pl-kos">{</span>
     <span class="pl-s">"type"</span>:           <span class="pl-s">"autoincrement"</span><span class="pl-kos">,</span> <span class="pl-c">// required</span>
-    <span class="pl-s">"autoType"</span>:       <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>        <span class="pl-c">// required, can be `int` or `long</span><span class="pl-type">&gt;</span>
-    <span class="pl-s">"startLong"</span>:      <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>          <span class="pl-c">// optional, start value if autoType = long</span>
-    <span class="pl-s">"startInt"</span>:       <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>           <span class="pl-c">// optional, start value if autoType = int</span>
+    <span class="pl-s">"autoType"</span>:       <span class="pl-type">&lt;</span><span>string</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>        <span class="pl-c">// required, either "int" or "long"</span>
+    <span class="pl-s">"startLong"</span>:      <span class="pl-type">&lt;</span><span>long</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>          <span class="pl-c">// optional, start value if autoType = "long"</span>
+    <span class="pl-s">"startInt"</span>:       <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span><span class="pl-kos">,</span>           <span class="pl-c">// optional, start value if autoType = "int"</span>
     <span class="pl-s">"nullPercentage"</span>: <span class="pl-type">&lt;</span><span>int</span><span class="pl-type">&gt;</span>            <span class="pl-c">// optional</span>
 <span class="pl-kos">}</span></pre>
 </div>
@@ -405,8 +405,8 @@
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
     <span class="pl-kos">{</span>
       <span class="pl-s">"type"</span>: <span class="pl-s">"int"</span><span class="pl-kos">,</span>
-      <span class="pl-s">"minInt"</span>: <span class="pl-c1">100</span><span class="pl-kos">,</span>
-      <span class="pl-s">"maxInt"</span>: <span class="pl-c1">999</span>
+      <span class="pl-s">"min"</span>: <span class="pl-c1">100</span><span class="pl-kos">,</span>
+      <span class="pl-s">"max"</span>: <span class="pl-c1">999</span>
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
     <span class="pl-kos">{</span>
       <span class="pl-s">"type"</span>: <span class="pl-s">"constant"</span><span class="pl-kos">,</span>
@@ -414,8 +414,8 @@
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
     <span class="pl-kos">{</span>
       <span class="pl-s">"type"</span>: <span class="pl-s">"int"</span><span class="pl-kos">,</span>
-      <span class="pl-s">"minInt"</span>: <span class="pl-c1">1000</span><span class="pl-kos">,</span>
-      <span class="pl-s">"maxInt"</span>: <span class="pl-c1">9999</span>
+      <span class="pl-s">"min"</span>: <span class="pl-c1">1000</span><span class="pl-kos">,</span>
+      <span class="pl-s">"max"</span>: <span class="pl-c1">9999</span>
     <span class="pl-kos">}</span><span class="pl-kos">,</span>
   <span class="pl-kos">]</span>
 <span class="pl-kos">}</span></pre>
