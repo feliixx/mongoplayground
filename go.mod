@@ -6,9 +6,9 @@ require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/feliixx/boa v0.2.2
 	github.com/feliixx/mgodatagen v0.11.2
-	github.com/feliixx/mongoextjson v1.1.3
+	github.com/feliixx/mongoextjson v1.2.0
 	github.com/prometheus/client_golang v1.13.0
-	go.mongodb.org/mongo-driver v1.10.2
+	go.mongodb.org/mongo-driver v1.10.3
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	google.golang.org/api v0.95.0
 )
