@@ -30,7 +30,7 @@ import (
 const gzipEncoding = "gzip"
 
 var (
-	//go:embed web/static web/playground.html
+	//go:embed web/static web/src/playground.html
 	assets embed.FS
 
 	// regex to match a md5 hash

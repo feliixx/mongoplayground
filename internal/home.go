@@ -28,7 +28,7 @@ const (
 	templateQuery  = "db.collection.find()"
 )
 
-var homeTemplate = template.Must(template.ParseFS(assets, "web/playground.html"))
+var homeTemplate = template.Must(template.ParseFS(assets, "web/src/playground.html"))
 
 // return a playground with the default configuration
 func (s *storage) homeHandler(w http.ResponseWriter, r *http.Request) {

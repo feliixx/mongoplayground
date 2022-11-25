@@ -1,0 +1,18 @@
+{
+  "name": "mongoplayground",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/playground.js",
+  "scripts": {
+    "postinstall": "npx playwright install --with-deps",
+    "build": "./bundle.sh",
+    "test": "npx playwright test"
+  },
+  "keywords": [],
+  "author": "Adrien Petel",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.28.0",
+    "esbuild": "0.14.11"
+  }
+}

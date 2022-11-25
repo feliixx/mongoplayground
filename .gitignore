@@ -8,9 +8,12 @@ cpu.out
 mem.out
 storage
 debug 
-tests/*.js
 backups
 .idea
 credentials.json
 token.json
 restart.sh
+internal/web/node_modules/
+internal/web/test-results/
+internal/web/playwright-report/
+internal/web/playwright/.cache/

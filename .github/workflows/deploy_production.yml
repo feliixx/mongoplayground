@@ -6,7 +6,7 @@ on:
       - "production" 
 
 env: 
-  MONGO_VERSION: 6.0.1
+  MONGO_VERSION: 6.0.2
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
   # name of the binary, the service and the user running the 
   # service 
@@ -20,11 +20,8 @@ jobs:
     environment: production
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-
-    - name: Set up Go
-      uses: actions/setup-go@v3
+    - uses: actions/checkout@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: '1.19'
 

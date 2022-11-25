@@ -28,7 +28,7 @@ import (
 
 func TestParser(t *testing.T) {
 
-	parserjs, err := os.ReadFile("../parser.js")
+	parserjs, err := os.ReadFile("../src/parser.js")
 	if err != nil {
 		t.Error(err)
 	}

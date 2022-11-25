@@ -1,4 +1,4 @@
-name: Run tests with coverage 
+name: Run backend and e2e tests  
 
 on:
   push:
@@ -11,31 +11,17 @@ on:
 env: 
   MONGO_VERSION: 6.0.2
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
-  ESBUILD_VERSION: 0.14.11
 
 jobs:
-  test:
+  tests:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+    - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
+    - uses: actions/setup-go@v3
       with:
         go-version: '1.19'
-
-    - name: Check minified files
-      id: check_minified_files
-      run: |
-        go install github.com/evanw/esbuild/cmd/esbuild@v$ESBUILD_VERSION
-        ./bundle.sh
-        git diff --quiet
-
-    - name: Print message if files are out of sync
-      if: failure() && steps.check_minified_files.outcome == 'failure'
-      run: echo "minified files are out of sync, run ./bundle.sh and commit the modified files"
 
     - name: Lint code 
       uses: golangci/golangci-lint-action@v3
@@ -61,3 +47,31 @@ jobs:
       uses: codecov/codecov-action@v3
       with:
         files: tools/coverage.txt
+
+    - uses: actions/setup-node@v3
+      with:
+        node-version: 18
+
+    - name: Install npm test dependencies
+      working-directory: internal/web
+      run: npm install --no-package-lock
+    
+    - name: Check minified files
+      id: check_minified_files
+      working-directory: internal/web
+      run: |
+        npm run build
+        git diff --quiet
+
+    - name: Print message if files are out of sync
+      if: failure() && steps.check_minified_files.outcome == 'failure'
+      run: echo "minified files are out of sync, run .npm run build and commit the modified files"
+    
+    - name: Start local instance
+      run: |
+        go build
+        ./mongoplayground&
+
+    - name: Run e2e tests
+      working-directory: internal/web
+      run: npm run test
