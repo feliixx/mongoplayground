@@ -55,9 +55,9 @@ jobs:
         mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
 
     - name: Run test
-      run: ./test.sh
+      run: tools/test.sh
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        files: ./coverage.txt
+        files: tools/coverage.txt
