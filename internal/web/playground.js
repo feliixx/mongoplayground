@@ -214,7 +214,7 @@ var Playground = function () {
             mode: 'bson'
         },
         {
-            config: '[{"collection":"collection","count":10,"content":{"key":{"type":"int","minInt":0,"maxInt":10}}}]',
+            config: '[{"collection":"collection","count":10,"content":{"key":{"type":"int","min":0,"max":10}}}]',
             query: 'db.collection.find()',
             mode: 'mgodatagen'
         },
