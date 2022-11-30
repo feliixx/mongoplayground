@@ -1,2 +1,2 @@
-internal/web/ace.js linguist-vendored
-internal/web/ext-language_tools.js linguist-vendored
+internal/web/vendored/ace.js linguist-vendored
+internal/web/vendored/ext-language_tools.js linguist-vendored
