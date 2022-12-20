@@ -106,8 +106,8 @@ test('test single db template', async ({ page }) => {
 
   await set('config', '')
   await set('query', '')
-  await page.getByRole('button', { name: 'bson single collection' }).click()
-  await page.locator('#custom-template ul').getByText('bson single collection').click()
+  await page.getByRole('button', { name: 'single collection' }).click()
+  await page.locator('#custom-template ul').getByText('single collection').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
   expect(await get('config')).toBe(`[
@@ -138,8 +138,8 @@ test('test single db template', async ({ page }) => {
 
 test('test multiple db template', async ({ page }) => {
 
-  await page.getByRole('button', { name: 'bson single collection' }).click()
-  await page.locator('#custom-template ul').getByText('bson multiple collection').click()
+  await page.getByRole('button', { name: 'single collection' }).click()
+  await page.locator('#custom-template ul').getByText('multiple collection').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
   expect(await get('config')).toBe(`db={
@@ -257,7 +257,7 @@ test('test multiple db template', async ({ page }) => {
 
 test('test mgodatagen template', async ({ page }) => {
 
-  await page.getByRole('button', { name: 'bson single collection' }).click()
+  await page.getByRole('button', { name: 'single collection' }).click()
   await page.locator('#custom-template ul').getByText('mgodatagen').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'mgodatagen' })).toBeVisible();
@@ -326,7 +326,7 @@ test('test mgodatagen template', async ({ page }) => {
 
 test('test update template', async ({ page }) => {
 
-  await page.getByRole('button', { name: 'bson single collection' }).click()
+  await page.getByRole('button', { name: 'single collection' }).click()
   await page.locator('#custom-template ul').getByText('update').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
@@ -370,7 +370,7 @@ test('test update template', async ({ page }) => {
 
 test('test index template', async ({ page }) => {
 
-  await page.getByRole('button', { name: 'bson single collection' }).click()
+  await page.getByRole('button', { name: 'single collection' }).click()
   await page.locator('#custom-template ul').getByText('index').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'mgodatagen' })).toBeVisible();
@@ -424,7 +424,7 @@ test('test index template', async ({ page }) => {
 
 test('test explain template', async ({ page }) => {
 
-  await page.getByRole('button', { name: 'bson single collection' }).click()
+  await page.getByRole('button', { name: 'single collection' }).click()
   await page.locator('#custom-template ul').getByText('explain').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
