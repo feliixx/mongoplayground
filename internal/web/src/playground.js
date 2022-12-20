@@ -72,7 +72,7 @@ var Playground = function () {
     })
     const comboTemplate = new CustomSelect({
         selectId: "template",
-        width: "210px",
+        width: "175px",
         onChange: () => { setTemplate(comboTemplate.getSelectedIndex()) }
     })
 
