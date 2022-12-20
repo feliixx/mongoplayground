@@ -628,14 +628,14 @@ select,
 
 /** Style for custom combobox, adaptation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
 
-.js-Dropdown {
+.custom-select {
     display: inline-block;
     font-size: 1em;
     font-family: var(--main-font-family);
     position: relative;
 }
 
-.js-Dropdown-title {
+.custom-select-title {
     color: var(--dropdown-color);
     background: var(--dropdown-title-background);
     border: 1px solid var(--dropdown-border);
@@ -649,7 +649,7 @@ select,
     height: 30px;
 }
 
-.js-Dropdown-title:after {
+.custom-select-title:after {
     border-color: var(--dropdown-border) transparent transparent transparent;
     border-style: solid;
     border-width: 6px;
@@ -662,11 +662,10 @@ select,
     width: 0;
 }
 
-.js-Dropdown-list {
+.custom-select-list {
     color: var(--dropdown-color);
     background: var(--dropdown-list-background);
-    border-left: 1px solid var(--dropdown-border);
-    border-right: 1px solid var(--dropdown-border);
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16);
     box-sizing: border-box;
     display: none;
     height: 0;
@@ -679,23 +678,18 @@ select,
     z-index: 999;
 }
 
-.js-Dropdown-list.is-open {
+.custom-select-list.is-open {
     display: block;
     height: auto;
     opacity: 1;
 }
 
-.js-Dropdown-list li {
-    border-bottom: 1px solid var(--dropdown-border);
+.custom-select-list li {
     cursor: pointer;
-    padding: .8em 0 .8em 1.5em;
+    padding: 6px 8px;
 }
 
-.js-Dropdown-list li:hover {
-    background-color: var(--dropdown-hover-background);
-}
-
-.js-Dropdown-list li.is-selected {
+.custom-select-list li:hover,
+.custom-select-list li.is-selected  {
     background-color: var(--dropdown-selected-background);
-    color: var(--dropdown-color);
 }
