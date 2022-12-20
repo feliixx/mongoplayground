@@ -61,6 +61,11 @@ test('run no result', async ({ page }) => {
   expect(await get('result')).toBe(`no document found`)
 })
 
+test('aggregation query without stages', async ({ page }) => {
+  await set('query', `db.collection.aggregate([{}])`)
+  await expect(page.getByText('Stage:')).toBeHidden()
+  await expect(page.locator('#custom-aggregation_stages')).toBeHidden()
+})
 
 test('aggregation query with stages', async ({ page }) => {
 

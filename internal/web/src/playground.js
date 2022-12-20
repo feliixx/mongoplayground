@@ -168,7 +168,7 @@ var Playground = function () {
         editor.getSession().setAnnotations(errors)
 
         if (type === "query") {
-            if (parser.getQueryType() === "aggregate") {
+            if (parser.getQueryType() === "aggregate" && parser.getAggregationStages().length > 0) {
                 comboStages.setOptions(parser.getAggregationStages())
                 customStages.style.visibility = "visible"
                 labelStages.style.visibility = "visible"
