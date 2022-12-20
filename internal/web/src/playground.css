@@ -126,7 +126,7 @@ select,
 }
 
 .toolbar .controls>:last-child {
-    float: right !important;
+    float: right;
 }
 
 .toolbar .controls>:last-child>input[type=button] {
@@ -165,7 +165,7 @@ select,
 
 .toolbar input[type=button]:hover,
 .toolbar input[type=button]:disabled {
-    background: var(--btn-hover-background) !important;
+    background: var(--btn-hover-background);
 }
 
 .content {
@@ -189,7 +189,7 @@ select,
     flex: 2 1 67%;
     margin-top: 1%;
     margin-left: 50px;
-    height: 98% !important;
+    height: 98%;
     display: none;
     overflow-x: hidden;
     overflow-y: scroll;
