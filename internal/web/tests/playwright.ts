@@ -14,19 +14,15 @@ export const test = baseTest.extend({
 export async function get(name: string, allowEmpty = false): Promise<string> {
     await currentPage.waitForTimeout(5)
     const editor = currentPage.locator(`#${name} > .ace_scroller > .ace_content`)
-    if (name != 'result') {
-        return editor.innerText()
-    }
-    let result = await editor.innerText()
-    if (allowEmpty) {
-        return result
-    }
-
-    while (!result || result === "running query...") {
+    let content = await editor.innerText()
+    if (name === 'config' || name === 'query' || allowEmpty) {
+        return content
+    } 
+    while (!content || content === "running query...") {
         await currentPage.waitForTimeout(10)
-        result = await editor.innerText()
+        content = await editor.innerText()
     }
-    return result
+    return content
 }
 
 export async function set(name: string, content: string) {

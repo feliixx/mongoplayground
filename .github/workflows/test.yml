@@ -65,7 +65,7 @@ jobs:
 
     - name: Print message if files are out of sync
       if: failure() && steps.check_minified_files.outcome == 'failure'
-      run: echo "minified files are out of sync, run .npm run build and commit the modified files"
+      run: echo "minified files are out of sync, run 'npm run build' and commit the modified files"
     
     - name: Start local instance
       run: |
