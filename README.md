@@ -44,11 +44,10 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 
 ## Developpement
 
-create to directory: `storage` and `backups`, and then run the playground with docker compose: 
+To automatically restart the server when a file changes, use: 
 
-
-```
-COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose up --build
+```sh
+ls  *.go internal/*.go internal/web/src/* | grep -v '.*_test.go' | entr tools/restart.sh
 ```
 
 ## Credits 
