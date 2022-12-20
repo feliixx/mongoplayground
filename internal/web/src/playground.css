@@ -9,7 +9,8 @@
     --text-input-background: #ececec;
     --text-input-color: #000;
     --button-background: #375eab;
-    --button-hover-background: #1f3663;
+    --button-hover-background: #2b53a2;
+    --button-disabled-background: #5f89c8;
     --h3-color: #24292e;
     --a-color: #0366d6;
     --resize-handler-background: #e5e7e8;
@@ -117,7 +118,7 @@ a {
 
 .toolbar .controls {
     margin-left: 230px;
-    padding: 10px 15px;
+    padding: 7px 15px;
 }
 
 select,
@@ -155,17 +156,21 @@ select,
 }
 
 .toolbar input[type=button] {
-    height: 30px;
-    border: 1px solid var(--button-background);
+    border: none;
+    padding: 8px;
     font-size: 1em;
     background: var(--button-background);
     color: white;
     border-radius: 5px;
+    cursor: pointer;
 }
 
-.toolbar input[type=button]:hover,
+.toolbar input[type=button]:hover {
+    background: var(--button-hover-background);
+}
+
 .toolbar input[type=button]:disabled {
-    background: var(--btn-hover-background);
+    background: var(--button-disabled-background);
 }
 
 .content {
