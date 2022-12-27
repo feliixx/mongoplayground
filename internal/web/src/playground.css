@@ -113,6 +113,7 @@ a {
     visibility: hidden;
     width: max-content;
     font-family: var(--main-font-family);
+    font-weight: normal;
     background-color: rgb(22, 22, 22);
     color: #fff;
     text-align: center;
@@ -143,8 +144,16 @@ a {
 }
 
 @keyframes fade {
-    0%,100% { opacity: 0 }
-    5%,90% { opacity: 1 }
+
+    0%,
+    100% {
+        opacity: 0
+    }
+
+    5%,
+    90% {
+        opacity: 1
+    }
 }
 
 .tooltip:hover .tooltip-hover {
@@ -188,7 +197,7 @@ select,
 
 .toolbar label {
     margin-left: 15px;
-    font-size: 1.2em;
+    font-weight: bold;
     color: var(--toolbar-color);
     font-family: var(--main-font-family);
 }
@@ -211,6 +220,7 @@ select,
     border: none;
     padding: 8px;
     font-size: 1em;
+    font-weight: bold;
     background: var(--button-background);
     color: white;
     border-radius: 5px;
