@@ -123,7 +123,7 @@ a {
     z-index: 1;
     top: 125%;
     left: 50%;
-    margin-left: -60px;
+    transform: translateX(-50%);
     opacity: 0;
 }
 
