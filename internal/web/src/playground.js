@@ -145,6 +145,23 @@ var Playground = function () {
     document.getElementById("share").addEventListener("click", save)
     document.getElementById("showDoc").addEventListener("click", toggleDoc)
 
+    document.querySelectorAll("[data-tooltip]").forEach(elem => {
+        const container = document.createElement("div")
+        container.className = "tooltip"
+        elem.parentNode.insertBefore(container, elem)
+
+        const span = document.createElement("span")
+        span.innerHTML = elem.getAttribute("data-tooltip")
+        span.className = "tooltiptext"
+        span.classList.add('tooltip-hover')
+        if (elem.id == "link") {
+            span.id = "link_tooltip"
+            span.classList.remove('tooltip-hover')
+        }
+        container.appendChild(span)
+        container.appendChild(elem)
+    })
+
     /**
      * Check editor content for syntax error
      * 
