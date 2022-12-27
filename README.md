@@ -47,7 +47,7 @@ Mongo playground: a simple sandbox to test and share MongoDB queries. Try it onl
 To automatically restart the server when a file changes, use: 
 
 ```sh
-ls  *.go internal/*.go internal/web/src/* | grep -v '.*_test.go' | entr tools/restart.sh
+ls  *.go internal/*.go internal/web/src/* | entr tools/restart.sh
 ```
 
 ## Credits 

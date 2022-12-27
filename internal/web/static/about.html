@@ -7,12 +7,28 @@
   <meta name="description" content="about mongoplayground: source code, license, credits">
   <link rel="icon" type="image/png" href="/static/favicon.png" />
   <link href="/static/playground-min-19.css" rel="stylesheet" type="text/css">
+  <style>
+    body > div:first-child {
+      height: 50px;
+      background-color: #353535;
+    }
+
+    body > div > a > div {
+      width: 240px;
+      font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
+      float: left;
+      font-size: 1.6em;
+      color: #d3d3d3;
+      padding: 8px 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
-  <div class="toolbar">
+  <div>
     <a href="/">
-      <div class="title">Mongo Playground</div>
+      <div>Mongo Playground</div>
     </a>
   </div>
   <div class="doc about">

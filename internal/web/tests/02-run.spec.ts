@@ -20,7 +20,7 @@ test('run default page with button', async ({ page }) => {
 test('run default page with shortcut', async ({ page }) => {
   expect(await get('result', true)).toBe('')
 
-  await page.getByText('Mongo Playground').press('Control+Enter')
+  await page.getByText('Template').press('Control+Enter')
   expect(await get('result')).toBe(`[
   {
     "_id": ObjectId("5a934e000102030405000000"),

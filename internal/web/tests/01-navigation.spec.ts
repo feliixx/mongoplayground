@@ -8,9 +8,6 @@ test('homepage', async ({ page }) => {
   await expect(page.getByRole('link', { name: 'Report an issue' })).toBeVisible()
 
   await expect(page.getByText(/MongoDB version \d.\d.\d+/)).toBeVisible()
-
-  await page.getByText('Mongo Playground').click()
-  await expect(page).toHaveURL(/\//)
 })
 
 test('about page', async ({ page }) => {
@@ -32,14 +29,14 @@ test('documentation page', async ({ page }) => {
   await expect(page).toHaveTitle(/Mongo playground/)
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Database' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Query' })).toBeHidden()
   await expect(page.getByRole('heading', { name: 'Result' })).toBeHidden()
 
   await page.getByRole('button', { name: 'docs' }).click()
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeHidden()
-  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Database' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Query' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Result' })).toBeVisible()
 })
@@ -50,14 +47,14 @@ test('run should close documentation page', async ({ page }) => {
   await page.getByRole('button', { name: 'docs' }).click()
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeVisible()
-  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Database' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Query' })).toBeHidden()
   await expect(page.getByRole('heading', { name: 'Result' })).toBeHidden()
 
   await page.getByRole('button', { name: 'run' }).click()
 
   await expect(page.getByRole('heading', { name: 'Summary' })).toBeHidden()
-  await expect(page.getByRole('heading', { name: 'Configuration' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Database' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Query' })).toBeVisible()
   await expect(page.getByRole('heading', { name: 'Result' })).toBeVisible()
 })
