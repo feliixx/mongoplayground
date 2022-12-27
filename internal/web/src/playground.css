@@ -89,6 +89,10 @@
     }
 }
 
+* {
+    box-sizing: border-box;
+}
+
 body {
     height: 100vh;
     margin: 0;
@@ -155,7 +159,7 @@ a {
 }
 
 .toolbar .title {
-    width: 220px;
+    width: 240px;
     font-family: var(--main-font-family);
     float: left;
     font-size: 1.6em;
@@ -228,7 +232,6 @@ select,
 }
 
 .content>div {
-    box-sizing: border-box;
     flex: 1 1 auto;
     height: 100%;
 }
@@ -502,10 +505,6 @@ select,
     font-size: 1em;
 }
 
-.doc * {
-    box-sizing: border-box;
-}
-
 .doc input {
     font-family: inherit;
     font-size: inherit;
@@ -703,7 +702,6 @@ select,
     background: var(--dropdown-title-background);
     border: 1px solid var(--dropdown-border);
     border-radius: 4px;
-    box-sizing: border-box;
     cursor: pointer;
     font-size: 1em;
     padding: .3em .6em;
@@ -729,7 +727,6 @@ select,
     color: var(--dropdown-color);
     background: var(--dropdown-list-background);
     box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16);
-    box-sizing: border-box;
     display: none;
     height: 0;
     list-style: none;
