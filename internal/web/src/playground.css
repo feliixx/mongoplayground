@@ -1,7 +1,7 @@
 :root {
     --main-font-family: -apple-system, BlinkMacSystemFont, Helvetica, Arial, sans-serif;
     --doc-code-font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
-    
+
     --body-background: #fff;
     --toolbar-background: #353535;
     --toolbar-color: #d3d3d3;
@@ -22,7 +22,7 @@
     --dropdown-border: #a5a5a5;
     --dropdown-hover-background: #375eab;
     --dropdown-selected-background: #1f3663;
-    
+
     --ace-editor-background: #f6f8fa;
     --ace-editor-color: #000;
     --ace-editor-border: none;
@@ -51,7 +51,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-     :root {
+    :root {
         --body-background: #22272e;
         --toolbar-background: #2d333b;
         --text-input-border: #444c56;
@@ -98,6 +98,53 @@ body {
 
 a {
     color: var(--a-color);
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: rgb(22, 22, 22);
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    position: absolute;
+    z-index: 1;
+    top: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent rgb(22, 22, 22) transparent;
+}
+
+.tooltip .tooltip-fadein-fadeout {
+    visibility: visible;
+    animation: fade 2s linear;
+}
+
+@keyframes fade {
+    0%,100% { opacity: 0 }
+    5%,90% { opacity: 1 }
+}
+
+.tooltip:hover .tooltip-hover {
+    visibility: visible;
+    opacity: 1;
 }
 
 .toolbar {
@@ -336,13 +383,16 @@ select,
     body {
         overflow: visible;
     }
+
     .toolbar {
         height: 40px;
     }
+
     .toolbar .controls {
         padding: 3px 3px;
         margin: 0;
     }
+
     .toolbar .controls>:nth-child(2),
     .toolbar .controls>:nth-child(4),
     .toolbar .controls>:nth-child(6),
@@ -351,30 +401,37 @@ select,
     .toolbar .title {
         display: none;
     }
+
     .content {
         display: inline;
     }
+
     .content>div {
         width: 100% !important;
         height: 100%;
         padding: 0;
     }
+
     .content>div:last-child {
         width: 100% !important;
     }
+
     .content .handler,
     .content .handler::before {
         display: none;
     }
+
     .ace_editor {
         height: 90% !important;
     }
+
     .footer {
         display: none;
     }
 }
 
 @media only screen and (min-width:1000px) and (max-width:1450px) {
+
     .toolbar .controls>:nth-child(2),
     .toolbar label,
     .toolbar .controls>:last-child>:nth-child(2) {
@@ -695,6 +752,6 @@ select,
 }
 
 .custom-select-list li:hover,
-.custom-select-list li.is-selected  {
+.custom-select-list li.is-selected {
     background-color: var(--dropdown-selected-background);
 }

@@ -186,6 +186,7 @@ var Playground = function () {
             }
             configOrQueryChangedSinceLastSave = true
             redirect("/", false)
+            document.getElementById("link_tooltip").classList.remove("tooltip-fadein-fadeout")
         }
     }
 
@@ -328,6 +329,8 @@ var Playground = function () {
 
                 if (responseTxt.startsWith("http")) {
                     redirect(responseTxt, true)
+                    navigator.clipboard.writeText(responseTxt);
+                    document.getElementById("link_tooltip").classList.add("tooltip-fadein-fadeout")
                 } else {
                     showError(responseTxt)
                 }

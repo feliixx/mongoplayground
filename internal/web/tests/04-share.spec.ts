@@ -64,3 +64,12 @@ test('run after share does not change URL', async ({ page }) => {
   await expect(page).toHaveURL(/p\/iKNbEa-etwo/)
 })
 
+test('sharing show copied tooltip', async ({ page }) => {
+  await expect(page.getByText("Copied")).toBeHidden()
+
+  await set('config', '{')
+  await page.getByRole('button', { name: 'share' }).click()
+  await expect(page).toHaveURL(/p\/MMrQg5UYwYX/)
+
+  await expect(page.getByText("Copied")).toBeVisible()
+})
