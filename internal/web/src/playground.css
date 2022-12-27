@@ -107,11 +107,12 @@ a {
 
 .tooltip .tooltiptext {
     visibility: hidden;
-    width: 120px;
+    width: max-content;
+    font-family: var(--main-font-family);
     background-color: rgb(22, 22, 22);
     color: #fff;
     text-align: center;
-    padding: 5px 0;
+    padding: 5px;
     border-radius: 6px;
     position: absolute;
     z-index: 1;
