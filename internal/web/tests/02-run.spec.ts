@@ -41,7 +41,7 @@ test('run incorrect config', async ({ page }) => {
   }
 ]`)
 
-  await page.getByText('3').hover()
+  await page.locator('#config').getByText('3').hover()
   await expect(page.locator('#config > .ace_tooltip')).toBeVisible()
   await expect(page.locator('#config > .ace_tooltip')).toHaveText(`Unknown type: 'invalid'`)
   await page.getByRole('button', { name: 'run' }).click()
