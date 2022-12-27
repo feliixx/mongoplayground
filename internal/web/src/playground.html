@@ -7,40 +7,39 @@
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" type="image/png" href="/static/favicon.png" />
-    <link href="/static/playground-min-5e2f8ed384a72853629705ad5f55b2b9.css" rel="stylesheet" type="text/css">
-    <script src="/static/playground-min-5386a319a59dbc9a639091dbd6138e48.js" type="text/javascript"></script>
+    <link href="/static/playground-min-635239c906f93ee75f6783c1567d9546.css" rel="stylesheet" type="text/css">
+    <script src="/static/playground-min-5c358b3b725044abcbcc454a581a1389.js" type="text/javascript"></script>
 </head>
 
 <body>
     <div class="toolbar">
-        <div class="title">Mongo Playground</div>
-        <div class="controls">
+        <div>
+            <label>Template</label>
+            <select id="template">
+                <option>single collection</option>
+                <option>multiple collections</option>
+                <option>mgodatagen</option>
+                <option>update</option>
+                <option>indexe</option>
+                <option>explain</option>
+            </select>
+        </div>
+        <div>
+            <label id="aggregation_stages_label">Stage</label>
+            <select id="aggregation_stages"></select>
             <input id="run" type="button" value="▶ run" data-tooltip="Ctrl + Enter">
             <input id="format" type="button" value="format" data-tooltip="Ctrl + s">
             <input id="share" type="button" value="share" disabled>
-            <input id="link" type="text" data-tooltip="Copied">
-            <label id="aggregation_stages_label" data-tooltip="See the output for<br/>the selected stage">
-                Stage
-            </label>
-            <select id="aggregation_stages"></select>
-            <div>
-                <label>Template</label>
-                <select id="template">
-                    <option>single collection</option>
-                    <option>multiple collections</option>
-                    <option>mgodatagen</option>
-                    <option>update</option>
-                    <option>indexe</option>
-                    <option>explain</option>
-                </select>
-                <input id="showDoc" type="button" value="docs">
-            </div>
+            <div id="link" data-tooltip="Copied ✔"></div>
+        </div>
+        <div>
+            <input id="showDoc" type="button" value="docs">
         </div>
     </div>
     <div class="content">
         <div id="configPanel">
             <div class="config_title">
-                <h3>Configuration</h3>
+                <h3>Database</h3>
                 <select id="mode">
                     <option {{if eq .Mode 1 }} selected {{end}}>bson</option>
                     <option {{if eq .Mode 0 }} selected {{end}}>mgodatagen</option>

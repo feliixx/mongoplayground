@@ -3,25 +3,19 @@
     --doc-code-font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, Courier, monospace;
 
     --body-background: #fff;
-    --toolbar-background: #353535;
+    --toolbar-background: #2d333b;
     --toolbar-color: #d3d3d3;
-    --text-input-border: #808080;
-    --text-input-background: #ececec;
-    --text-input-color: #000;
     --button-background: #375eab;
     --button-hover-background: #2b53a2;
     --button-disabled-background: #5f89c8;
-    --h3-color: #24292e;
+    --h3-color: rgb(99, 100, 101);
     --a-color: #0366d6;
     --resize-handler-background: #e5e7e8;
     --footer-color: #646262;
 
-    --dropdown-color: #c9d1d9;
-    --dropdown-title-background: #0d1117;
-    --dropdown-list-background: #0d1117;
-    --dropdown-border: #a5a5a5;
-    --dropdown-hover-background: #375eab;
-    --dropdown-selected-background: #1f3663;
+    --dropdown-selected: #1f3663;
+    --content-dropdown-color: var(--h3-color);
+    --content-dropdown-selected: lightgray;
 
     --ace-editor-background: #f6f8fa;
     --ace-editor-color: #000;
@@ -53,14 +47,12 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --body-background: #22272e;
-        --toolbar-background: #2d333b;
-        --text-input-border: #444c56;
-        --text-input-background: #22272e;
-        --text-input-color: #c2c3c5;
         --h3-color: #adbac7;
         --a-color: #4c8edf;
         --resize-handler-background: #2d333b;
         --footer-color: #dbd7d7;
+
+        --content-dropdown-selected: var(--dropdown-selected);
 
         --ace-editor-background: #22272e;
         --ace-editor-color: #a8b5c1;
@@ -117,7 +109,7 @@ a {
     background-color: rgb(22, 22, 22);
     color: #fff;
     text-align: center;
-    padding: 5px;
+    padding: 7  px;
     border-radius: 6px;
     position: absolute;
     z-index: 1;
@@ -140,7 +132,7 @@ a {
 
 .tooltip .tooltip-fadein-fadeout {
     visibility: visible;
-    animation: fade 2s linear;
+    animation: fade 3s linear;
 }
 
 @keyframes fade {
@@ -162,63 +154,60 @@ a {
 }
 
 .toolbar {
-    width: 100%;
-    height: 50px;
+    padding: 5px 15px;
     background-color: var(--toolbar-background);
+    display: flex;
+    height: 47px;
 }
 
-.toolbar .title {
-    width: 240px;
-    font-family: var(--main-font-family);
-    float: left;
-    font-size: 1.6em;
-    color: var(--toolbar-color);
-    padding: 8px 10px;
-    cursor: pointer;
+.toolbar>div {
+    flex: 1 1 auto;
 }
 
-.toolbar .controls {
-    margin-left: 230px;
-    padding: 7px 15px;
+.toolbar>div>#custom-template {
+    margin-top: 2px;
 }
 
-select,
-.toolbar .controls>:nth-child(5) {
-    visibility: hidden;
+.toolbar #run {
+    margin-left: 15px;
 }
 
-.toolbar .controls>:last-child {
+.toolbar #showDoc {
     float: right;
-}
-
-.toolbar .controls>:last-child>input[type=button] {
-    margin-left: 20px;
+    margin-top: 1px;
 }
 
 .toolbar label {
-    margin-left: 15px;
-    font-weight: bold;
+    margin-left: 50px;
+    font-size: 1.2em;
     color: var(--toolbar-color);
     font-family: var(--main-font-family);
 }
 
-.toolbar input[type=text] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    border: 1px solid var(--text-input-border);
+.toolbar #format {
+    margin-top: 1px;
+}
+
+.toolbar #link {
+    border: 1px solid #444c56;
     border-radius: 4px;
-    background-color: var(--text-input-background);
-    color: var(--text-input-color);
-    font-size: 1em;
-    height: 24px;
-    width: 350px;
+    background-color: #22272e;
+    color: var(--toolbar-color);
+    font-family: var(--main-font-family);
+    height: 34px;
+    width: 330px;
+    padding: 9px;
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
+    margin-top: -3px;
     visibility: hidden;
 }
 
 .toolbar input[type=button] {
     border: none;
-    padding: 8px;
+    height: 34px;
+    padding: 7px 8px;
     font-size: 1em;
     font-weight: bold;
     background: var(--button-background);
@@ -278,6 +267,21 @@ select,
 
 .content .config_title>:last-child {
     margin-left: 25px;
+}
+
+.content .config_title .custom-select-title,
+.content .config_title .custom-select-list {
+    color: var(--content-dropdown-color);
+    background-color: var(--body-background);
+}
+
+.content .config_title .custom-select-title:after {
+    border-color: var(--content-dropdown-color) transparent transparent transparent;
+}
+
+.content .config_title .custom-select-list li:hover,
+.content .config_title .custom-select-list li.is-selected {
+    background-color: var(--content-dropdown-selected);
 }
 
 .content .resizable_editor {
@@ -393,27 +397,26 @@ select,
     background-color: var(--ace-selection-background) !important;
 }
 
-@media only screen and (max-width:999px) {
+@media only screen and (max-width:950px) {
     body {
         overflow: visible;
     }
 
     .toolbar {
-        height: 40px;
+        padding: 0;
+        height: 36px;
     }
 
-    .toolbar .controls {
-        padding: 3px 3px;
-        margin: 0;
-    }
-
-    .toolbar .controls>:nth-child(2),
-    .toolbar .controls>:nth-child(4),
-    .toolbar .controls>:nth-child(6),
+    .toolbar #format,
+    .toolbar>div:first-child,
+    .toolbar>div:last-child,
     .toolbar label,
-    .toolbar .controls>:last-child>:nth-child(2),
-    .toolbar .title {
+    .toolbar .custom-select {
         display: none;
+    }
+
+    .toolbar>div:nth-child(2)>.tooltip:last-of-type {
+        width: 80px;
     }
 
     .content {
@@ -444,11 +447,8 @@ select,
     }
 }
 
-@media only screen and (min-width:1000px) and (max-width:1450px) {
-
-    .toolbar .controls>:nth-child(2),
-    .toolbar label,
-    .toolbar .controls>:last-child>:nth-child(2) {
+@media only screen and (min-width:950px) and (max-width:1300px) {
+    .toolbar>div:first-child {
         display: none;
     }
 }
@@ -699,6 +699,9 @@ select,
 
 
 /** Style for custom combobox, adaptation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
+select {
+    visibility: hidden;
+}
 
 .custom-select {
     display: inline-block;
@@ -708,20 +711,20 @@ select,
 }
 
 .custom-select-title {
-    color: var(--dropdown-color);
-    background: var(--dropdown-title-background);
-    border: 1px solid var(--dropdown-border);
+    color: var(--toolbar-color);
+    background: var(--toolbar-background);
+    border: 1px solid #6a6a6a;
     border-radius: 4px;
     cursor: pointer;
     font-size: 1em;
     padding: .3em .6em;
     position: relative;
     text-align: left;
-    height: 30px;
+    height: 32px;
 }
 
 .custom-select-title:after {
-    border-color: var(--dropdown-border) transparent transparent transparent;
+    border-color: var(--toolbar-color) transparent transparent transparent;
     border-style: solid;
     border-width: 6px;
     content: '';
@@ -734,8 +737,8 @@ select,
 }
 
 .custom-select-list {
-    color: var(--dropdown-color);
-    background: var(--dropdown-list-background);
+    color: var(--toolbar-color);
+    background: var(--toolbar-background);
     box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16);
     display: none;
     height: 0;
@@ -761,5 +764,5 @@ select,
 
 .custom-select-list li:hover,
 .custom-select-list li.is-selected {
-    background-color: var(--dropdown-selected-background);
+    background-color: var(--dropdown-selected);
 }

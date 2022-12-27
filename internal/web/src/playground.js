@@ -216,7 +216,7 @@ var Playground = function () {
     function redirect(url, showLink) {
         window.history.replaceState({}, "MongoDB playground", url)
         link.style.visibility = showLink ? "visible" : "hidden"
-        link.value = url
+        link.innerHTML = url
         shareBtn.disabled = showLink
     }
 

@@ -34,7 +34,7 @@ test('format with button', async ({ page }) => {
 test('format with shortcut', async ({ page }) => {
 
   await set('query', 'db.collection.find({key:1})')
-  await page.getByText('Mongo Playground').press('Control+s')
+  await page.getByText('Template').press('Control+s')
 
   expect(await get('query')).toBe(`db.collection.find({
   key: 1
