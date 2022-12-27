@@ -62,19 +62,17 @@ var Playground = function () {
 
     const comboStages = new CustomSelect({
         selectId: "aggregation_stages",
-        width: "170px",
         onChange: run
     })
     const comboMode = new CustomSelect({
         selectId: "mode",
-        width: "130px",
         onChange: checkEditorContent.bind(null, configEditor, "config")
     })
     const comboTemplate = new CustomSelect({
         selectId: "template",
-        width: "175px",
         onChange: () => { setTemplate(comboTemplate.getSelectedIndex()) }
     })
+    document.getElementById("labelTemplate").style.visibility = "visible"
 
     const customStages = document.getElementById("custom-aggregation_stages")
     const labelStages = document.getElementById("aggregation_stages_label")
@@ -94,6 +92,8 @@ var Playground = function () {
 
     configEditor.setValue(parser.indent(configEditor.getValue(), "config", comboMode.getValue()), -1)
     queryEditor.setValue(parser.indent(queryEditor.getValue(), "query", comboMode.getValue()), -1)
+
+    document.querySelector("div.content").style.visibility = "visible"
 
     configChangedSinceLastRun = false
     queryChangedSinceLastRun = false

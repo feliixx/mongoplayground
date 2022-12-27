@@ -109,7 +109,7 @@ a {
     background-color: rgb(22, 22, 22);
     color: #fff;
     text-align: center;
-    padding: 7  px;
+    padding: 7px;
     border-radius: 6px;
     position: absolute;
     z-index: 1;
@@ -182,6 +182,7 @@ a {
     font-size: 1.2em;
     color: var(--toolbar-color);
     font-family: var(--main-font-family);
+    visibility: hidden;
 }
 
 .toolbar #format {
@@ -195,7 +196,7 @@ a {
     color: var(--toolbar-color);
     font-family: var(--main-font-family);
     height: 34px;
-    width: 330px;
+    width: 350px;
     padding: 9px;
     display: inline-block;
     vertical-align: middle;
@@ -228,6 +229,7 @@ a {
     width: 100%;
     height: calc(100% - 110px);
     display: flex;
+    visibility: hidden;
 }
 
 .content>div {
@@ -397,6 +399,17 @@ a {
     background-color: var(--ace-selection-background) !important;
 }
 
+@media only screen and (max-width:490px) {
+    .toolbar #run {
+        margin-left: 1px;
+    }
+    .toolbar #link {
+        width: 200px;
+        text-indent: -150px;
+        overflow: hidden;
+    }
+}
+
 @media only screen and (max-width:950px) {
     body {
         overflow: visible;
@@ -494,6 +507,7 @@ a {
 
 .doc a {
     background-color: transparent;
+    text-decoration: none;
 }
 
 .doc a:active,
@@ -501,18 +515,8 @@ a {
     outline-width: 0;
 }
 
-.doc strong {
-    font-weight: inherit;
-}
-
-.doc strong {
-    font-weight: bolder;
-}
-
-.doc code,
-.doc pre {
-    font-family: monospace, monospace;
-    font-size: 1em;
+.doc a:hover {
+    text-decoration: underline;
 }
 
 .doc input {
@@ -521,21 +525,8 @@ a {
     line-height: inherit;
 }
 
-.doc a {
-    text-decoration: none;
-}
-
-.doc a:hover {
-    text-decoration: underline;
-}
-
 .doc strong {
     font-weight: 600;
-}
-
-.doc p {
-    margin-top: 0;
-    margin-bottom: 10px;
 }
 
 .doc ul {
@@ -544,14 +535,8 @@ a {
     margin-bottom: 0;
 }
 
-.doc code {
-    font-family: var(--doc-code-font-family);
-    font-size: 12px;
-}
-
+.doc code,
 .doc pre {
-    margin-top: 0;
-    margin-bottom: 0;
     font-family: var(--doc-code-font-family);
     font-size: 12px;
 }
@@ -701,6 +686,11 @@ a {
 /** Style for custom combobox, adaptation from https://github.com/zoltantothcom/vanilla-js-dropdown by Zoltan Toth */
 select {
     visibility: hidden;
+    width: 175px;
+}
+
+select#mode {
+    width: 130px;
 }
 
 .custom-select {

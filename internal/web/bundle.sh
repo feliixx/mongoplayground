@@ -28,5 +28,6 @@ sed -i "s/playground-min-.*\.js/playground-min-$JS_HASH.js/" src/playground.html
 node_modules/esbuild/bin/esbuild --minify src/playground.css > static/playground-min.css
 CSS_HASH=$(md5sum static/playground-min.css | cut -d " " -f1)
 sed -i "s/playground-min-.*\.css/playground-min-$CSS_HASH.css/" src/playground.html
+sed -i "s/playground-min-.*\.css/playground-min-$CSS_HASH.css/" static/about.html
 
 rm -f bundle.js
