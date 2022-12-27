@@ -25,7 +25,6 @@
  *
  * @class
  * @param {string} config.selectId - HTML id of the select.
- * @param {string} config.width - width of the custom select in px
  * @param {function} config.onChange - custom code to execute when an option is selected
  */
 var CustomSelect = function (config) {
@@ -47,11 +46,11 @@ var CustomSelect = function (config) {
 
     const button = document.createElement("button")
     button.className = "custom-select-title"
-    button.style.width = config.width
+    button.style.width = select.offsetWidth + 'px'
 
     const ul = document.createElement("ul")
     ul.className = "custom-select-list"
-    ul.style.width = config.width
+    ul.style.width = select.offsetWidth + 'px'
 
     generateOptions()
 
