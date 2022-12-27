@@ -7,7 +7,7 @@
     <meta name="description" content="Mongo playground: a simple sandbox to test and share MongoDB queries online">
     <meta name="color-scheme" content="dark light">
     <link rel="icon" type="image/png" href="/static/favicon.png" />
-    <link href="/static/playground-min-ef49498c296af92b6fb2aabe3d112e30.css" rel="stylesheet" type="text/css">
+    <link href="/static/playground-min-7aa6f9ddb84f4e641ad2a9353ab653fb.css" rel="stylesheet" type="text/css">
     <script src="/static/playground-min-b42c6e34f007f5c847d19aa96ab3a25c.js" type="text/javascript"></script>
 </head>
 
@@ -22,7 +22,12 @@
                 <span id="link_tooltip" class="tooltiptext">Copied</span>
                 <input id="link" type="text">
             </div>
-            <label id="aggregation_stages_label">Stage:</label>
+            <label id="aggregation_stages_label" class="tooltip">
+                Stage:
+                <span class="tooltiptext tooltip-hover">
+                    See the output for<br/>the selected stage
+                </span>
+            </label>
             <select id="aggregation_stages"></select>
             <div>
                 <label>Template:</label>
