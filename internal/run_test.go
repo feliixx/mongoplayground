@@ -22,6 +22,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -502,8 +503,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"k":3},{"_id":2,"k":3}]`},
 			"query":  {`db.collection.update({"k":3}, {"$set": {"k":0}}, {"multi": false})`},
 		},
-		result:    `[{"_id":1,"k":0},{"_id":2,"k":3}]`,
-		dbCreated: true,
+		result: `[{"_id":1,"k":0},{"_id":2,"k":3}]`,
 	},
 	{
 		name: `basic update many`,
@@ -512,8 +512,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"n":5},{"_id":2,"n":2}]`},
 			"query":  {`db.collection.update({}, {"$inc": {"n":10}}, {"multi": true})`},
 		},
-		result:    `[{"_id":1,"n":15},{"_id":2,"n":12}]`,
-		dbCreated: true,
+		result: `[{"_id":1,"n":15},{"_id":2,"n":12}]`,
 	},
 	{
 		name: `update without option`,
@@ -522,8 +521,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"name":"ke"},{"_id":2,"name":"lme"}]`},
 			"query":  {`db.collection.update({}, {"$rename": {"name":"new"}})`},
 		},
-		result:    `[{"_id":1,"new":"ke"},{"_id":2,"name":"lme"}]`,
-		dbCreated: true,
+		result: `[{"_id":1,"new":"ke"},{"_id":2,"name":"lme"}]`,
 	},
 	{
 		name: `update with upsert`,
@@ -532,8 +530,7 @@ var runTests = []runTest{
 			"config": {`[{"field":2.334}]`},
 			"query":  {`db.collection.update({"field":2}, {"$set": {"_id":2}}, {"upsert": true})`},
 		},
-		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"field":2.334},{"_id":2,"field":2}]`,
-		dbCreated: true,
+		result: `[{"_id":ObjectId("5a934e000102030405000000"),"field":2.334},{"_id":2,"field":2}]`,
 	},
 	{
 		name: `update with arrayFilter`,
@@ -542,8 +539,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,102]},{"_id":3,"grades":[95,110,100]}]`},
 			"query":  {`db.collection.update({grades:{$gte:100}},{$set:{"grades.$[element]":100}}, {"multi": true, arrayFilters: [{"element": { $gte: 100 }}]})`},
 		},
-		result:    `[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,100]},{"_id":3,"grades":[95,100,100]}]`,
-		dbCreated: true,
+		result: `[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,100]},{"_id":3,"grades":[95,100,100]}]`,
 	},
 	{
 		name: `empty update`,
@@ -552,8 +548,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"g":95},{"_id":2,"g":98}]`},
 			"query":  {`db.collection.update()`},
 		},
-		result:    `fail to run update: update document must have at least one element`,
-		dbCreated: true,
+		result: `fail to run update: update document must have at least one element`,
 	},
 	{
 		name: `upsert with empty db`,
@@ -562,8 +557,7 @@ var runTests = []runTest{
 			"config": {`[]`},
 			"query":  {`db.collection.update({},{"$set":{"_id":"new"}},{"upsert":true})`},
 		},
-		result:    `[{"_id":"new"}]`,
-		dbCreated: true, // this should create a db even if config is empty, because of the upsert
+		result: `[{"_id":"new"}]`,
 	},
 	{
 		name: `update with pipeline`,
@@ -572,8 +566,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"moshe","health":0,"maxHealth":200}]`},
 			"query":  {`db.collection.update({},[{"$set": { "health": "$maxHealth" }}])`},
 		},
-		result:    `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
-		dbCreated: true,
+		result: `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
 	},
 	{
 		name: `explain default`,
@@ -823,12 +816,21 @@ func TestRunCreateDB(t *testing.T) {
 	nbMongoDatabases := 0
 	cacheSize := 0
 	for _, tt := range runTests {
-		if !strings.HasPrefix(tt.result, "error in query") && tt.result != errPlaygroundToBig {
-			cacheSize++
-		}
 		if tt.dbCreated {
 			nbMongoDatabases++
 		}
+
+		// if there is an error in query, or if the playground is too big,
+		// the db should not be created, and no entry should be saved in cache
+		if tt.result == errPlaygroundToBig || strings.HasPrefix(tt.result, "error in query") {
+			continue
+		}
+		// if it's an update, the db should be dropped when the query ends, and no entry
+		// should be kept in cache
+		if strings.Contains(tt.params["query"][0], ".update(") {
+			continue
+		}
+		cacheSize++
 	}
 	testStorageContent(t, cacheSize, nbMongoDatabases, nbBadgerRecords)
 }
@@ -837,55 +839,64 @@ func TestRunExistingDB(t *testing.T) {
 
 	defer clearDatabases(t)
 
-	// the first /run request should create the database
-	want := templateResult
-	got := httpBody(t, runEndpoint, http.MethodPost, templateParams)
-	if want != got {
-		t.Errorf("expected %s but got %s", want, got)
+	wg := sync.WaitGroup{}
+	// running the same query multiple time concurrently
+	// should always produce the same result
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			got := httpBody(t, runEndpoint, http.MethodPost, templateParams)
+			if want := templateResult; want != got {
+				t.Errorf("expected %s but got %s", want, got)
+			}
+		}(&wg)
 	}
+	wg.Wait()
+
 	p := &page{
 		Mode:   mgodatagenMode,
 		Config: []byte(templateParams.Get("config")),
 	}
+	// there should be only one DB created, and it should be present in the
+	// cache.
 	DBHash := p.dbHash()
 	_, ok := testStorage.activeDB.list[DBHash]
 	if !ok {
 		t.Errorf("dbCreated should contain DB %s", DBHash)
 	}
-
-	//  the second /run should produce the same result
-	got = httpBody(t, runEndpoint, http.MethodPost, templateParams)
-	if want != got {
-		t.Errorf("expected %s but got %s", want, got)
-	}
-
 	testStorageContent(t, 1, 1, 0)
 }
 
-func TestRunUpdateTwice(t *testing.T) {
+func TestRunUpdateMultipleTimes(t *testing.T) {
 
 	defer clearDatabases(t)
 
 	params := url.Values{"mode": {"bson"}, "config": {`[]`}, "query": {`db.collection.update({},{"$set":{"_id":0}},{"upsert":true})`}}
-	want := `[{"_id":0}]`
-	got := httpBody(t, runEndpoint, http.MethodPost, params)
-	if want != got {
-		t.Errorf("expected %s but got %s", want, got)
-	}
-	// re-run the same run query, activeDatabase counter should not be
-	// incremented because it's the same db, even if we re-create it
-	// every time
-	got = httpBody(t, runEndpoint, http.MethodPost, params)
-	if want != got {
-		t.Errorf("expected %s but got %s", want, got)
-	}
 
-	testStorageContent(t, 1, 1, 0)
+	wg := sync.WaitGroup{}
+	// running the same update query multiple time concurrently
+	// should always produce the same result
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup) {
+			defer wg.Done()
+			got := httpBody(t, runEndpoint, http.MethodPost, params)
+			if want := `[{"_id":0}]`; want != got {
+				t.Errorf("expected %s but got %s", want, got)
+			}
+		}(&wg)
+	}
+	wg.Wait()
+	// db should be dropped immediatly, and should not be cached.
+	testStorageContent(t, 0, 0, 0)
 }
 
 func TestRunFindAfterUpdate(t *testing.T) {
 	defer clearDatabases(t)
 
+	// this should create a temporary db just for the time of the query.
+	// it should be dropped immediately after
 	params := url.Values{"mode": {"bson"}, "config": {`[{_id:1}]`}, "query": {`db.collection.update({},{"$set":{"updated":true}})`}}
 	want := `[{"_id":1,"updated":true}]`
 	got := httpBody(t, runEndpoint, http.MethodPost, params)
@@ -901,7 +912,7 @@ func TestRunFindAfterUpdate(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testStorageContent(t, 2, 2, 0)
+	testStorageContent(t, 1, 1, 0)
 }
 
 func TestConsistentError(t *testing.T) {
