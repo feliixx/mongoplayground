@@ -124,7 +124,7 @@ func TestSave(t *testing.T) {
 			}
 		}
 	}
-	testStorageContent(t, nbMongoDatabases, nbBadgerRecords)
+	testStorageContent(t, nbMongoDatabases, nbMongoDatabases, nbBadgerRecords)
 
 	testPlaygroundStats(t, nbMgoDatagen, nbBsonSingle, nbBsonMultiple, nbUnknown)
 }

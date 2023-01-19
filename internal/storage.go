@@ -22,8 +22,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"sort"
-	"sync"
 	"time"
 
 	"github.com/dgraph-io/badger/v2"
@@ -48,10 +46,7 @@ type storage struct {
 	backupDir           string
 	backupServiceStatus serviceInfo
 
-	// activeDB holds info of the database created / used during
-	// the last cleanupInterval. Its access is guarded by activeDbLock
-	activeDbLock sync.RWMutex
-	activeDB     map[string]dbMetaInfo
+	activeDB *cache
 
 	mailInfo *MailInfo
 
@@ -76,8 +71,10 @@ func newStorage(mongoUri string, dropFirst bool, cloudflareInfo *CloudflareInfo,
 		mongoSession: session,
 		mongoVersion: getMongoVersion(session),
 		kvStore:      kvStore,
-		activeDB:     map[string]dbMetaInfo{},
-		backupDir:    "backups",
+		activeDB: &cache{
+			list: map[string]dbMetaInfo{},
+		},
+		backupDir: "backups",
 		backupServiceStatus: serviceInfo{
 			Name:   "backup",
 			Status: statusUp,
@@ -133,20 +130,22 @@ func (s *storage) removeExpiredDB() {
 
 	now := time.Now()
 
-	s.activeDbLock.Lock()
-	for name, infos := range s.activeDB {
-		if now.Sub(time.Unix(infos.lastUsed, 0)) > cleanupInterval {
-			err := s.mongoSession.Database(name).Drop(context.Background())
-			if err != nil {
-				log.Printf("fail to drop database %v: %v", name, err)
+	s.activeDB.Lock()
+	for name, info := range s.activeDB.list {
+		if now.Sub(time.Unix(info.lastUsed, 0)) > cleanupInterval {
+			if info.err == nil {
+				err := s.mongoSession.Database(name).Drop(context.Background())
+				if err != nil {
+					log.Printf("fail to drop database %v: %v", name, err)
+				}
 			}
-			delete(s.activeDB, name)
+			delete(s.activeDB.list, name)
 		}
 	}
-	s.activeDbLock.Unlock()
+	s.activeDB.Unlock()
 
 	cleanupDuration.Set(time.Since(now).Seconds())
-	activeDatabasesCounter.Set(float64(len(s.activeDB)))
+	activeDatabasesCounter.Set(float64(len(s.activeDB.list)))
 }
 
 // create a backup from the badger db, and store it in backupDir.
@@ -201,24 +200,6 @@ func (s *storage) handleBackupError(message string, err error) {
 	if s.mailInfo != nil {
 		s.mailInfo.sendErrorByEmail(errorMsg)
 	}
-}
-
-type dbMetaInfo struct {
-	// list of collections in the database
-	collections sort.StringSlice
-	// last usage of this database, stored as Unix time
-	lastUsed int64
-	// true if all collections of the database are empty
-	emptyDatabase bool
-}
-
-func (d *dbMetaInfo) hasCollection(collectionName string) bool {
-	for _, name := range d.collections {
-		if name == collectionName {
-			return true
-		}
-	}
-	return false
 }
 
 func createMongodbSession(mongoUri string) (*mongo.Client, error) {

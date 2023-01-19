@@ -43,7 +43,7 @@ func TestDeleteExistingDB(t *testing.T) {
 
 	testStorage.deleteExistingDB()
 
-	testStorageContent(t, 0, 0)
+	testStorageContent(t, 0, 0, 0)
 }
 
 func TestRemoveExpiredDB(t *testing.T) {
@@ -63,24 +63,23 @@ func TestRemoveExpiredDB(t *testing.T) {
 	}
 
 	DBHash := p.dbHash()
-	dbInfo := testStorage.activeDB[DBHash]
+	testStorage.activeDB.Lock()
+	dbInfo := testStorage.activeDB.list[DBHash]
 	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
-	testStorage.activeDB[DBHash] = dbInfo
+	testStorage.activeDB.list[DBHash] = dbInfo
+	testStorage.activeDB.Unlock()
 
 	// this DB should not be removed
-	configFormat := `[{"collection": "collection%v","count": 10,"content": {}}]`
-	params.Set("config", fmt.Sprintf(configFormat, "other"))
-
-	want = `collection "collection" doesn't exist`
+	params = url.Values{"mode": {"bson"}, "config": {"[{_id:1}]"}, "query": {templateQuery}}
+	want = `[{"_id":1}]`
 	got = httpBody(t, runEndpoint, http.MethodPost, params)
-
 	if want != got {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
 	testStorage.removeExpiredDB()
 
-	_, ok := testStorage.activeDB[DBHash]
+	_, ok := testStorage.activeDB.list[DBHash]
 	if ok {
 		t.Errorf("DB %s should not be present in activeDB", DBHash)
 	}
@@ -93,7 +92,7 @@ func TestRemoveExpiredDB(t *testing.T) {
 		t.Errorf("%s should have been removed from mongodb", DBHash)
 	}
 
-	testStorageContent(t, 1, 0)
+	testStorageContent(t, 1, 1, 0)
 }
 
 func TestBackup(t *testing.T) {
@@ -122,14 +121,17 @@ func clearDatabases(t *testing.T) {
 		if err != nil {
 			fmt.Printf("fail to drop db: %v", err)
 		}
-		delete(testStorage.activeDB, name)
+		delete(testStorage.activeDB.list, name)
 	}
 
-	if len(testStorage.activeDB) > 0 {
-		t.Errorf("activeDB map content and databases doesn't match. Remaining keys: %v", testStorage.activeDB)
-		testStorage.activeDB = map[string]dbMetaInfo{}
+	for _, db := range testStorage.activeDB.list {
+		if db.err == nil {
+			t.Errorf(`Database leaked: %+v`, db)
+		}
 	}
-
+	testStorage.activeDB = &cache{
+		list: map[string]dbMetaInfo{},
+	}
 	// reset prometheus metrics
 	activeDatabasesCounter.Set(0)
 
@@ -164,7 +166,7 @@ func clearDatabases(t *testing.T) {
 	}
 }
 
-func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
+func testStorageContent(t *testing.T, cacheSize, nbMongoDatabases, nbBadgerRecords int) {
 	dbNames, err := testStorage.mongoSession.ListDatabaseNames(context.Background(), bson.D{})
 	if err != nil {
 		t.Error(err)
@@ -172,7 +174,7 @@ func testStorageContent(t *testing.T, nbMongoDatabases, nbBadgerRecords int) {
 	if want, got := nbMongoDatabases, len(filterDBNames(dbNames)); want != got {
 		t.Errorf("expected %d DB, but got %d", want, got)
 	}
-	if want, got := nbMongoDatabases, len(testStorage.activeDB); want != got {
+	if want, got := cacheSize, len(testStorage.activeDB.list); want != got {
 		t.Errorf("expected %d db in map, but got %d", want, got)
 	}
 	if want, got := nbMongoDatabases, int(testutil.ToFloat64(activeDatabasesCounter)); want != got {
