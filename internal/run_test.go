@@ -26,30 +26,29 @@ import (
 )
 
 type runTest struct {
-	name          string
-	params        url.Values
-	result        string
-	nbDBexcpected int
+	name      string
+	params    url.Values
+	result    string
+	dbCreated bool
 }
 
 var runTests = []runTest{
 	{
-		name:          "incorrect config",
-		params:        url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"db.c.find()"}},
-		result:        "error in configuration:\n  error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
-		nbDBexcpected: 0,
+		name:   "incorrect config",
+		params: url.Values{"mode": {"mgodatagen"}, "config": {"h"}, "query": {"db.c.find()"}},
+		result: "error in configuration:\n  error in configuration file: object / array / Date badly formatted: \n\n\t\tinvalid character 'h' looking for beginning of value",
 	},
 	{
-		name:          "non existing collection",
-		params:        url.Values{"mode": {"mgodatagen"}, "config": {templateConfigOld}, "query": {"db.c.find()"}},
-		result:        `collection "c" doesn't exist`,
-		nbDBexcpected: 1,
+		name:      "non existing collection",
+		params:    url.Values{"mode": {"bson"}, "config": {`[{"key":0}]`}, "query": {"db.c.find()"}},
+		result:    `collection "c" doesn't exist`,
+		dbCreated: true,
 	},
 	{
-		name:          "deterministic list of objectId",
-		params:        templateParams,
-		result:        templateResult,
-		nbDBexcpected: 0, // db already exists
+		name:      "deterministic list of objectId",
+		params:    templateParams,
+		result:    templateResult,
+		dbCreated: true,
 	},
 	{
 		name: "deterministic results with generators",
@@ -68,17 +67,16 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {templateQuery}},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":"1jU"},{"_id":ObjectId("5a934e000102030405000001"),"k":"tBRWL"},{"_id":ObjectId("5a934e000102030405000002"),"k":"6Hch"},{"_id":ObjectId("5a934e000102030405000003"),"k":"ZWHW"},{"_id":ObjectId("5a934e000102030405000004"),"k":"RkMG"},{"_id":ObjectId("5a934e000102030405000005"),"k":"RIr"},{"_id":ObjectId("5a934e000102030405000006"),"k":"ru7"},{"_id":ObjectId("5a934e000102030405000007"),"k":"OB"},{"_id":ObjectId("5a934e000102030405000008"),"k":"ja"},{"_id":ObjectId("5a934e000102030405000009"),"k":"K307"}]`,
+		dbCreated: true,
 	},
-	// same config, but aggregation
 	{
 		name: "basic aggregation",
 		params: url.Values{
 			"mode": {"mgodatagen"},
 			"config": {`[
 			{
-				"collection": "collection",
+				"collection": "newName",
 				"count": 10,
 				"content": {
 					"k": {
@@ -88,9 +86,9 @@ var runTests = []runTest{
 					}
 				}
 			}]`},
-			"query": {`db.collection.aggregate([{"$project": {"_id": 0}}])`}},
-		result:        `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
-		nbDBexcpected: 0,
+			"query": {`db.newName.aggregate([{"$project": {"_id": 0}}])`}},
+		result:    `[{"k":"1jU"},{"k":"tBRWL"},{"k":"6Hch"},{"k":"ZWHW"},{"k":"RkMG"},{"k":"RIr"},{"k":"ru7"},{"k":"OB"},{"k":"ja"},{"k":"K307"}]`,
+		dbCreated: true,
 	},
 	{
 		name: "doc nb > 100 mgodatagen mode",
@@ -109,8 +107,8 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {`db.collection.aggregate([{"$group": {"_id": 0, "nbDoc": {"$sum":1}}}])`}},
-		result:        `[{"_id":0,"nbDoc":100}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":0,"nbDoc":100}]`,
+		dbCreated: true,
 	},
 	{
 		name: "doc nb > 100 bson mode",
@@ -118,8 +116,8 @@ var runTests = []runTest{
 			"mode":   {"bson"},
 			"config": {`[{"_id":1},{"_id":2},{"_id":3},{"_id":4},{"_id":5},{"_id":6},{"_id":7},{"_id":8},{"_id":9},{"_id":10},{"_id":11},{"_id":12},{"_id":13},{"_id":14},{"_id":15},{"_id":16},{"_id":17},{"_id":18},{"_id":19},{"_id":20},{"_id":21},{"_id":22},{"_id":23},{"_id":24},{"_id":25},{"_id":26},{"_id":27},{"_id":28},{"_id":29},{"_id":30},{"_id":31},{"_id":32},{"_id":33},{"_id":34},{"_id":35},{"_id":36},{"_id":37},{"_id":38},{"_id":39},{"_id":40},{"_id":41},{"_id":42},{"_id":43},{"_id":44},{"_id":45},{"_id":46},{"_id":47},{"_id":48},{"_id":49},{"_id":50},{"_id":51},{"_id":52},{"_id":53},{"_id":54},{"_id":55},{"_id":56},{"_id":57},{"_id":58},{"_id":59},{"_id":60},{"_id":61},{"_id":62},{"_id":63},{"_id":64},{"_id":65},{"_id":66},{"_id":67},{"_id":68},{"_id":69},{"_id":70},{"_id":71},{"_id":72},{"_id":73},{"_id":74},{"_id":75},{"_id":76},{"_id":77},{"_id":78},{"_id":79},{"_id":80},{"_id":81},{"_id":82},{"_id":83},{"_id":84},{"_id":85},{"_id":86},{"_id":87},{"_id":88},{"_id":89},{"_id":90},{"_id":91},{"_id":92},{"_id":93},{"_id":94},{"_id":95},{"_id":96},{"_id":97},{"_id":98},{"_id":99},{"_id":100},{"_id":101},{"_id":102},{"_id":103},{"_id":104},{"_id":105},{"_id":106}]`},
 			"query":  {`db.collection.aggregate([{"$group": {"_id": 0, "nbDoc": {"$sum":1}}}])`}},
-		result:        `[{"_id":0,"nbDoc":100}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":0,"nbDoc":100}]`,
+		dbCreated: true,
 	},
 	{
 		name: "invalid aggregation query (invalid json)",
@@ -127,7 +125,7 @@ var runTests = []runTest{
 			"mode": {"mgodatagen"},
 			"config": {`[
 			{
-				"collection": "collection",
+				"collection": "valid",
 				"count": 10,
 				"content": {
 					"k": {
@@ -137,9 +135,8 @@ var runTests = []runTest{
 					}
 				}
 			}]`},
-			"query": {`db.collection.aggregate([{"$project": {"_id": 0}])`}},
-		result:        "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
-		nbDBexcpected: 0,
+			"query": {`db.valid.aggregate([{"$project": {"_id": 0}])`}},
+		result: "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 	},
 	{
 		name: "invalid aggregation query (invalid syntax)",
@@ -147,7 +144,7 @@ var runTests = []runTest{
 			"mode": {"mgodatagen"},
 			"config": {`[
 			{
-				"collection": "collection",
+				"collection": "valid2",
 				"count": 10,
 				"content": {
 					"k": {
@@ -157,9 +154,9 @@ var runTests = []runTest{
 					}
 				}
 			}]`},
-			"query": {`db.collection.aggregate([{"$project": "_id"}])`}},
-		result:        "query failed: (Location15969) $project specification must be an object",
-		nbDBexcpected: 0,
+			"query": {`db.valid2.aggregate([{"$project": "_id"}])`}},
+		result:    "query failed: (Location15969) $project specification must be an object",
+		dbCreated: true,
 	},
 	{
 		name: "invalid find query (invalid syntax)",
@@ -178,8 +175,8 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {`db.collection.find({"$set": 12})`}},
-		result:        "query failed: (BadValue) unknown top level operator: $set. If you have a field name that starts with a '$' symbol, consider using $getField or $setField.",
-		nbDBexcpected: 1,
+		result:    "query failed: (BadValue) unknown top level operator: $set. If you have a field name that starts with a '$' symbol, consider using $getField or $setField.",
+		dbCreated: true,
 	},
 	{
 		name: "invalid find query (invalid json)",
@@ -198,8 +195,7 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {`db.collection.find({"k": "tJ")`}},
-		result:        "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
-		nbDBexcpected: 0,
+		result: "error in query:\n  fail to parse content of query: invalid character ']' after object key:value pair",
 	},
 	{
 		name: "two databases",
@@ -228,8 +224,8 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-		result:        `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e00010203040500000a"),"k":5},{"_id":ObjectId("5a934e00010203040500000b"),"k":5},{"_id":ObjectId("5a934e00010203040500000e"),"k":4},{"_id":ObjectId("5a934e000102030405000011"),"k":5},{"_id":ObjectId("5a934e000102030405000012"),"k":5},{"_id":ObjectId("5a934e000102030405000013"),"k":4}]`,
+		dbCreated: true,
 	},
 	{
 		name: "two databases invalid config",
@@ -257,18 +253,17 @@ var runTests = []runTest{
 				}
 			}]`},
 			"query": {`db.coll2.find({"k": {"$gt": 3}})`}},
-		result:        "error in configuration:\n  fail to create collection coll2: invalid generator for field 'k'\n  cause: invalid type ''",
-		nbDBexcpected: 0,
+		result: "error in configuration:\n  fail to create collection coll2: invalid generator for field 'k'\n  cause: invalid type ''",
 	},
 	{
 		name: "basic json mode",
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{"k": 1}]`},
+			"config": {`[{"key": 1}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000"),"k":1}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"key":1}]`,
+		dbCreated: true,
 	},
 	{
 		name: "empty json",
@@ -277,8 +272,8 @@ var runTests = []runTest{
 			"config": {`[{}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000")}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000")}]`,
+		dbCreated: true,
 	},
 	{
 		name: "invalid method",
@@ -287,18 +282,17 @@ var runTests = []runTest{
 			"config": {`[{"_id":356636}]`},
 			"query":  {`db.collection.findOne()`},
 		},
-		result:        "invalid method: 'findOne'",
-		nbDBexcpected: 1,
+		result:    "invalid method: 'findOne'",
+		dbCreated: true,
 	},
 	{
 		name: "invalid query syntax",
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{}]`},
+			"config": {`[{"key":2}]`},
 			"query":  {`find()`},
 		},
-		result:        fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
-		nbDBexcpected: 0,
+		result: fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 	},
 	{
 		name: "require array of bson documents or a single document",
@@ -307,8 +301,7 @@ var runTests = []runTest{
 			"config": {`{"k": 1}, {"k": 2}`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
-		nbDBexcpected: 0,
+		result: fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
 	},
 	{
 		name: "multiple collection in bson mode",
@@ -317,8 +310,8 @@ var runTests = []runTest{
 			"config": {`db={"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":10}]}`},
 			"query":  {`db.collection1.find()`},
 		},
-		result:        `[{"_id":1,"k":8}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"k":8}]`,
+		dbCreated: true,
 	},
 	{
 		name: "multiple collection in json mode without _id",
@@ -327,8 +320,8 @@ var runTests = []runTest{
 			"config": {`db={"collection1":[{"k":8}],"collection2":[{"k2":8},{"k2":8}]}`},
 			"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"k",foreignField:"k2","as":"lookupDoc"}})`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000"),"k":8,"lookupDoc":[{"_id":ObjectId("5a934e000102030405000001"),"k2":8},{"_id":ObjectId("5a934e000102030405000002"),"k2":8}]}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"k":8,"lookupDoc":[{"_id":ObjectId("5a934e000102030405000001"),"k2":8},{"_id":ObjectId("5a934e000102030405000002"),"k2":8}]}]`,
+		dbCreated: true,
 	},
 	{
 		name: "multiple collection in bson mode with lookup",
@@ -337,8 +330,8 @@ var runTests = []runTest{
 			"config": {`db={"collection1":[{"_id":1,"k":8}],"collection2":[{"_id":1,"k2":1}]}`},
 			"query":  {`db.collection1.aggregate({"$lookup":{"from":"collection2","localField":"_id",foreignField:"_id","as":"lookupDoc"}})`},
 		},
-		result:        `[{"_id":1,"k":8,"lookupDoc":[{"_id":1,"k2":1}]}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"k":8,"lookupDoc":[{"_id":1,"k2":1}]}]`,
+		dbCreated: true,
 	},
 	{
 		name: `bson old syntax create only collection "collection"`,
@@ -347,8 +340,8 @@ var runTests = []runTest{
 			"config": {`[{"k": 1.1111}, {"k": 2.2323}]`},
 			"query":  {`db.otherCollection.find()`},
 		},
-		result:        `collection "otherCollection" doesn't exist`,
-		nbDBexcpected: 1,
+		result:    `collection "otherCollection" doesn't exist`,
+		dbCreated: true,
 	},
 	{
 		name: `doc with "_id" should not be overwritten`,
@@ -357,8 +350,8 @@ var runTests = []runTest{
 			"config": {`[{"_id": 1}, {"_id": 2}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":1},{"_id":2}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1},{"_id":2}]`,
+		dbCreated: true,
 	},
 	{
 		name: `mixed doc with/without "_id"`,
@@ -367,8 +360,8 @@ var runTests = []runTest{
 			"config": {`[{"_id": 1}, {}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":1},{"_id":ObjectId("5a934e000102030405000001")}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1},{"_id":ObjectId("5a934e000102030405000001")}]`,
+		dbCreated: true,
 	},
 	{
 		name: `duplicate "_id" error`,
@@ -377,8 +370,7 @@ var runTests = []runTest{
 			"config": {`[{"_id":1},{"_id":1}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        "error in configuration:\n  bulk write exception: write errors: [E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { _id: 1.0 }]",
-		nbDBexcpected: 0, // the config is incorrect, no db should be created
+		result: "error in configuration:\n  bulk write exception: write errors: [E11000 duplicate key error collection: 57735364208e15b517d23e542088ed29.collection index: _id_ dup key: { _id: 1.0 }]",
 	},
 	{
 		name: `bson "ObjectId" notation`,
@@ -387,28 +379,28 @@ var runTests = []runTest{
 			"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000001")},{"_id":1}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000001")},{"_id":1}]`,
+		dbCreated: true,
 	},
 	{
 		name: `bson unkeyed notation`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
+			"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":2}]`},
 			"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000001")}]`,
-		nbDBexcpected: 0,
+		result:    `[{"_id":ObjectId("5a934e000102030405000001")}]`,
+		dbCreated: true,
 	},
 	{
 		name: `unkeyed params in aggreagtion`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":1}]`},
+			"config": {`[{"_id": ObjectId("5a934e000102030405000001")},{"_id":3}]`},
 			"query":  {`db.collection.aggregate([{$match: {_id: ObjectId("5a934e000102030405000001")}}])`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000001")}]`,
-		nbDBexcpected: 0,
+		result:    `[{"_id":ObjectId("5a934e000102030405000001")}]`,
+		dbCreated: true,
 	},
 	{
 		name: `doc with bson "ISODate"`,
@@ -417,8 +409,8 @@ var runTests = []runTest{
 			"config": {`[{dt: ISODate("2000-01-01T00:00:00+00:00")}]`},
 			"query":  {`db.collection.find()`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000"),"dt":ISODate("2000-01-01T00:00:00Z")}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"dt":ISODate("2000-01-01T00:00:00Z")}]`,
+		dbCreated: true,
 	},
 	{
 		name: `invalid "ObjectId" should not panic`,
@@ -427,8 +419,7 @@ var runTests = []runTest{
 			"config": {`[{"_id": ObjectId("5a9")}]`},
 			"query":  {`db.collection.find({_id: ObjectId("5a934e000102030405000001")})`},
 		},
-		result:        "error in configuration:\n  the provided hex string is not a valid ObjectID",
-		nbDBexcpected: 0,
+		result: "error in configuration:\n  the provided hex string is not a valid ObjectID",
 	},
 	{
 		name: `regex parsing`, // TODO
@@ -437,8 +428,7 @@ var runTests = []runTest{
 			"config": {`[{"k": "randompattern"}]`},
 			"query":  {`db.collection.find({k: /pattern/})`},
 		},
-		result:        "error in query:\n  fail to parse content of query: invalid character '/' looking for beginning of value",
-		nbDBexcpected: 0,
+		result: "error in query:\n  fail to parse content of query: invalid character '/' looking for beginning of value",
 	},
 	{
 		name: `query with projection`,
@@ -447,8 +437,8 @@ var runTests = []runTest{
 			"config": {`[{"k":1},{"k":2},{"k":3}]`},
 			"query":  {`db.collection.find({}, {"_id": 0})`},
 		},
-		result:        `[{"k":1},{"k":2},{"k":3}]`,
-		nbDBexcpected: 1,
+		result:    `[{"k":1},{"k":2},{"k":3}]`,
+		dbCreated: true,
 	},
 	{
 		name: `empty config`,
@@ -457,18 +447,16 @@ var runTests = []runTest{
 			"config": {""},
 			"query":  {"db.c.find()"},
 		},
-		result:        fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
-		nbDBexcpected: 0,
+		result: fmt.Sprintf("error in configuration:\n  %v", errInvalidConfig),
 	},
 	{
 		name: `empty query`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {templateConfigOld},
+			"config": {`["key":3`},
 			"query":  {""},
 		},
-		result:        fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
-		nbDBexcpected: 0,
+		result: fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 	},
 	{
 		name: `too many collections`,
@@ -477,28 +465,26 @@ var runTests = []runTest{
 			"config": {`db={"a":[],"b":[],"c":[],"d":[],"e":[],"f":[],"g":[],"h":[],"i":[],"j":[],"k":[]}`},
 			"query":  {"db.c.find()"},
 		},
-		result:        "error in configuration:\n  max number of collection in a database is 10, but was 11",
-		nbDBexcpected: 0,
+		result: "error in configuration:\n  max number of collection in a database is 10, but was 11",
 	},
 	{
 		name: `no documents found`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`db={"a":[]}`},
-			"query":  {"db.a.find()"},
+			"config": {`db={"a":[{}]}`},
+			"query":  {`db.a.find({"k":0})`},
 		},
-		result:        noDocFound,
-		nbDBexcpected: 0,
+		result:    noDocFound,
+		dbCreated: true,
 	},
 	{
 		name: `invalid query with 3 '.'`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {templateConfigOld},
+			"config": {`["key":4]`},
 			"query":  {`[{"key.path.test":{"$match":10}}])`},
 		},
-		result:        fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
-		nbDBexcpected: 0,
+		result: fmt.Sprintf("error in query:\n  %v", errInvalidQuery),
 	},
 	{
 		name: `playground too big`,
@@ -507,8 +493,7 @@ var runTests = []runTest{
 			"config": {string(make([]byte, maxByteSize))},
 			"query":  {"db.collection.find()"},
 		},
-		result:        errPlaygroundToBig,
-		nbDBexcpected: 0,
+		result: errPlaygroundToBig,
 	},
 	{
 		name: `basic update one`,
@@ -517,8 +502,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"k":3},{"_id":2,"k":3}]`},
 			"query":  {`db.collection.update({"k":3}, {"$set": {"k":0}}, {"multi": false})`},
 		},
-		result:        `[{"_id":1,"k":0},{"_id":2,"k":3}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"k":0},{"_id":2,"k":3}]`,
+		dbCreated: true,
 	},
 	{
 		name: `basic update many`,
@@ -527,8 +512,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"n":5},{"_id":2,"n":2}]`},
 			"query":  {`db.collection.update({}, {"$inc": {"n":10}}, {"multi": true})`},
 		},
-		result:        `[{"_id":1,"n":15},{"_id":2,"n":12}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"n":15},{"_id":2,"n":12}]`,
+		dbCreated: true,
 	},
 	{
 		name: `update without option`,
@@ -537,8 +522,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"name":"ke"},{"_id":2,"name":"lme"}]`},
 			"query":  {`db.collection.update({}, {"$rename": {"name":"new"}})`},
 		},
-		result:        `[{"_id":1,"new":"ke"},{"_id":2,"name":"lme"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"new":"ke"},{"_id":2,"name":"lme"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `update with upsert`,
@@ -547,8 +532,8 @@ var runTests = []runTest{
 			"config": {`[{"field":2.334}]`},
 			"query":  {`db.collection.update({"field":2}, {"$set": {"_id":2}}, {"upsert": true})`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000000"),"field":2.334},{"_id":2,"field":2}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000000"),"field":2.334},{"_id":2,"field":2}]`,
+		dbCreated: true,
 	},
 	{
 		name: `update with arrayFilter`,
@@ -557,8 +542,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,102]},{"_id":3,"grades":[95,110,100]}]`},
 			"query":  {`db.collection.update({grades:{$gte:100}},{$set:{"grades.$[element]":100}}, {"multi": true, arrayFilters: [{"element": { $gte: 100 }}]})`},
 		},
-		result:        `[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,100]},{"_id":3,"grades":[95,100,100]}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"grades":[95,92,90]},{"_id":2,"grades":[98,100,100]},{"_id":3,"grades":[95,100,100]}]`,
+		dbCreated: true,
 	},
 	{
 		name: `empty update`,
@@ -567,8 +552,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"g":95},{"_id":2,"g":98}]`},
 			"query":  {`db.collection.update()`},
 		},
-		result:        `fail to run update: update document must have at least one element`,
-		nbDBexcpected: 1,
+		result:    `fail to run update: update document must have at least one element`,
+		dbCreated: true,
 	},
 	{
 		name: `upsert with empty db`,
@@ -577,8 +562,8 @@ var runTests = []runTest{
 			"config": {`[]`},
 			"query":  {`db.collection.update({},{"$set":{"_id":"new"}},{"upsert":true})`},
 		},
-		result:        `[{"_id":"new"}]`,
-		nbDBexcpected: 1, // this should create a db even if config is empty, because of the upsert
+		result:    `[{"_id":"new"}]`,
+		dbCreated: true, // this should create a db even if config is empty, because of the upsert
 	},
 	{
 		name: `update with pipeline`,
@@ -587,8 +572,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"moshe","health":0,"maxHealth":200}]`},
 			"query":  {`db.collection.update({},[{"$set": { "health": "$maxHealth" }}])`},
 		},
-		result:        `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `explain default`,
@@ -597,8 +582,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"greta"}]`},
 			"query":  {`db.collection.find().explain()`},
 		},
-		result:        `{"command":{"$db":"433c2ef8cb26c90dd962d047dea315de","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{},"planCacheKey":"D542626C","queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
-		nbDBexcpected: 1,
+		result:    `{"command":{"$db":"433c2ef8cb26c90dd962d047dea315de","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{}`,
+		dbCreated: true,
 	},
 	{
 		name: `explain executionStats`,
@@ -607,18 +592,18 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"tim"}]`},
 			"query":  {`db.collection.find().explain("executionStats")`},
 		},
-		result:        `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
-		nbDBexcpected: 1,
+		result:    `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
+		dbCreated: true,
 	},
 	{
 		name: `explain executionStats before find`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"tim"}]`},
+			"config": {`[{"_id":2,"username":"tom"}]`},
 			"query":  {`db.collection.explain("executionStats").find()`},
 		},
-		result:        `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"d0eaaeabc460c11f6f70b605a70c50d8.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
-		nbDBexcpected: 0, // same config as above
+		result:    `{"command":{"$db":"35598334d516d2dc5d67d18c838fa285","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
+		dbCreated: true,
 	},
 	{
 		name: `explain allPlansExecution before find`,
@@ -627,8 +612,18 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"TP"}]`},
 			"query":  {`db.collection.explain("allPlansExecution").find()`},
 		},
-		result:        `{"command":{"$db":"40dd3ef1cd82a6d68d98fdcd3ddf4242","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true,"executionTimeMillis":0,"nReturned":1,"totalDocsExamined":1,"totalKeysExamined":0},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"40dd3ef1cd82a6d68d98fdcd3ddf4242.collection","parsedQuery":{},"rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
-		nbDBexcpected: 1,
+		result:    `{"command":{"$db":"40dd3ef1cd82a6d68d98fdcd3ddf4242","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
+		dbCreated: true,
+	},
+	{
+		name: `explain too short`,
+		params: url.Values{
+			"mode":   {"bson"},
+			"config": {`[{"_id":1,"username":"singleQuote"}]`},
+			"query":  {`db.collection.find().explain(")`},
+		},
+		result:    `{"command":{"$db":"7fb2bc41534140cadc0bb68d1377cc2a","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{}`,
+		dbCreated: true,
 	},
 	{
 		name: `malformatted explain`,
@@ -637,8 +632,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1,"username":"unfinished"}]`},
 			"query":  {`db.collection.find().explain(`},
 		},
-		result:        `[{"_id":1,"username":"unfinished"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1,"username":"unfinished"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `mgodatagen $text query without index`,
@@ -662,8 +657,8 @@ var runTests = []runTest{
 				}
 			  })`},
 		},
-		result:        `query failed: (IndexNotFound) text index required for $text query`,
-		nbDBexcpected: 1,
+		result:    `query failed: (IndexNotFound) text index required for $text query`,
+		dbCreated: true,
 	},
 	{
 		name: `mgodatagen $text query with index`,
@@ -696,8 +691,8 @@ var runTests = []runTest{
 				}
 			  })`},
 		},
-		result:        `[{"_id":ObjectId("5a934e000102030405000005"),"word":"RIre"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":ObjectId("5a934e000102030405000005"),"word":"RIre"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation batch size greater than 100 ( defaut )`,
@@ -722,18 +717,8 @@ var runTests = []runTest{
 			  ]`},
 			"query": {`db.collection.aggregate([{"$unwind": "$array"},{"$project":{"_id":"$array"}}])`},
 		},
-		result:        `[{"_id":1},{"_id":2},{"_id":3},{"_id":4},{"_id":5},{"_id":6},{"_id":7},{"_id":8},{"_id":9},{"_id":10},{"_id":11},{"_id":12},{"_id":13},{"_id":14},{"_id":15},{"_id":16},{"_id":17},{"_id":18},{"_id":19},{"_id":20},{"_id":21},{"_id":22},{"_id":23},{"_id":24},{"_id":25},{"_id":26},{"_id":27},{"_id":28},{"_id":29},{"_id":30},{"_id":31},{"_id":32},{"_id":33},{"_id":34},{"_id":35},{"_id":36},{"_id":37},{"_id":38},{"_id":39},{"_id":40},{"_id":41},{"_id":42},{"_id":43},{"_id":44},{"_id":45},{"_id":46},{"_id":47},{"_id":48},{"_id":49},{"_id":50},{"_id":51},{"_id":52},{"_id":53},{"_id":54},{"_id":55},{"_id":56},{"_id":57},{"_id":58},{"_id":59},{"_id":60},{"_id":61},{"_id":62},{"_id":63},{"_id":64},{"_id":65},{"_id":66},{"_id":67},{"_id":68},{"_id":69},{"_id":70},{"_id":71},{"_id":72},{"_id":73},{"_id":74},{"_id":75},{"_id":76},{"_id":77},{"_id":78},{"_id":79},{"_id":80},{"_id":81},{"_id":82},{"_id":83},{"_id":84},{"_id":85},{"_id":86},{"_id":87},{"_id":88},{"_id":89},{"_id":90},{"_id":91},{"_id":92},{"_id":93},{"_id":94},{"_id":95},{"_id":96},{"_id":97},{"_id":98},{"_id":99},{"_id":100},{"_id":101},{"_id":102},{"_id":103},{"_id":104},{"_id":105},{"_id":106},{"_id":107},{"_id":108},{"_id":109},{"_id":110}]`,
-		nbDBexcpected: 1,
-	},
-	{
-		name: `explain too short`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"singleQuote"}]`},
-			"query":  {`db.collection.find().explain(")`},
-		},
-		result:        `{"command":{"$db":"7fb2bc41534140cadc0bb68d1377cc2a","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{},"planCacheKey":"D542626C","queryHash":"8B3D4AB8","rejectedPlans":[],"winningPlan":{"direction":"forward","stage":"COLLSCAN"}},"serverParameters":{"internalDocumentSourceGroupMaxMemoryBytes":104857600,"internalDocumentSourceSetWindowFieldsMaxMemoryBytes":104857600,"internalLookupStageIntermediateDocumentMaxSizeBytes":104857600,"internalQueryFacetBufferSizeBytes":104857600,"internalQueryFacetMaxOutputDocSizeBytes":104857600,"internalQueryMaxAddToSetBytes":104857600,"internalQueryMaxBlockingSortMemoryUsageBytes":104857600,"internalQueryProhibitBlockingMergeOnMongoS":0}}`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1},{"_id":2},{"_id":3},{"_id":4},{"_id":5},{"_id":6},{"_id":7},{"_id":8},{"_id":9},{"_id":10},{"_id":11},{"_id":12},{"_id":13},{"_id":14},{"_id":15},{"_id":16},{"_id":17},{"_id":18},{"_id":19},{"_id":20},{"_id":21},{"_id":22},{"_id":23},{"_id":24},{"_id":25},{"_id":26},{"_id":27},{"_id":28},{"_id":29},{"_id":30},{"_id":31},{"_id":32},{"_id":33},{"_id":34},{"_id":35},{"_id":36},{"_id":37},{"_id":38},{"_id":39},{"_id":40},{"_id":41},{"_id":42},{"_id":43},{"_id":44},{"_id":45},{"_id":46},{"_id":47},{"_id":48},{"_id":49},{"_id":50},{"_id":51},{"_id":52},{"_id":53},{"_id":54},{"_id":55},{"_id":56},{"_id":57},{"_id":58},{"_id":59},{"_id":60},{"_id":61},{"_id":62},{"_id":63},{"_id":64},{"_id":65},{"_id":66},{"_id":67},{"_id":68},{"_id":69},{"_id":70},{"_id":71},{"_id":72},{"_id":73},{"_id":74},{"_id":75},{"_id":76},{"_id":77},{"_id":78},{"_id":79},{"_id":80},{"_id":81},{"_id":82},{"_id":83},{"_id":84},{"_id":85},{"_id":86},{"_id":87},{"_id":88},{"_id":89},{"_id":90},{"_id":91},{"_id":92},{"_id":93},{"_id":94},{"_id":95},{"_id":96},{"_id":97},{"_id":98},{"_id":99},{"_id":100},{"_id":101},{"_id":102},{"_id":103},{"_id":104},{"_id":105},{"_id":106},{"_id":107},{"_id":108},{"_id":109},{"_id":110}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation with $out`,
@@ -742,8 +727,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":"yellow"}]`},
 			"query":  {`db.collection.aggregate([{$out: "ouptut"}])`},
 		},
-		result:        `[{"_id":"yellow"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":"yellow"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation with "$out" quoted`,
@@ -752,8 +737,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":1},{"_id":2},{"_id":3}]`},
 			"query":  {`db.collection.aggregate([{"$match":{"_id":1}},{"$out": {db: "ouptut", collection: "y"}}])`},
 		},
-		result:        `[{"_id":1}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation with $merge`,
@@ -762,8 +747,8 @@ var runTests = []runTest{
 			"config": {`[{"_id":"abcde"}]`},
 			"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"}])`},
 		},
-		result:        `[{"_id":"abcde"}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":"abcde"}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation invalid pipeline`,
@@ -772,18 +757,18 @@ var runTests = []runTest{
 			"config": {`[{"_id":0.000122}]`},
 			"query":  {`db.collection.aggregate([1,2])`},
 		},
-		result:        `query failed: (TypeMismatch) Each element of the 'pipeline' array must be an object`,
-		nbDBexcpected: 1,
+		result:    `query failed: (TypeMismatch) Each element of the 'pipeline' array must be an object`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation with $merge in first pos`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[{"_id":1}]`},
-			"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"},{$match:{_id:1}},{$project:{_id:0}}])`},
+			"config": {`[{"_id":11,"b":0}]`},
+			"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"},{$match:{_id:11}},{$project:{_id:0}}])`},
 		},
-		result:        `[{}]`,
-		nbDBexcpected: 1,
+		result:    `[{"b":0}]`,
+		dbCreated: true,
 	},
 	{
 		name: `aggregation with $out and $merge`,
@@ -792,18 +777,17 @@ var runTests = []runTest{
 			"config": {`[{"_id":1},{"_id":2},{"_id":3},{"_id":38294834}]`},
 			"query":  {`db.collection.aggregate([{$merge: "ouptut-merge"},{"$match":{"_id":1}},{"$out": {db: "ouptut", collection: "y"}}])`},
 		},
-		result:        `[{"_id":1}]`,
-		nbDBexcpected: 1,
+		result:    `[{"_id":1}]`,
+		dbCreated: true,
 	},
 	{
 		name: `fuzz entry 1`,
 		params: url.Values{
 			"mode":   {"bson"},
-			"config": {`[]`},
+			"config": {`[{"key":5}]`},
 			"query":  {`..)(`},
 		},
-		result:        "error in query:\n  query must match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()",
-		nbDBexcpected: 0,
+		result: "error in query:\n  query must match db.coll.find(...) or db.coll.aggregate(...) or db.coll.update()",
 	},
 }
 
@@ -818,11 +802,17 @@ func TestRunCreateDB(t *testing.T) {
 			t.Run(test.name, func(t *testing.T) {
 
 				t.Parallel()
-
+				want := test.result
 				got := httpBody(t, runEndpoint, http.MethodPost, test.params)
 
-				if want := test.result; want != got {
-					t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
+				if strings.HasPrefix(test.name, "explain") {
+					if !strings.HasPrefix(got, want) {
+						t.Errorf("expected result to start with\n '%s'\n but got\n '%s'", want, got)
+					}
+				} else {
+					if want != got {
+						t.Errorf("expected\n '%s'\n but got\n '%s'", want, got)
+					}
 				}
 			})
 		}
@@ -831,10 +821,16 @@ func TestRunCreateDB(t *testing.T) {
 	// run only should not save anything in badger
 	nbBadgerRecords := 0
 	nbMongoDatabases := 0
+	cacheSize := 0
 	for _, tt := range runTests {
-		nbMongoDatabases += tt.nbDBexcpected
+		if !strings.HasPrefix(tt.result, "error in query") && tt.result != errPlaygroundToBig {
+			cacheSize++
+		}
+		if tt.dbCreated {
+			nbMongoDatabases++
+		}
 	}
-	testStorageContent(t, nbMongoDatabases, nbBadgerRecords)
+	testStorageContent(t, cacheSize, nbMongoDatabases, nbBadgerRecords)
 }
 
 func TestRunExistingDB(t *testing.T) {
@@ -852,9 +848,9 @@ func TestRunExistingDB(t *testing.T) {
 		Config: []byte(templateParams.Get("config")),
 	}
 	DBHash := p.dbHash()
-	_, ok := testStorage.activeDB[DBHash]
+	_, ok := testStorage.activeDB.list[DBHash]
 	if !ok {
-		t.Errorf("activeDb should contain DB %s", DBHash)
+		t.Errorf("dbCreated should contain DB %s", DBHash)
 	}
 
 	//  the second /run should produce the same result
@@ -863,7 +859,7 @@ func TestRunExistingDB(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testStorageContent(t, 1, 0)
+	testStorageContent(t, 1, 1, 0)
 }
 
 func TestRunUpdateTwice(t *testing.T) {
@@ -884,7 +880,7 @@ func TestRunUpdateTwice(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testStorageContent(t, 1, 0)
+	testStorageContent(t, 1, 1, 0)
 }
 
 func TestRunFindAfterUpdate(t *testing.T) {
@@ -905,7 +901,7 @@ func TestRunFindAfterUpdate(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testStorageContent(t, 2, 0)
+	testStorageContent(t, 2, 2, 0)
 }
 
 func TestConsistentError(t *testing.T) {
