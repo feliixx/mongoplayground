@@ -32,7 +32,9 @@ import (
 
 const (
 	// interval between two MongoDB cleanup
-	cleanupInterval = 4 * time.Hour
+	cleanupInterval = 10 * time.Minute
+	// how long a database is kept after its last use 
+	maxUnusedDuration = 6 * time.Hour
 	// interval between two Badger backup
 	backupInterval = 24 * time.Hour
 )
@@ -92,7 +94,7 @@ func newStorage(mongoUri string, dropFirst bool, cloudflareInfo *CloudflareInfo,
 
 	go func(s *storage) {
 		for range time.Tick(cleanupInterval) {
-			s.removeExpiredDB()
+			s.removeUnusedDB()
 		}
 	}(s)
 
@@ -125,14 +127,21 @@ func (s *storage) deleteExistingDB() error {
 	return nil
 }
 
-// remove database not used since the previous cleanup in MongoDB
-func (s *storage) removeExpiredDB() {
+func (s *storage) removeUnusedDB() {
 
 	now := time.Now()
 
 	s.activeDB.Lock()
 	for name, info := range s.activeDB.list {
-		if now.Sub(time.Unix(info.lastUsed, 0)) > cleanupInterval {
+
+		// if database creation failed, always remove it from the cache 
+		// as soon as possible, to prevent temporary error due to MongoDB 
+		// from being kept for too long.
+		if info.err != nil {
+			delete(s.activeDB.list, name)
+		}
+
+		if now.Sub(time.Unix(info.lastUsed, 0)) > maxUnusedDuration {
 			if info.err == nil {
 				err := s.mongoSession.Database(name).Drop(context.Background())
 				if err != nil {
