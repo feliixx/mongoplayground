@@ -62,12 +62,23 @@ func TestRemoveExpiredDB(t *testing.T) {
 		Config: []byte(params.Get("config")),
 	}
 
+	// this db should be removed: too old
 	DBHash := p.dbHash()
 	testStorage.activeDB.Lock()
 	dbInfo := testStorage.activeDB.list[DBHash]
-	dbInfo.lastUsed = time.Now().Add(-cleanupInterval).Unix()
+	dbInfo.lastUsed = time.Now().Add(-maxUnusedDuration).Unix()
 	testStorage.activeDB.list[DBHash] = dbInfo
 	testStorage.activeDB.Unlock()
+
+	// this db should be removed: creation error
+	params = url.Values{"mode": {"mgodatagen"}, "config": {"[{}]"}, "query": {templateQuery}}
+	want = `error in configuration:
+  error in configuration file: 
+	'collection' and 'database' fields can't be empty`
+	got = httpBody(t, runEndpoint, http.MethodPost, params)
+	if want != got {
+		t.Errorf("expected %s but got %s", want, got)
+	}
 
 	// this DB should not be removed
 	params = url.Values{"mode": {"bson"}, "config": {"[{_id:1}]"}, "query": {templateQuery}}
@@ -77,7 +88,7 @@ func TestRemoveExpiredDB(t *testing.T) {
 		t.Errorf("expected %s but got %s", want, got)
 	}
 
-	testStorage.removeExpiredDB()
+	testStorage.removeUnusedDB()
 
 	_, ok := testStorage.activeDB.list[DBHash]
 	if ok {
