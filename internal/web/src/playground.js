@@ -293,65 +293,65 @@ var Playground = function () {
     /**
      * load the documentation and add it to the doc panel
      */
-    function loadDocs() {
-        fetch("/static/docs-c310647d0539a44970e85f228788385b.html", { method: "GET" })
-            .then(response => response.text())
-            .then(responseTxt => {
-                docPanel.innerHTML = responseTxt
-            })
+    async function loadDocs() {
+        const r = await fetch("/static/docs-c310647d0539a44970e85f228788385b.html", { method: "GET" })
+        if (!r.ok) {
+            return showError(`Failed to fetch doc: ${r.status} ${await r.text()}`)
+        }
+        docPanel.innerHTML = await r.text()
     }
 
     /**
      * Format both editors and run the current playground
      */
-    function run() {
+    async function run() {
 
         if (hasSyntaxError()) {
             return
         }
         formatAll()
-
         showResult("running query...", false)
 
-        fetch("/run", { method: "POST", body: encodePlayground(false) })
-            .then(response => response.text())
-            .then(responseTxt => {
+        const r = await fetch("/run", { method: "POST", body: encodePlayground(false) })
+        if (!r.ok) {
+            return showError(`Failed to run playground: ${r.status} ${await r.text()}`)
+        }
 
-                configChangedSinceLastRun = false
-                queryChangedSinceLastRun = false
+        configChangedSinceLastRun = false
+        queryChangedSinceLastRun = false
 
-                if (responseTxt.startsWith("[") || responseTxt.startsWith("{")) {
-                    showResult(responseTxt, true)
-                } else if (responseTxt === "no document found") {
-                    showResult(responseTxt, false)
-                } else {
-                    showError(responseTxt)
-                }
-            })
+        const result = await r.text()
+        if (result.startsWith("[") || result.startsWith("{")) {
+            return showResult(result, true)
+        }
+        if (result === "no document found") {
+            return showResult(result, false)
+        }
+        showError(result)
     }
 
     /**
      * Save the current playground. The playground can be saved even if 
      * it contains syntax errors 
      */
-    function save() {
+    async function save() {
 
         formatAll()
 
-        fetch("/save", { method: "POST", body: encodePlayground(true) })
-            .then(response => response.text())
-            .then(responseTxt => {
+        const r = await fetch("/save", { method: "POST", body: encodePlayground(true) })
+        if (!r.ok) {
+            return showError(`Failed to save playground: ${r.status} ${await r.text()}`)
+        }
 
-                configOrQueryChangedSinceLastSave = false
+        configOrQueryChangedSinceLastSave = false
 
-                if (responseTxt.startsWith("http")) {
-                    redirect(responseTxt, true)
-                    navigator.clipboard.writeText(responseTxt);
-                    document.getElementById("link_tooltip").classList.add("tooltip-fadein-fadeout")
-                } else {
-                    showError(responseTxt)
-                }
-            })
+        const result = await r.text()
+        if (!result.startsWith("http")) {
+            return showError(result)
+        }
+        redirect(result, true)
+        navigator.clipboard.writeText(result);
+        document.getElementById("link_tooltip").classList.add("tooltip-fadein-fadeout")
     }
 
     /**
