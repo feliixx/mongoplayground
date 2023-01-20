@@ -54,7 +54,7 @@ jobs:
 
     - name: Install npm test dependencies
       working-directory: internal/web
-      run: npm install --no-package-lock
+      run: npm install
     
     - name: Check minified files
       id: check_minified_files
