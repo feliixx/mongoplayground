@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/playground.js",
   "scripts": {
-    "postinstall": "npx playwright install --with-deps",
+    "postinstall": "npx playwright install",
     "build": "./bundle.sh",
     "test": "npx playwright test"
   },
@@ -12,7 +12,7 @@
   "author": "Adrien Petel",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.28.0",
-    "esbuild": "0.14.11"
+    "@playwright/test": "^1.29.2",
+    "esbuild": "0.17.3"
   }
 }
