@@ -6,6 +6,12 @@
 Mongo playground: a simple sandbox to test and share MongoDB queries. Try it online : [**https://mongoplayground.net**](https://mongoplayground.net/)
 
 
+## Shared playgrounds
+
+Shared playgrounds are saved forever. Do not share playground containing sensitive data, as
+they can get accessed by anyone who get the playground link!
+
+
 ## Limitations
 
   ### Size limitations
