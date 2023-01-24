@@ -1078,7 +1078,7 @@ var Completer = function (config) {
         },
         {
             caption: "$dateDiff",
-            value: '$dateDiff: {\n "startDate": "dateExpression",\n "unit": "Unit",\n"amount": "int",\n "timezone": "tzExpression",\n "startOfWeek": "day"\n}',
+            value: '$dateDiff: {\n "startDate": "dateExpression",\n "unit": "Unit",\n "amount": "int",\n "timezone": "tzExpression",\n "startOfWeek": "day"\n}',
             meta: "date operator (v5.0+)"
         },
         {

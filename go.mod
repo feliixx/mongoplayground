@@ -7,8 +7,8 @@ require (
 	github.com/feliixx/boa v0.2.2
 	github.com/feliixx/mgodatagen v0.11.2
 	github.com/feliixx/mongoextjson v1.2.0
-	github.com/prometheus/client_golang v1.13.0
-	go.mongodb.org/mongo-driver v1.10.3
+	github.com/prometheus/client_golang v1.14.0
+	go.mongodb.org/mongo-driver v1.11.1
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	google.golang.org/api v0.95.0
 )
@@ -40,7 +40,7 @@ require (
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
