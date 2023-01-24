@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/playground.js",
   "scripts": {
-    "postinstall": "npx playwright install",
+    "postinstall": "npx playwright install chromium",
     "build": "./bundle.sh",
     "test": "npx playwright test"
   },

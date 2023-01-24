@@ -5,10 +5,10 @@ test('format default page', async ({ page }) => {
 
   const configTxt = `[
   {
-  "key": 1
+    "key": 1
   },
   {
-  "key": 2
+    "key": 2
   }
 ]`
   const queryTxt = 'db.collection.find()'
