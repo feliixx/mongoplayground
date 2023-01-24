@@ -9,7 +9,7 @@ on:
       - production
 
 env: 
-  MONGO_VERSION: 6.0.2
+  MONGO_VERSION: 6.0.3
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
     - name: Lint code 
       uses: golangci/golangci-lint-action@v3
       with:
-        version: v1.48.0
+        version: v1.50.1
         args: --timeout 2m0s
 
     - name: Vet code
@@ -46,7 +46,7 @@ jobs:
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        files: tools/coverage.txt
+        files: coverage.txt
 
     - uses: actions/setup-node@v3
       with:

@@ -179,7 +179,7 @@
 }`,meta:"date operator (v5.0+)"},{caption:"$dateDiff",value:`$dateDiff: {
  "startDate": "dateExpression",
  "unit": "Unit",
-" amount": "int",
+ "amount": "int",
  "timezone": "tzExpression",
  "startOfWeek": "day"
 }`,meta:"date operator (v5.0+)"},{caption:"$dateSubtract",value:`$dateSubtract: {
