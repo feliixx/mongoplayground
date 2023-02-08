@@ -457,7 +457,7 @@ var Completer = function (config) {
         },
         {
             caption: "$dateFromParts",
-            value: '$dateFromParts : {\n "year": "year", "month": "month", "day": "day",\n "hour": "hour", "minute": "minute", "second": "second",\n "millisecond": "ms", "timezone": "tzExpression"\n}',
+            value: '$dateFromParts: {\n "year": "year", "month": "month", "day": "day",\n "hour": "hour", "minute": "minute", "second": "second",\n "millisecond": "ms", "timezone": "tzExpression"\n}',
             meta: "date operator"
         },
         {
@@ -822,7 +822,7 @@ var Completer = function (config) {
         },
         {
             caption: "$round",
-            value: '$round : [ "number", "place" ]',
+            value: '$round: [ "number", "place" ]',
             meta: "arithmetic operator (v4.2+)"
         },
         {
@@ -1027,7 +1027,7 @@ var Completer = function (config) {
         },
         {
             caption: "$trunc",
-            value: '$trunc : [ "number", "place" ]',
+            value: '$trunc: [ "number", "place" ]',
             meta: "arithmetic operator"
         },
         {
