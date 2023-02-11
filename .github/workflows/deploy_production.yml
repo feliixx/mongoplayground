@@ -6,7 +6,7 @@ on:
       - "production" 
 
 env: 
-  MONGO_VERSION: 6.0.3
+  MONGO_VERSION: 6.0.4
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
   # name of the binary, the service and the user running the 
   # service 
@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3
       with:
-        go-version: '1.19'
+        go-version: '1.20'
 
     - name: Vet code
       run: go vet ./...
