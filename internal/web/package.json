@@ -12,7 +12,7 @@
   "author": "Adrien Petel",
   "license": "MIT",
   "devDependencies": {
-    "@playwright/test": "^1.29.2",
-    "esbuild": "0.17.3"
+    "@playwright/test": "^1.30.0",
+    "esbuild": "0.17.7"
   }
 }
