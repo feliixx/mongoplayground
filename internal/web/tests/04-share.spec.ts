@@ -73,3 +73,16 @@ test('sharing show copied tooltip', async ({ page }) => {
 
   await expect(page.getByText("Copied")).toBeVisible()
 })
+
+test('saving the same playground twice returns the same URL', async ({ page }) => {
+  await expect(page.getByText("Copied")).toBeHidden()
+
+  await set('config', '{"_id":1}')
+  await page.getByRole('button', { name: 'share' }).click()
+  await expect(page).toHaveURL(/p\/Cz5OkFt6TSH/)
+
+  await set('config', '')
+  await set('config', '{"_id":1}')
+  await page.getByRole('button', { name: 'share' }).click()
+  await expect(page).toHaveURL(/p\/Cz5OkFt6TSH/)
+})

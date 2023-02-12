@@ -17,6 +17,7 @@
 package internal
 
 import (
+	"log"
 	"fmt"
 	"net/http"
 
@@ -26,7 +27,7 @@ import (
 // save the playground and return the playground url, which looks
 // like:
 //
-//   https://mongoplayground.net/p/nJhd-dhf3Ea
+//	https://mongoplayground.net/p/nJhd-dhf3Ea
 func (s *storage) saveHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Cache-control", "no-transform")
@@ -42,21 +43,23 @@ func (s *storage) saveHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id := s.save(p)
+	id, err := s.save(p)
+	if err != nil {
+		w.Write([]byte(fmt.Errorf("fail to save playground: %w", err).Error()))
+		return
+	}
 
 	fmt.Fprintf(w, "%sp/%s", r.Referer(), id)
 }
 
-func (s *storage) save(p *page) []byte {
+func (s *storage) save(p *page) ([]byte, error) {
 
-	id, val := p.ID(), p.encode()
-
+	key := p.ID()
 	// before saving, check if the playground is not already
 	// saved
 	alreadySaved := false
 	s.kvStore.View(func(txn *badger.Txn) error {
-
-		_, err := txn.Get(id)
+		_, err := txn.Get(key)
 		// if the key is not found, an 'ErrKeyNotFound' is returned.
 		// hence if the error is nil, the playground is already saved
 		if err == nil {
@@ -66,12 +69,17 @@ func (s *storage) save(p *page) []byte {
 	})
 
 	if !alreadySaved {
-		s.kvStore.Update(func(txn *badger.Txn) error {
-			return txn.Set(id, val)
+		val := p.encode()
+		err := s.kvStore.Update(func(txn *badger.Txn) error {
+			return txn.Set(key, val)
 		})
+		if err != nil {
+			log.Printf("fail to save page with id %s: %v", key, err)
+			return nil, err
+		}
 		// At this point, we know for sure that a new playground
 		// has been saved, so update the stats
 		savedPlaygroundSize.WithLabelValues(p.label()).Observe(float64(len(val)))
 	}
-	return id
+	return key, nil
 }
