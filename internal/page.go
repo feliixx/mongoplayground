@@ -73,7 +73,9 @@ func newPage(modeName, config, query string) (*page, error) {
 	}, nil
 }
 
-// generate an unique id for this page
+// get the ID of the page. The ID is a hash of the 
+// content of the page, so calling ID() multiple times on the 
+// same page will always return the same result.
 func (p *page) ID() []byte {
 	e := sha256.New()
 	e.Write([]byte{p.Mode})
@@ -85,8 +87,9 @@ func (p *page) ID() []byte {
 	return b[:pageIDLength]
 }
 
-// generate an unique hash to identify the database used by the p page. Two pages with
-// same config and mode should generate the same dbHash
+// generate an unique hash to identify the database used by the page. The results
+// of this function should be identical all for pages having the same mode and 
+// the same config. 
 func (p *page) dbHash() string {
 	return fmt.Sprintf("%x", md5.Sum(append(p.Config, p.Mode)))
 }
