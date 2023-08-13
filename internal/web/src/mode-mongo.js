@@ -51,6 +51,7 @@ define("ace/mode/mongo_highlight_rules", ["require", "exports", "module", "ace/l
         this.$rules = {
             "start": [
                 {token: "comment", regex: "//.*"},
+                {token: "key", regex: '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]\\s*(?=:)'},
                 {token: "string", regex: '["](?:(?:\\\\.)|(?:[^"\\\\]))*?["]'},
                 {token: "constant.numeric", regex: "0[xX][0-9a-fA-F]+\\b"},
                 {token: "constant.numeric", regex: "[+-]?\\d+(?:(?:\\.\\d*)?(?:[eE][+-]?\\d+)?)?\\b"},

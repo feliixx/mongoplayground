@@ -30,13 +30,12 @@
     --ace-completion-line-selected-background: #cad6fa;
     --ace-selection-background: #b5d5ff;
 
-    --token-string-color: #032f62;
-    --token-numeric-color: #005cc5;
-    --token-function-color: #6f42c1;
+    --token-string-color: #62831e;
+    --token-numeric-color: #55a4ff;
+    --token-function-color: #c1610b;
     --token-comment-color: #9299a2;
-    --token-variable-color: #000;
-    --token-language-color: #686df7;
-    --token-type-color: #a73f3f;
+    --token-key-color: #2D5896;
+    --token-language-color: #c1610b;
     --syntax-error-color: #8b0000;
 
     --doc-color: #24292e;
@@ -67,12 +66,12 @@
         --ace-completion-line-selected-background: #171a1f;
         --ace-selection-background: #2e4c77;
 
-        --token-string-color: #85b8e2;
-        --token-numeric-color: #65a8ec;
-        --token-function-color: #c7ade5;
+        --token-string-color: #ce9178;
+        --token-numeric-color: #b5cea8;
+        --token-function-color: #9e6dd6;
         --token-comment-color: #6c7985;
-        --token-variable-color: #a8b5c1;
-        --token-language-color: #d18849;
+        --token-key-color: #94dcfe;
+        --token-language-color: #4b9ad6;
         --syntax-error-color: #d6655e;
 
         --doc-color: #a8b5c1;
@@ -358,8 +357,8 @@ a {
     color: var(--syntax-error-color) !important;
 }
 
-.ace_variable {
-    color: var(--token-variable-color) !important;
+.ace_key {
+    color: var(--token-key-color) !important;
 }
 
 .ace_autocomplete {
