@@ -8,7 +8,7 @@ require (
 	github.com/feliixx/mgodatagen v0.11.2
 	github.com/feliixx/mongoextjson v1.2.0
 	github.com/prometheus/client_golang v1.16.0
-	go.mongodb.org/mongo-driver v1.11.1
+	go.mongodb.org/mongo-driver v1.11.9
 	golang.org/x/oauth2 v0.5.0
 	google.golang.org/api v0.95.0
 )
