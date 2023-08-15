@@ -413,7 +413,7 @@ func addJavascriptIndentRoundTripTests(buffer *bytes.Buffer) {
 ])`,
 		},
 		{
-			name:  "trailing comma are allowed",
+			name:  "trailing comma should be removed in query",
 			eType: "query",
 			input: `db.store.aggregate([
   {
@@ -424,17 +424,45 @@ func addJavascriptIndentRoundTripTests(buffer *bytes.Buffer) {
   },
 				
 			])`,
-			compact: `db.store.aggregate([{$unwind:{path:"$storeSignals",preserveNullAndEmptyArrays:false,}},])`,
+			compact: `db.store.aggregate([{$unwind:{path:"$storeSignals",preserveNullAndEmptyArrays:false}}])`,
 			indent: `db.store.aggregate([
   {
     $unwind: {
       path: "$storeSignals",
-      preserveNullAndEmptyArrays: false,
-      
+      preserveNullAndEmptyArrays: false
     }
-  },
-  
+  }
 ])`,
+		},
+		{
+			name:  "trailing comma should be removed in config",
+			eType: "config",
+			input: `[
+  {"key": 1,
+	"array": [1, 2,3,],},
+  {
+    "key": 2,"ob": {"k": 1,}
+
+	, 
+
+},]`,
+			compact: `[{"key":1,"array":[1,2,3]},{"key":2,"ob":{"k":1}}]`,
+			indent: `[
+  {
+    "key": 1,
+    "array": [
+      1,
+      2,
+      3
+    ]
+  },
+  {
+    "key": 2,
+    "ob": {
+      "k": 1
+    }
+  }
+]`,
 		},
 		{
 			name:  "aggregate with multiple object instead of array",

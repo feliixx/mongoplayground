@@ -219,6 +219,21 @@ var Parser = function () {
         at += 1
     }
 
+    function removeTrailingComma() {
+        let i = output.length - 2
+        while([" ", "\n"].includes(output.charAt(i))) {
+          i--
+        }
+        if (output.charAt(i) === ",") {
+          const end = output.charAt(output.length - 1)
+          output = output.slice(0, -(output.length - i))
+          if (doIndent) {
+            output += newline()
+          }
+          output += end
+        }
+    }
+
     function newline() {
         // might happen with some pathological input
         if (depth < 0) {
@@ -376,6 +391,7 @@ var Parser = function () {
                 collectionBson()
                 white()
                 if (ch === "}") {
+                    removeTrailingComma()
                     return next()
                 }
                 if (ch !== ",") {
@@ -384,7 +400,7 @@ var Parser = function () {
                 next()
                 white()
                 if (ch === "}") {
-                    // trailing comma are allowed
+                    removeTrailingComma()
                     return next()
                 }
             }
@@ -727,6 +743,7 @@ var Parser = function () {
             value()
             white()
             if (ch === "]") {
+                removeTrailingComma()
                 return next()
             }
             if (ch !== ",") {
@@ -735,7 +752,7 @@ var Parser = function () {
             next()
             white()
             if (ch === "]") {
-                // trailing comma are allowed
+                removeTrailingComma()
                 return next()
             }
         }
@@ -770,6 +787,7 @@ var Parser = function () {
             }
             white()
             if (ch === "}") {
+                removeTrailingComma()
                 return next()
             }
             if (ch !== ",") {
@@ -778,7 +796,7 @@ var Parser = function () {
             next()
             white()
             if (ch === "}") {
-                // trailing comma are allowed
+                removeTrailingComma()
                 return next()
             }
         }
@@ -941,6 +959,7 @@ var Parser = function () {
                     output = output.slice(0, indexEndLastWantedStages)
                     output += "]"
                 }
+                removeTrailingComma()
                 return next()
             }
             if (ch !== ",") {
@@ -953,7 +972,7 @@ var Parser = function () {
                     output = output.slice(0, indexEndLastWantedStages)
                     output += "]"
                 }
-                // trailing comma are allowed
+                removeTrailingComma()
                 return next()
             }
         }
@@ -992,6 +1011,7 @@ var Parser = function () {
 
             white()
             if (ch === "}") {
+                removeTrailingComma()
                 return next()
             }
             if (ch !== ",") {
@@ -1000,7 +1020,7 @@ var Parser = function () {
             next()
             white()
             if (ch === "}") {
-                // trailing comma are allowed
+                removeTrailingComma()
                 return next()
             }
         }
