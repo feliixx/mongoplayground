@@ -1321,7 +1321,7 @@ var Completer = function (config) {
         editor.removeWordLeft()
 
         let start = ""
-        if (!token.value.startsWith('"')) {
+        if (!token.value.startsWith('"') && !["true", "false", "null"].includes(data.value)) {
             start = '"'
         }
 
