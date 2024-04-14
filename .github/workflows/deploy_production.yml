@@ -20,8 +20,8 @@ jobs:
     environment: production
 
     steps:
-    - uses: actions/checkout@v3
-    - uses: actions/setup-go@v3
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
@@ -45,7 +45,7 @@ jobs:
 
     - name: Register SSH key
       continue-on-error: true
-      uses: webfactory/ssh-agent@v0.7.0
+      uses: webfactory/ssh-agent@v0.9.0
       with:
         ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY_PRODUCTION }}
 
@@ -70,7 +70,7 @@ jobs:
       run: for i in 10 10 15 15; do sleep $i; wget -nv --no-check-certificate -O- https://${{ secrets.HOST_PRODUCTION }}/health  | grep -q '{"Status":"UP"' && s=0 && break || s=$?; done; (exit $s)
     
     - name: Check if home/view pages have changed
-      uses: tj-actions/verify-changed-files@v9
+      uses: tj-actions/verify-changed-files@v17
       id: verify-changed-files
       with:
         files: |
