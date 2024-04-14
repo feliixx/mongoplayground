@@ -17,16 +17,16 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v5
       with:
         go-version: '1.22'
 
     - name: Lint code 
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v4
       with:
-        version: v1.54.1
+        version: v1.57.2
         args: --timeout 2m0s
 
     - name: Vet code
@@ -44,13 +44,13 @@ jobs:
       run: tools/test.sh
     
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         files: coverage.txt
 
-    - uses: actions/setup-node@v3
+    - uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
 
     - name: Install npm test dependencies
       working-directory: internal/web
