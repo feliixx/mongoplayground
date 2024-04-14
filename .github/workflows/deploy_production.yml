@@ -70,7 +70,7 @@ jobs:
       run: for i in 10 10 15 15; do sleep $i; wget -nv --no-check-certificate -O- https://${{ secrets.HOST_PRODUCTION }}/health  | grep -q '{"Status":"UP"' && s=0 && break || s=$?; done; (exit $s)
     
     - name: Check if home/view pages have changed
-      uses: tj-actions/verify-changed-files@v9
+      uses: tj-actions/verify-changed-files@v17
       id: verify-changed-files
       with:
         files: |
