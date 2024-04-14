@@ -59,7 +59,7 @@ type storage struct {
 
 func newStorage(mongoUri string, dropFirst bool, cloudflareInfo *CloudflareInfo, mailInfo *MailInfo, googleDriveInfo *GoogleDriveInfo) (*storage, error) {
 
-	session, err := createMongodbSession(mongoUri)
+	session, err := mongo.Connect(context.Background(), options.Client().ApplyURI(mongoUri))
 	if err != nil {
 		return nil, err
 	}
@@ -209,19 +209,6 @@ func (s *storage) handleBackupError(message string, err error) {
 	if s.mailInfo != nil {
 		s.mailInfo.sendErrorByEmail(errorMsg)
 	}
-}
-
-func createMongodbSession(mongoUri string) (*mongo.Client, error) {
-
-	session, err := mongo.NewClient(options.Client().ApplyURI(mongoUri))
-	if err != nil {
-		return nil, fmt.Errorf("fail to create mongodb client: %v", err)
-	}
-	err = session.Connect(context.Background())
-	if err != nil {
-		return nil, fmt.Errorf("fail to connect to mongodb: %v", err)
-	}
-	return session, nil
 }
 
 func getMongoVersion(client *mongo.Client) []byte {

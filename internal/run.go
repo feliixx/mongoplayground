@@ -589,18 +589,18 @@ func runQuery(context context.Context, collection *mongo.Collection, method stri
 }
 
 func parseUpdateOpts(opts any) (bool, *options.UpdateOptions) {
-
 	optsDoc, _ := opts.(map[string]any)
-
 	multi, _ := optsDoc["multi"].(bool)
-	upsert, _ := optsDoc["upsert"].(bool)
-	arrayFilters, _ := optsDoc["arrayFilters"].([]any)
-
-	return multi, options.Update().
-		SetUpsert(upsert).
-		SetArrayFilters(options.ArrayFilters{
-			Filters: arrayFilters,
+	updateOpts := options.Update()
+	if upsert, ok := optsDoc["upsert"]; ok {
+		updateOpts.SetUpsert(upsert.(bool))
+	}
+	if arrayFilters, ok := optsDoc["arrayFilters"]; ok {
+		updateOpts.SetArrayFilters(options.ArrayFilters{
+			Filters: arrayFilters.([]any),
 		})
+	}
+	return multi, updateOpts
 }
 
 // remove any aggregation stages that might write to another db/collection,
