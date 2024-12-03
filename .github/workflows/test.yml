@@ -44,7 +44,7 @@ jobs:
         run: tools/test.sh
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           files: coverage.txt
 
