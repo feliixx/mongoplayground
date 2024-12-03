@@ -7,7 +7,7 @@ toolchain go1.23.3
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
 	github.com/feliixx/boa v0.2.2
-	github.com/feliixx/mgodatagen v0.11.2
+	github.com/feliixx/mgodatagen v0.12.0
 	github.com/feliixx/mongoextjson v1.2.0
 	github.com/prometheus/client_golang v1.20.5
 	go.mongodb.org/mongo-driver v1.17.1
@@ -39,7 +39,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.14.0 // indirect
 	github.com/gosuri/uilive v0.0.4 // indirect
 	github.com/gosuri/uiprogress v0.0.1 // indirect
-	github.com/iancoleman/orderedmap v0.2.0 // indirect
+	github.com/iancoleman/orderedmap v0.3.0 // indirect
 	github.com/klauspost/compress v1.17.9 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
