@@ -7,14 +7,14 @@ on:
 
 env:
   MONGO_VERSION: 8.0.3
-  UBUNTU_VERSION: linux-x86_64-ubuntu2004
+  UBUNTU_VERSION: linux-x86_64-ubuntu2204
   # name of the binary, the service and the user running the
   # service
   APP_NAME: mongoplayground
 
 jobs:
   deploy:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     environment: production
 
