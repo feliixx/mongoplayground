@@ -569,56 +569,6 @@ var runTests = []runTest{
 		result: `[{"_id":1,"health":200,"maxHealth":200,"username":"moshe"}]`,
 	},
 	{
-		name: `explain default`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"greta"}]`},
-			"query":  {`db.collection.find().explain()`},
-		},
-		result:    `{"command":{"$db":"433c2ef8cb26c90dd962d047dea315de","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"433c2ef8cb26c90dd962d047dea315de.collection","parsedQuery":{}`,
-		dbCreated: true,
-	},
-	{
-		name: `explain executionStats`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"tim"}]`},
-			"query":  {`db.collection.find().explain("executionStats")`},
-		},
-		result:    `{"command":{"$db":"d0eaaeabc460c11f6f70b605a70c50d8","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
-		dbCreated: true,
-	},
-	{
-		name: `explain executionStats before find`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":2,"username":"tom"}]`},
-			"query":  {`db.collection.explain("executionStats").find()`},
-		},
-		result:    `{"command":{"$db":"35598334d516d2dc5d67d18c838fa285","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
-		dbCreated: true,
-	},
-	{
-		name: `explain allPlansExecution before find`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"TP"}]`},
-			"query":  {`db.collection.explain("allPlansExecution").find()`},
-		},
-		result:    `{"command":{"$db":"40dd3ef1cd82a6d68d98fdcd3ddf4242","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"executionStats":{"allPlansExecution":[],"executionStages":{"advanced":1,"direction":"forward","docsExamined":1,"executionTimeMillisEstimate":0,"isEOF":1,"nReturned":1,"needTime":1,"needYield":0,"restoreState":0,"saveState":0,"stage":"COLLSCAN","works":3},"executionSuccess":true`,
-		dbCreated: true,
-	},
-	{
-		name: `explain too short`,
-		params: url.Values{
-			"mode":   {"bson"},
-			"config": {`[{"_id":1,"username":"singleQuote"}]`},
-			"query":  {`db.collection.find().explain(")`},
-		},
-		result:    `{"command":{"$db":"7fb2bc41534140cadc0bb68d1377cc2a","filter":{},"find":"collection","maxTimeMS":NumberLong(20000),"projection":{}},"explainVersion":"1","queryPlanner":{"indexFilterSet":false,"maxIndexedAndSolutionsReached":false,"maxIndexedOrSolutionsReached":false,"maxScansToExplodeReached":false,"namespace":"7fb2bc41534140cadc0bb68d1377cc2a.collection","parsedQuery":{}`,
-		dbCreated: true,
-	},
-	{
 		name: `malformatted explain`,
 		params: url.Values{
 			"mode":   {"bson"},

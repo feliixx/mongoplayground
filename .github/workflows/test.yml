@@ -36,9 +36,8 @@ jobs:
         run: |
           wget --quiet http://downloads.mongodb.org/linux/mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
           tar xzvf mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
-          echo "$PWD/mongodb-$UBUNTU_VERSION-$MONGO_VERSION/bin" >> $GITHUB_PATH
           mkdir $PWD/db
-          mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
+          $PWD/mongodb-$UBUNTU_VERSION-$MONGO_VERSION/bin/mongod --dbpath $PWD/db --logpath /dev/null --fork
 
       - name: Run test
         run: tools/test.sh
