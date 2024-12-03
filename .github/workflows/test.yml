@@ -1,4 +1,4 @@
-name: Run backend and e2e tests  
+name: Run backend and e2e tests
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     branches-ignore:
       - production
 
-env: 
+env:
   MONGO_VERSION: 8.0.3
   UBUNTU_VERSION: linux-x86_64-ubuntu2004
 
@@ -17,61 +17,61 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: actions/setup-go@v5
-      with:
-        go-version: '1.23'
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
 
-    - name: Lint code 
-      uses: golangci/golangci-lint-action@v4
-      with:
-        version: v1.57.2
-        args: --timeout 2m0s
+      - name: Lint code
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: v1.57.2
+          args: --timeout 2m0s
 
-    - name: Vet code
-      run: go vet ./...
+      - name: Vet code
+        run: go vet ./...
 
-    - name: Download MongoDB and setup standalone db
-      run: |
-        wget --quiet http://downloads.mongodb.org/linux/mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
-        tar xzvf mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
-        echo "$PWD/mongodb-$UBUNTU_VERSION-$MONGO_VERSION/bin" >> $GITHUB_PATH
-        mkdir $PWD/db
-        mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
+      - name: Download MongoDB and setup standalone db
+        run: |
+          wget --quiet http://downloads.mongodb.org/linux/mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
+          tar xzvf mongodb-$UBUNTU_VERSION-$MONGO_VERSION.tgz
+          echo "$PWD/mongodb-$UBUNTU_VERSION-$MONGO_VERSION/bin" >> $GITHUB_PATH
+          mkdir $PWD/db
+          mongod --dbpath $PWD/db --logpath /dev/null --nojournal --fork
 
-    - name: Run test
-      run: tools/test.sh
-    
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
-      with:
-        files: coverage.txt
+      - name: Run test
+        run: tools/test.sh
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.txt
 
-    - name: Install npm test dependencies
-      working-directory: internal/web
-      run: npm install
-    
-    - name: Check minified files
-      id: check_minified_files
-      working-directory: internal/web
-      run: |
-        npm run build
-        git diff --quiet
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-    - name: Print message if files are out of sync
-      if: failure() && steps.check_minified_files.outcome == 'failure'
-      run: echo "minified files are out of sync, run 'npm run build' and commit the modified files"
-    
-    - name: Start local instance
-      run: |
-        go build
-        ./mongoplayground&
+      - name: Install npm test dependencies
+        working-directory: internal/web
+        run: npm install
 
-    - name: Run e2e tests
-      working-directory: internal/web
-      run: npm run test
+      - name: Check minified files
+        id: check_minified_files
+        working-directory: internal/web
+        run: |
+          npm run build
+          git diff --quiet
+
+      - name: Print message if files are out of sync
+        if: failure() && steps.check_minified_files.outcome == 'failure'
+        run: echo "minified files are out of sync, run 'npm run build' and commit the modified files"
+
+      - name: Start local instance
+        run: |
+          go build
+          ./mongoplayground&
+
+      - name: Run e2e tests
+        working-directory: internal/web
+        run: npm run test
