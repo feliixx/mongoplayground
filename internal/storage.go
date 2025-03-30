@@ -64,7 +64,7 @@ func newStorage(mongoUri string, dropFirst bool, cloudflareInfo *CloudflareInfo,
 		return nil, err
 	}
 
-	kvStore, err := badger.Open(badger.DefaultOptions("storage"))
+	kvStore, err := badger.Open(badger.DefaultOptions("storage").WithTruncate(true))
 	if err != nil {
 		return nil, err
 	}
