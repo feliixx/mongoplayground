@@ -23,10 +23,11 @@ import (
 	"net/http"
 	"regexp"
 	"testing"
+	"time"
 )
 
 const (
-	lokiPort = 65000
+	lokiPort = 64123
 )
 
 var (
@@ -37,6 +38,7 @@ var (
 func TestSendLogsToLoki(t *testing.T) {
 
 	startMockLokiServer()
+	time.Sleep(1 * time.Second)
 
 	l := NewLokiLogger("localhost", lokiPort)
 
