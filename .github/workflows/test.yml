@@ -39,6 +39,12 @@ jobs:
           mkdir $PWD/db
           $PWD/mongodb-$UBUNTU_VERSION-$MONGO_VERSION/bin/mongod --dbpath $PWD/db --logpath /dev/null --fork
 
+      - name: Download mongosh 
+        run: |
+          wget --quiet https://downloads.mongodb.com/compass/mongosh-2.5.1-linux-x64.tgz
+          tar xzvf mongosh-2.5.1-linux-x64.tgz
+          echo "$PWD/mongosh-2.5.1-linux-x64/bin" >> $GITHUB_PATH
+
       - name: Run test
         run: tools/test.sh
 
