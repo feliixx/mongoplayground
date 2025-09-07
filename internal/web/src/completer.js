@@ -647,7 +647,7 @@ var Completer = function (config) {
         },
         {
             caption: "$lookup",
-            value: '$lookup: {\n "from": "collection to join",\n "localField": "field from the input documents",\n "foreignField": "field from the documents of the from collection",\n "as": "output array field"\n}',
+            value: '$lookup: {\n "from": "collection to join",\n "localField": "field from the input documents",\n "foreignField": "field from the documents of the from collection",\n "let": {var1: "val1"},\n "pipeline": [],\n "as": "output array field"\n}',
             meta: "aggregation stage"
         },
         {
@@ -1188,6 +1188,11 @@ var Completer = function (config) {
             meta: "aggregation accumulator (v5.2+)"
         },
         {
+            caption: "$sortArray",
+            value: '$sortArray: { input: "$arr", sortBy: { field: 1 } }',
+            meta: "aggregation accumulator (v5.2+)"
+        },
+        {
             caption: "$linearFill",
             value: '$linearFill: "expression"',
             meta: "aggregation (v5.3+)"
@@ -1206,6 +1211,11 @@ var Completer = function (config) {
             caption: "$tsSecond",
             value: '$tsSecond: "expression"',
             meta: "aggregation (v5.1+)"
+        },
+        {
+            caption: "$toUUID",
+            value: '$toUUID: "expression"',
+            meta: "aggregation (v8.0+)"
         },
     ].map(addInsertMatch).concat(basicBsonSnippet)
 
