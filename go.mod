@@ -2,7 +2,7 @@ module github.com/feliixx/mongoplayground
 
 go 1.23.0
 
-toolchain go1.24.2
+toolchain go1.25.1
 
 require (
 	github.com/dgraph-io/badger/v2 v2.2007.4
