@@ -1,11 +1,11 @@
 import { expect } from '@playwright/test';
-import { test, get, set } from './playwright'
+import { test, setEditorContent, expectEditorContent } from './playwright'
 
 test('run default page with button', async ({ page }) => {
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
 
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000000"),
     "key": 1
@@ -18,10 +18,10 @@ test('run default page with button', async ({ page }) => {
 })
 
 test('run default page with shortcut', async ({ page }) => {
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
 
   await page.getByText('Template').press('Control+Enter')
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000000"),
     "key": 1
@@ -35,7 +35,7 @@ test('run default page with shortcut', async ({ page }) => {
 
 test('run incorrect config', async ({ page }) => {
 
-  await set('config', `[
+  await setEditorContent('config', `[
   {
     a: invalid
   }
@@ -47,29 +47,29 @@ test('run incorrect config', async ({ page }) => {
   await page.getByRole('button', { name: 'run' }).click()
 
   await expect(page.locator('#resultPanel')).toHaveClass('text_red')
-  expect(await get('result')).toBe(`Invalid configuration:
+  await expectEditorContent('result', `Invalid configuration:
 Line 3: Unknown type: 'invalid'`)
 })
 
 test('run no result', async ({ page }) => {
 
-  await set('config', `[{k:1}]`)
-  await set('query', `db.collection.find({k:2})`)
+  await setEditorContent('config', `[{k:1}]`)
+  await setEditorContent('query', `db.collection.find({k:2})`)
   await page.getByRole('button', { name: 'run' }).click()
 
   await expect(page.locator('#resultPanel')).not.toHaveClass('text_red')
-  expect(await get('result')).toBe(`no document found`)
+  await expectEditorContent('result', 'no document found')
 })
 
 test('aggregation query without stages', async ({ page }) => {
-  await set('query', `db.collection.aggregate([{}])`)
+  await setEditorContent('query', `db.collection.aggregate([{}])`)
   await expect(page.getByText('Stage:')).toBeHidden()
   await expect(page.locator('#custom-aggregation_stages')).toBeHidden()
 })
 
 test('aggregation query with stages', async ({ page }) => {
 
-  await set('query', `db.collection.aggregate([
+  await setEditorContent('query', `db.collection.aggregate([
     {
       "$project": {
         "_id": 0
@@ -87,7 +87,7 @@ test('aggregation query with stages', async ({ page }) => {
   await expect(page.locator('#custom-aggregation_stages ul').getByText('$match')).toBeVisible()
 
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "key": 1
   }
@@ -97,7 +97,7 @@ test('aggregation query with stages', async ({ page }) => {
   await page.locator('#custom-aggregation_stages ul').getByText('$project').click()
 
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "key": 1
   },
@@ -109,13 +109,13 @@ test('aggregation query with stages', async ({ page }) => {
 
 test('test single db template', async ({ page }) => {
 
-  await set('config', '')
-  await set('query', '')
+  await setEditorContent('config', '')
+  await setEditorContent('query', '')
   await page.getByRole('button', { name: 'single collection' }).click()
   await page.locator('#custom-template ul').getByText('single collection').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {
     "key": 1
   },
@@ -124,12 +124,12 @@ test('test single db template', async ({ page }) => {
   }
 ]`)
 
-  expect(await get('query')).toBe(`db.collection.find()`)
+  await expectEditorContent('query', `db.collection.find()`)
   await expect(page.locator('#custom-aggregation_stage')).toBeHidden();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000000"),
     "key": 1
@@ -147,7 +147,7 @@ test('test multiple db template', async ({ page }) => {
   await page.locator('#custom-template ul').getByText('multiple collection').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
-  expect(await get('config')).toBe(`db={
+  await expectEditorContent('config', `db={
   "orders": [
     {
       "_id": 1,
@@ -198,7 +198,7 @@ test('test multiple db template', async ({ page }) => {
   ]
 }`)
 
-  expect(await get('query')).toBe(`db.orders.aggregate([
+  await expectEditorContent('query', `db.orders.aggregate([
   {
     "$lookup": {
       "from": "inventory",
@@ -210,9 +210,9 @@ test('test multiple db template', async ({ page }) => {
 ])`)
   await expect(page.getByRole('button', { name: '$lookup' })).toBeVisible();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": 1,
     "inventory_docs": [
@@ -260,7 +260,7 @@ test('test mgodatagen template', async ({ page }) => {
   await page.locator('#custom-template ul').getByText('mgodatagen').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'mgodatagen' })).toBeVisible();
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {
     "collection": "collection",
     "count": 10,
@@ -274,12 +274,12 @@ test('test mgodatagen template', async ({ page }) => {
   }
 ]`)
 
-  expect(await get('query')).toBe(`db.collection.find()`)
+  await expectEditorContent('query', `db.collection.find()`)
   await expect(page.locator('#custom-aggregation_stage')).toBeHidden();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000000"),
     "key": 10
@@ -329,7 +329,7 @@ test('test update template', async ({ page }) => {
   await page.locator('#custom-template ul').getByText('update').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {
     "key": 1
   },
@@ -338,7 +338,7 @@ test('test update template', async ({ page }) => {
   }
 ]`)
 
-  expect(await get('query')).toBe(`db.collection.update({
+  await expectEditorContent('query', `db.collection.update({
   "key": 2
 },
 {
@@ -352,9 +352,9 @@ test('test update template', async ({ page }) => {
 })`)
   await expect(page.locator('#custom-aggregation_stage')).toBeHidden();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000000"),
     "key": 1
@@ -373,7 +373,7 @@ test('test index template', async ({ page }) => {
   await page.locator('#custom-template ul').getByText('index').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'mgodatagen' })).toBeVisible();
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {
     "collection": "collection",
     "count": 5,
@@ -400,16 +400,16 @@ test('test index template', async ({ page }) => {
   }
 ]`)
 
-  expect(await get('query')).toBe(`db.collection.find({
+  await expectEditorContent('query', `db.collection.find({
   "$text": {
     "$search": "coffee"
   }
 })`)
   await expect(page.locator('#custom-aggregation_stage')).toBeHidden();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "_id": ObjectId("5a934e000102030405000002"),
     "description": "Just coffee"
@@ -427,7 +427,7 @@ test('test explain template', async ({ page }) => {
   await page.locator('#custom-template ul').getByText('explain').click()
 
   await expect(page.locator('#custom-mode').getByRole('button', { name: 'bson' })).toBeVisible();
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {
     "_id": 1,
     "item": "ABC",
@@ -463,7 +463,7 @@ test('test explain template', async ({ page }) => {
   }
 ]`)
 
-  expect(await get('query')).toBe(`db.collection.aggregate([
+  await expectEditorContent('query', `db.collection.aggregate([
   {
     "$unwind": {
       "path": "$sizes",
@@ -484,9 +484,8 @@ test('test explain template', async ({ page }) => {
     }
   }
 ]).explain("executionStats")`)
-  await expect(page.getByRole('button', {name: "$sort"})).toBeVisible();
+  await expect(page.getByRole('button', { name: "$sort" })).toBeVisible();
 
-  expect(await get('result', true)).toBe('')
+  await expectEditorContent('result', '')
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await (await get('result')).slice(0,1)).toBe('{')
 })

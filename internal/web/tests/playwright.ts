@@ -1,4 +1,4 @@
-import { test as baseTest, Page } from "@playwright/test";
+import { test as baseTest, expect, Page } from "@playwright/test";
 
 let currentPage: Page
 
@@ -10,28 +10,27 @@ export const test = baseTest.extend({
     },
 });
 
-export async function get(name: string, allowEmpty = false): Promise<string> {
-    await currentPage.waitForTimeout(5)
-    let content = await getEditorContent(name)
-    if (name === 'config' || name === 'query' || allowEmpty) {
-        return content
-    }
-    while (!content || content === "running query...") {
-        await currentPage.waitForTimeout(10)
-        content = await getEditorContent(name)
-    }
-    return content
+type Editor = 'config' | 'query' | 'result'
+
+export async function expectEditorContent(name: Editor, expected: string) {
+    expect.poll(async () => {
+        try {
+            return await getEditorContent(name)
+        } catch (e: any) {
+            return ''
+        } 
+    }).toBe(expected);
 }
 
-export async function set(name: string, content: string) {
+export async function setEditorContent(name: Editor, content: string) {
     const textarea = currentPage.locator(`#${name}`).getByRole('textbox')
     await textarea.click({ force: true })
     await textarea.press('Control+a+Delete')
     await textarea.fill(content)
 }
 
-async function getEditorContent(name: string) {
-    const textLayer = currentPage.locator(`#${name} > .ace_scroller > .ace_content > .ace_text-layer`)
+async function getEditorContent(name: Editor) {
+    const textLayer = currentPage.locator(`#${name} .ace_text-layer`)
     // textLayer looks like:
     // 
     //<div class="ace_line"><span>[</span></div>

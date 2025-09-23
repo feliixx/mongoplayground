@@ -1,11 +1,11 @@
 import { expect } from '@playwright/test';
-import { test, get, set } from './playwright'
+import { test, setEditorContent, expectEditorContent } from './playwright'
 
 test('changing config enables share', async ({ page }) => {
 
   const shareButton = page.getByRole('button', { name: 'share' })
   await expect(shareButton).toBeDisabled()
-  await set('config', '[]')
+  await setEditorContent('config', '[]')
   await shareButton.click()
   await expect(page).toHaveURL(/p\/4btTeezhQ_i/)
   await expect(shareButton).toBeDisabled()
@@ -15,7 +15,7 @@ test('changing query enables share', async ({ page }) => {
 
   const shareButton = page.getByRole('button', { name: 'share' })
   await expect(shareButton).toBeDisabled()
-  await set('query', 'db.c.find({v:"a"})')
+  await setEditorContent('query', 'db.c.find({v:"a"})')
   await shareButton.click()
   await expect(page).toHaveURL(/p\/IIAf09j3hnm/)
   await expect(shareButton).toBeDisabled()
@@ -34,21 +34,21 @@ test('changing mode enables share', async ({ page }) => {
 
 test('sharing format the playground', async ({ page }) => {
 
-  await set('config', '[{}]')
+  await setEditorContent('config', '[{}]')
   await page.getByRole('button', { name: 'share' }).click()
   await expect(page).toHaveURL(/p\/4cOeA7NGLru/)
-  expect(await get('config')).toBe(`[
+  await expectEditorContent('config', `[
   {}
 ]`)
 })
 
 test('run after share does not change URL', async ({ page }) => {
 
-  await set('config', 'db={"a":[{k:1}]}')
-  await set('query', 'db.a.find({},{_id:0})')
+  await setEditorContent('config', 'db={"a":[{k:1}]}')
+  await setEditorContent('query', 'db.a.find({},{_id:0})')
 
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "k": 1
   }
@@ -56,7 +56,7 @@ test('run after share does not change URL', async ({ page }) => {
   await page.getByRole('button', { name: 'share' }).click()
   await expect(page).toHaveURL(/p\/iKNbEa-etwo/)
   await page.getByRole('button', { name: 'run' }).click()
-  expect(await get('result')).toBe(`[
+  await expectEditorContent('result', `[
   {
     "k": 1
   }
@@ -67,7 +67,7 @@ test('run after share does not change URL', async ({ page }) => {
 test('sharing show copied tooltip', async ({ page }) => {
   await expect(page.getByText("Copied")).toBeHidden()
 
-  await set('config', '{')
+  await setEditorContent('config', '{')
   await page.getByRole('button', { name: 'share' }).click()
   await expect(page).toHaveURL(/p\/MMrQg5UYwYX/)
 
@@ -77,12 +77,12 @@ test('sharing show copied tooltip', async ({ page }) => {
 test('saving the same playground twice returns the same URL', async ({ page }) => {
   await expect(page.getByText("Copied")).toBeHidden()
 
-  await set('config', '{"_id":1}')
+  await setEditorContent('config', '{"_id":1}')
   await page.getByRole('button', { name: 'share' }).click()
   await expect(page).toHaveURL(/p\/Cz5OkFt6TSH/)
 
-  await set('config', '')
-  await set('config', '{"_id":1}')
+  await setEditorContent('config', '')
+  await setEditorContent('config', '{"_id":1}')
   await page.getByRole('button', { name: 'share' }).click()
   await expect(page).toHaveURL(/p\/Cz5OkFt6TSH/)
 })
