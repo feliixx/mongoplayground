@@ -1,6 +1,6 @@
 module github.com/feliixx/mongoplayground
 
-go 1.23.0
+go 1.24.0
 
 toolchain go1.25.1
 
@@ -11,7 +11,7 @@ require (
 	github.com/feliixx/mongoextjson v1.2.0
 	github.com/prometheus/client_golang v1.21.1
 	go.mongodb.org/mongo-driver v1.17.3
-	golang.org/x/oauth2 v0.29.0
+	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.209.0
 )
 
