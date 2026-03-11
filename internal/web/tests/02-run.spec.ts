@@ -263,14 +263,69 @@ test('test mgodatagen template', async ({ page }) => {
   await expectEditorContent('config', `[
   {
     "collection": "collection",
-    "count": 10,
+    "count": 3,
     "content": {
-      "key": {
+      "enum": {
+        "type": "enum",
+        "values": [
+          "abc",
+          "xyz",
+          "123"
+        ]
+      },
+      "int": {
         "type": "int",
         "min": 0,
         "max": 10
+      },
+      "coordinates": {
+        "type": "enum",
+        "values": [
+          {
+            "coordinates": [
+              53.23,
+              67.12
+            ],
+            "type": "Point"
+          },
+          {
+            "coordinates": [
+              54.23,
+              67.12
+            ],
+            "type": "Point"
+          },
+          {
+            "coordinates": [
+              51.23,
+              64.12
+            ],
+            "type": "Point"
+          }
+        ]
       }
-    }
+    },
+    "indexes": [
+      {
+        "name": "single_idx",
+        "key": {
+          "enum": 1
+        }
+      },
+      {
+        "name": "compund_idx",
+        "key": {
+          "enum": -1,
+          "int": -1
+        }
+      },
+      {
+        "name": "2dsphere_idx",
+        "key": {
+          "coordinates": "2dsphere"
+        }
+      }
+    ]
   }
 ]`)
 
